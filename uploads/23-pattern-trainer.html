@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>23 · Pattern Trainer</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .trainer-box {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px 28px;
+    margin: 20px 0;
+  }
+  .score-board {
+    display: flex;
+    justify-content: space-between;
+    background: var(--bg-3);
+    padding: 16px 24px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    align-items: center;
+  }
+  .score-item {
+    text-align: center;
+  }
+  .score-item .num {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--accent);
+    font-family: monospace;
+  }
+  .score-item .label {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .pattern-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+    margin: 16px 0;
+  }
+  .pattern-btn {
+    background: var(--bg-3);
+    border: 2px solid var(--border);
+    color: var(--fg);
+    padding: 14px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 14px;
+    text-align: left;
+    transition: all 0.2s;
+  }
+  .pattern-btn:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+  .pattern-btn.right {
+    background: rgba(63, 185, 80, 0.2);
+    border-color: var(--good);
+  }
+  .pattern-btn.wrong {
+    background: rgba(248, 81, 73, 0.2);
+    border-color: var(--bad);
+  }
+  .pattern-btn:disabled { cursor: not-allowed; }
+  .feedback-box {
+    margin-top: 16px;
+    padding: 14px 18px;
+    border-radius: 8px;
+    display: none;
+  }
+  .feedback-box.show { display: block; }
+  .feedback-box.right {
+    background: rgba(63, 185, 80, 0.1);
+    border-left: 4px solid var(--good);
+  }
+  .feedback-box.wrong {
+    background: rgba(248, 81, 73, 0.1);
+    border-left: 4px solid var(--bad);
+  }
+  .progress-bar {
+    height: 8px;
+    background: var(--bg-3);
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 10px 0;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    transition: width 0.4s;
+  }
+  .difficulty {
+    display: inline-block;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-left: 8px;
+  }
+  .diff-easy { background: rgba(63, 185, 80, 0.2); color: var(--good); }
+  .diff-mid  { background: rgba(240, 136, 62, 0.2); color: var(--warn); }
+  .diff-hard { background: rgba(248, 81, 73, 0.2); color: var(--bad); }
+</style>
+</head>
+<body>
+<header class="site">
+  <div class="container">
+    <h1><a href="index.html" style="color: var(--fg)">← Hub</a> · 23 Pattern Trainer 🎯</h1>
+    <nav class="top">
+      <a href="22-race.html">← Race</a>
+      <a href="24-master-calc.html">Master Calc →</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+  <h1>Pattern Recognition Trainer 🧠</h1>
+  <p class="lead">
+    ดู code snippet → ระบุว่าเป็น <strong>pattern</strong> อะไร (D&amp;C / DP / Greedy / Backtracking / Brute Force / Two Pointers / Sliding Window)
+    ฝึกตา + สมองให้แม่น เพราะข้อสอบมักให้ code มาแล้วถามว่า "วิธีอะไร, complexity เท่าไร"
+  </p>
+
+  <div class="score-board">
+    <div class="score-item">
+      <div class="num" id="streak">0</div>
+      <div class="label">Streak 🔥</div>
+    </div>
+    <div class="score-item">
+      <div class="num"><span id="correct">0</span> / <span id="total">0</span></div>
+      <div class="label">Correct</div>
+    </div>
+    <div class="score-item">
+      <div class="num" id="accuracy">0%</div>
+      <div class="label">Accuracy</div>
+    </div>
+    <div class="score-item">
+      <div class="num" id="qnum">1</div>
+      <div class="label">Q #</div>
+    </div>
+  </div>
+
+  <div class="progress-bar">
+    <div class="progress-fill" id="progress" style="width: 0%"></div>
+  </div>
+
+  <div class="trainer-box" id="trainer-box">
+    <div id="question-area"></div>
+    <div class="pattern-options" id="options"></div>
+    <div class="feedback-box" id="feedback"></div>
+    <div style="display: flex; justify-content: space-between; margin-top: 16px">
+      <button id="next-btn" class="ghost" style="display: none">Next ▶</button>
+      <button id="restart-btn" class="ghost">🔄 เริ่มใหม่</button>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  <div class="container"><a href="index.html">← Hub</a> · <a href="24-master-calc.html">ถัดไป: Master Calc →</a></div>
+</footer>
+
+<script src="script.js"></script>
+<script>
+const PATTERNS = ['Brute Force', 'Divide & Conquer', 'Dynamic Programming', 'Greedy', 'Backtracking', 'Two Pointers', 'Sliding Window'];
+
+const QUESTIONS = [
+  {
+    code: `for (int i = 0; i < n; i++)
+    for (int j = i+1; j < n; j++)
+        if (a[i] + a[j] == target)
+            return {i, j};`,
+    answer: 'Brute Force',
+    diff: 'easy',
+    explain: 'Loop ซ้อน 2 ชั้น ลองทุกคู่ — O(n²) brute force'
+  },
+  {
+    code: `int l = 0, r = n - 1;
+while (l < r) {
+    if (a[l] + a[r] == target) return {l, r};
+    if (a[l] + a[r] < target) l++;
+    else r--;
+}`,
+    answer: 'Two Pointers',
+    diff: 'easy',
+    explain: 'pointer ซ้าย-ขวาขยับเข้าหากันบน sorted array — O(n)'
+  },
+  {
+    code: `int sum = 0;
+for (int i = 0; i < k; i++) sum += a[i];
+int best = sum;
+for (int i = k; i < n; i++) {
+    sum += a[i] - a[i-k];
+    best = max(best, sum);
+}`,
+    answer: 'Sliding Window',
+    diff: 'easy',
+    explain: 'เพิ่มตัวขวา ลบตัวซ้าย ขนาด window คงที่ k — O(n)'
+  },
+  {
+    code: `int mergeSort(vector<int>& a, int l, int r) {
+    if (l >= r) return;
+    int m = (l + r) / 2;
+    mergeSort(a, l, m);
+    mergeSort(a, m+1, r);
+    merge(a, l, m, r);
+}`,
+    answer: 'Divide & Conquer',
+    diff: 'easy',
+    explain: 'แบ่งครึ่ง → recurse ทั้ง 2 ฝั่ง → combine — classic D&C'
+  },
+  {
+    code: `vector<int> dp(n+1, 0);
+dp[0] = 1;
+for (int c : coins)
+    for (int x = c; x <= amount; x++)
+        dp[x] += dp[x-c];`,
+    answer: 'Dynamic Programming',
+    diff: 'mid',
+    explain: 'มี dp[] table + recurrence ใช้ค่าเก่า — coin change DP'
+  },
+  {
+    code: `void perm(vector<int>& a, int l, int r) {
+    if (l == r) { print(a); return; }
+    for (int i = l; i <= r; i++) {
+        swap(a[l], a[i]);
+        perm(a, l+1, r);
+        swap(a[l], a[i]);  // undo
+    }
+}`,
+    answer: 'Backtracking',
+    diff: 'easy',
+    explain: 'มี swap + recurse + undo (swap กลับ) — pattern backtracking ชัดเจน'
+  },
+  {
+    code: `sort(activities.begin(), activities.end(),
+     [](Act a, Act b) { return a.f < b.f; });
+int count = 1, lastF = activities[0].f;
+for (int i = 1; i < n; i++)
+    if (activities[i].s >= lastF) {
+        count++;
+        lastF = activities[i].f;
+    }`,
+    answer: 'Greedy',
+    diff: 'mid',
+    explain: 'sort ตาม finish time + เลือก local optimum (start ≥ lastFinish) — Activity Selection Greedy'
+  },
+  {
+    code: `int knapsack(int W, vector<int>& wt, vector<int>& val, int n) {
+    vector<vector<int>> M(n+1, vector<int>(W+1, 0));
+    for (int i = 1; i <= n; i++)
+        for (int w = 0; w <= W; w++) {
+            M[i][w] = M[i-1][w];
+            if (wt[i-1] <= w)
+                M[i][w] = max(M[i][w], M[i-1][w-wt[i-1]] + val[i-1]);
+        }
+    return M[n][W];
+}`,
+    answer: 'Dynamic Programming',
+    diff: 'mid',
+    explain: 'M[i][w] table 2D + recurrence — 0/1 Knapsack DP'
+  },
+  {
+    code: `int binarySearch(vector<int>& a, int target) {
+    int lo = 0, hi = a.size() - 1;
+    while (lo <= hi) {
+        int mid = lo + (hi - lo) / 2;
+        if (a[mid] == target) return mid;
+        if (a[mid] < target) lo = mid + 1;
+        else hi = mid - 1;
+    }
+    return -1;
+}`,
+    answer: 'Divide & Conquer',
+    diff: 'easy',
+    explain: 'แบ่งช่วงครึ่ง โดยตัดทิ้งครึ่งที่ไม่มี target — D&C (1 sub-problem)'
+  },
+  {
+    code: `bool safe(vector<int>& pos, int row, int col) {
+    for (int i = 0; i < row; i++) {
+        if (pos[i] == col) return false;
+        if (abs(pos[i]-col) == abs(i-row)) return false;
+    }
+    return true;
+}
+void solve(vector<int>& pos, int row, int n) {
+    if (row == n) { count++; return; }
+    for (int c = 0; c < n; c++)
+        if (safe(pos, row, c)) {
+            pos[row] = c;
+            solve(pos, row+1, n);
+        }
+}`,
+    answer: 'Backtracking',
+    diff: 'mid',
+    explain: 'N-Queens — มี safe() prune + recurse + อ้อมไป next position — backtracking'
+  },
+  {
+    code: `for (int mask = 0; mask < (1 << n); mask++) {
+    int sum = 0;
+    for (int i = 0; i < n; i++)
+        if (mask & (1 << i)) sum += a[i];
+    if (sum == target) print();
+}`,
+    answer: 'Brute Force',
+    diff: 'mid',
+    explain: 'ลองทุก subset (2ⁿ) ผ่าน bitmask — exhaustive enumeration = brute force'
+  },
+  {
+    code: `unordered_map<char, int> last;
+int l = 0, best = 0;
+for (int r = 0; r < s.size(); r++) {
+    if (last.count(s[r]) && last[s[r]] >= l)
+        l = last[s[r]] + 1;
+    last[s[r]] = r;
+    best = max(best, r - l + 1);
+}`,
+    answer: 'Sliding Window',
+    diff: 'mid',
+    explain: 'l, r pointer + window ขยายตาม condition (อักษรไม่ซ้ำ) — Sliding Window สำหรับ longest substring'
+  },
+  {
+    code: `int dp[5];
+dp[0] = 0; dp[1] = nums[0];
+for (int i = 2; i <= n; i++)
+    dp[i] = max(dp[i-1], dp[i-2] + nums[i-1]);`,
+    answer: 'Dynamic Programming',
+    diff: 'easy',
+    explain: 'dp[i] = max(dp[i-1], dp[i-2] + nums[i-1]) — House Robber DP classic'
+  },
+  {
+    code: `sort(items, by_ratio_desc);
+double total = 0;
+for (auto& it : items) {
+    if (W >= it.w) { total += it.v; W -= it.w; }
+    else { total += it.v * (W / it.w); break; }
+}`,
+    answer: 'Greedy',
+    diff: 'easy',
+    explain: 'เรียงตาม ratio (v/w) แล้วเลือก top — Fractional Knapsack Greedy'
+  },
+  {
+    code: `int quickSelect(vector<int>& a, int l, int r, int k) {
+    if (l == r) return a[l];
+    int p = partition(a, l, r);
+    if (k == p) return a[p];
+    if (k < p) return quickSelect(a, l, p-1, k);
+    return quickSelect(a, p+1, r, k);
+}`,
+    answer: 'Divide & Conquer',
+    diff: 'mid',
+    explain: 'partition (divide) + recurse แค่ฝั่งเดียว — Quick Select D&C'
+  }
+];
+
+// Shuffle questions on load
+let questions = [...QUESTIONS];
+let qIdx = 0;
+let correct = 0;
+let total = 0;
+let streak = 0;
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+}
+
+function escapeHtml(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function renderQuestion() {
+  if (qIdx >= questions.length) {
+    showFinal();
+    return;
+  }
+  const q = questions[qIdx];
+  document.getElementById('question-area').innerHTML = `
+    <div style="margin-bottom: 12px">
+      <strong style="color: var(--accent-2)">โค้ดนี้ใช้ pattern อะไร?</strong>
+      <span class="difficulty diff-${q.diff}">${q.diff}</span>
+    </div>
+    <pre style="background: var(--code-bg); padding: 16px; border-radius: 8px; border: 1px solid var(--border); overflow-x: auto"><code class="cpp">${escapeHtml(q.code)}</code></pre>
+  `;
+  // Highlight code
+  const codeEl = document.querySelector('#question-area pre code');
+  if (codeEl && window.applyHighlight) window.applyHighlight();
+  // Render options
+  const opts = document.getElementById('options');
+  opts.innerHTML = '';
+  PATTERNS.forEach(p => {
+    const btn = document.createElement('button');
+    btn.className = 'pattern-btn';
+    btn.textContent = p;
+    btn.onclick = () => answer(p, btn);
+    opts.appendChild(btn);
+  });
+  document.getElementById('feedback').classList.remove('show');
+  document.getElementById('next-btn').style.display = 'none';
+  document.getElementById('qnum').textContent = (qIdx + 1) + ' / ' + questions.length;
+  updateProgress();
+  // Apply syntax highlighting
+  document.querySelectorAll('pre code.cpp').forEach(el => {
+    if (el.dataset.hl !== '1' && window.applyHighlight) {
+      // Re-trigger highlight
+    }
+  });
+}
+
+function answer(picked, btn) {
+  const q = questions[qIdx];
+  total++;
+  document.querySelectorAll('.pattern-btn').forEach(b => b.disabled = true);
+  const fb = document.getElementById('feedback');
+  if (picked === q.answer) {
+    correct++; streak++;
+    btn.classList.add('right');
+    fb.className = 'feedback-box show right';
+    fb.innerHTML = '<strong>✓ ถูกต้อง!</strong> ' + q.explain;
+    // Confetti emoji burst
+    if (streak >= 5) fb.innerHTML += ' 🔥🔥 streak ' + streak + '!';
+  } else {
+    streak = 0;
+    btn.classList.add('wrong');
+    document.querySelectorAll('.pattern-btn').forEach(b => {
+      if (b.textContent === q.answer) b.classList.add('right');
+    });
+    fb.className = 'feedback-box show wrong';
+    fb.innerHTML = '<strong>✗ ผิด — เฉลย: ' + q.answer + '</strong><br>' + q.explain;
+  }
+  updateScore();
+  document.getElementById('next-btn').style.display = '';
+}
+
+function next() {
+  qIdx++;
+  renderQuestion();
+}
+
+function showFinal() {
+  const acc = total === 0 ? 0 : Math.round(correct * 100 / total);
+  let grade = '';
+  if (acc >= 90) grade = '🏆 ยอดเยี่ยม! เซียนแล้ว';
+  else if (acc >= 75) grade = '⭐ เก่ง! สอบผ่านแน่';
+  else if (acc >= 60) grade = '👍 ดี — ทบทวนหัวข้อที่พลาดอีกหน่อย';
+  else if (acc >= 40) grade = '📚 ต้องอ่านเพิ่ม — กลับไปดูหน้า 18 Walkthroughs';
+  else grade = '⚠️ อ่านพื้นฐานก่อน (00-09) แล้วกลับมาทำใหม่';
+
+  document.getElementById('trainer-box').innerHTML = `
+    <h2 style="text-align: center; color: var(--accent)">🎉 จบแล้ว!</h2>
+    <div style="text-align: center; padding: 30px">
+      <div style="font-size: 48px; color: var(--accent-2); font-family: monospace">${correct} / ${total}</div>
+      <div style="font-size: 24px; color: var(--accent); margin: 10px 0">${acc}% accuracy</div>
+      <div style="font-size: 18px; margin: 16px 0">${grade}</div>
+      <button onclick="location.reload()">🔄 ลองใหม่</button>
+    </div>
+  `;
+}
+
+function updateScore() {
+  document.getElementById('correct').textContent = correct;
+  document.getElementById('total').textContent = total;
+  document.getElementById('streak').textContent = streak;
+  const acc = total === 0 ? 0 : Math.round(correct * 100 / total);
+  document.getElementById('accuracy').textContent = acc + '%';
+}
+
+function updateProgress() {
+  const p = (qIdx / questions.length) * 100;
+  document.getElementById('progress').style.width = p + '%';
+}
+
+document.getElementById('next-btn').onclick = next;
+document.getElementById('restart-btn').onclick = () => location.reload();
+
+shuffle(questions);
+renderQuestion();
+</script>
+</body>
+</html>

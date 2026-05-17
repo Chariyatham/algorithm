@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Algorithm Learning Hub — เรียน Algorithm จากศูนย์ถึงเซียน</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="site">
+  <div class="container">
+    <h1>Algorithm Learning Hub</h1>
+    <nav class="top">
+      <a href="#topics">หัวข้อ</a>
+      <a href="#how">วิธีเรียน</a>
+      <a href="#cpp">เรื่อง C++</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+  <h1>เรียน Algorithm จากศูนย์ ถึงเซียน</h1>
+  <p class="lead">
+    สื่อการเรียนแบบ interactive — มีอนิเมชันให้ดูทีละ step โค้ด C++ ทุกตัวอย่างรันได้จริง
+    มีแบบฝึกพร้อมเฉลย ครอบคลุมเนื้อหาในไฟล์ PDF ทั้งหมดของวิชานี้ (Big O, recursion, sort,
+    divide &amp; conquer, DP, greedy, backtracking, graph)
+  </p>
+
+  <div class="card">
+    <strong style="color: var(--accent-2)">เปิดวิธีไหน?</strong>
+    <p style="margin: 8px 0 0">
+      ดับเบิลคลิก <code>index.html</code> ใน file manager หรือเปิดผ่าน VS Code
+      Live Server ก็ได้ — ทุกหน้าใช้งานได้ <strong>โดยไม่ต้องต่อ internet</strong>
+      ไม่มีการเรียก library ภายนอก ทุกอนิเมชันเขียนด้วย vanilla JS
+    </p>
+  </div>
+
+  <h2 id="topics">หัวข้อทั้งหมด — 26 หน้า · ครบทุกอย่าง + Animation + Mock Exam + Tools</h2>
+  <p>เรียงจากง่ายไปยาก — ถ้าเริ่มจากศูนย์ <em>จริง ๆ</em> ให้เริ่มจากหน้า <strong>00 Foundations</strong></p>
+  <div class="note tip" style="margin: 12px 0">
+    <strong>✅ ครบจริง ๆ:</strong> เนื้อหานี้สร้างจากการอ่าน PDF <strong>ทุกไฟล์</strong> ในโฟลเดอร์
+    <code>/home/kim/Downloads/algorithm/</code> รวม 45 ไฟล์ (PDF + jpg + cpp + txt) — รวมไฟล์ในโฟลเดอร์ย่อย
+    <code>lab/</code>, <code>labSortLab2/</code>, <code>labWeak2/</code>, <code>tranning/</code> ทั้งหมด
+  </div>
+
+  <h3 style="margin-top: 24px">📚 ส่วนที่ 1 — รากฐาน</h3>
+  <div class="topics">
+    <a class="topic" href="00-foundations.html" style="border-color: var(--accent)">
+      <div class="num">00 — เริ่มต้น</div>
+      <h3>🌱 Foundations</h3>
+      <p>สำหรับมือใหม่จริงๆ — algorithm คืออะไร, C++ พื้นฐาน, คิดเป็น algorithm step-by-step</p>
+      <span class="tag">absolute beginner</span>
+    </a>
+
+    <a class="topic" href="01-bigo.html">
+      <div class="num">01 — รากฐาน</div>
+      <h3>Big O &amp; Time Complexity</h3>
+      <p>วัด "ความเร็ว" ของอัลกอริทึม เข้าใจ O(1), O(n), O(n²), O(2ⁿ) ผ่านกราฟเปรียบเทียบที่ปรับ n ได้</p>
+      <span class="tag">interactive graph</span>
+    </a>
+
+    <a class="topic" href="02-recursion.html">
+      <div class="num">02 — รากฐาน</div>
+      <h3>Recursion</h3>
+      <p>เข้าใจ call stack จริงๆ ดู factorial, fibonacci, findMax วิ่งทีละ frame เห็น stack เกิด-ลด</p>
+      <span class="tag">stack animation</span>
+    </a>
+  </div>
+
+  <h3 style="margin-top: 32px">⚙️ ส่วนที่ 2 — เนื้อหาหลัก</h3>
+  <div class="topics">
+    <a class="topic" href="03-sorting.html">
+      <div class="num">03 — เนื้อหาหลัก</div>
+      <h3>Sorting Algorithms</h3>
+      <p>Bubble, Selection, Insertion, Merge, Quick — ดู bar เคลื่อนเรียงให้เห็น เปลี่ยนสีตอนเทียบ-สลับ</p>
+      <span class="tag">5 sort animations</span>
+    </a>
+
+    <a class="topic" href="04-divide-conquer.html">
+      <div class="num">04 — เนื้อหาหลัก</div>
+      <h3>Divide &amp; Conquer</h3>
+      <p>หลัก แบ่ง-แก้-รวม + Master Theorem + Binary Search + Strassen matrix multiply</p>
+      <span class="tag">recursion tree</span>
+    </a>
+
+    <a class="topic" href="05-dp.html">
+      <div class="num">05 — ขั้นกลาง</div>
+      <h3>Dynamic Programming</h3>
+      <p>memo vs tabulation — Fibonacci, Coin Change, 0/1 Knapsack, LCS ดูตาราง DP fill ทีละช่อง</p>
+      <span class="tag">DP table animation</span>
+    </a>
+
+    <a class="topic" href="06-greedy.html">
+      <div class="num">06 — ขั้นกลาง</div>
+      <h3>Greedy Algorithms</h3>
+      <p>Activity Selection, Fractional Knapsack, Huffman, MST — เมื่อไหร่ greedy ใช้ได้ เมื่อไหร่พัง</p>
+      <span class="tag">step-by-step pick</span>
+    </a>
+  </div>
+
+  <h3 style="margin-top: 32px">🎯 ส่วนที่ 3 — ขั้นสูง</h3>
+  <div class="topics">
+    <a class="topic" href="07-backtracking.html">
+      <div class="num">07 — ขั้นสูง</div>
+      <h3>Backtracking</h3>
+      <p>N-Queens บนกระดานจริง, Subset-Sum, Permutation, 0/1 Knapsack — ดู tree เดินเส้น &amp; pruning</p>
+      <span class="tag">N-Queens board</span>
+    </a>
+
+    <a class="topic" href="08-graph.html">
+      <div class="num">08 — ขั้นสูง</div>
+      <h3>Graph Algorithms</h3>
+      <p>Adjacency list/matrix, BFS, DFS, Dijkstra — node กระพริบไล่ตามที่ algorithm visit</p>
+      <span class="tag">BFS / DFS / Dijkstra</span>
+    </a>
+
+    <a class="topic" href="09-exhaustive.html">
+      <div class="num">09 — เสริม</div>
+      <h3>Exhaustive Search</h3>
+      <p>ลองทุกความเป็นไปได้ — Brute force vs Backtracking ต่างกันยังไง เมื่อไหร่ต้องใช้</p>
+      <span class="tag">vs backtracking</span>
+    </a>
+  </div>
+
+  <h3 style="margin-top: 32px">📦 ส่วนที่ 4 — ลึกขึ้น &amp; ทบทวน</h3>
+  <div class="topics">
+    <a class="topic" href="12-search.html">
+      <div class="num">12 — ลึก</div>
+      <h3>Searching Deep Dive</h3>
+      <p>Binary search variants: lower/upper bound, search on answer, rotated array, ternary search</p>
+      <span class="tag">all variants</span>
+    </a>
+
+    <a class="topic" href="13-datastructures.html">
+      <div class="num">13 — ลึก</div>
+      <h3>Data Structures (STL)</h3>
+      <p>vector, set, map, stack, queue, priority_queue — เลือก container ยังไง + decision tree</p>
+      <span class="tag">STL guide</span>
+    </a>
+
+    <a class="topic" href="14-advanced.html" style="border-color: var(--bad)">
+      <div class="num">14 — เซียน</div>
+      <h3>🔥 Advanced Techniques</h3>
+      <p>Two pointers, sliding window, prefix sum, bit manipulation, Union-Find, monotonic stack</p>
+      <span class="tag">contest-level</span>
+    </a>
+
+    <a class="topic" href="15-extras.html" style="border-color: var(--accent-2)">
+      <div class="num">15 — ครบ PDF</div>
+      <h3>📘 เนื้อหาเสริมตรง PDF</h3>
+      <p>Quick Select, Karatsuba, Maxima Set, Strassen M1-M7, Floyd-Warshall, Warshall, Binomial DP, Rod Cutting, Power 3 versions</p>
+      <span class="tag">14 หัวข้อ</span>
+    </a>
+
+    <a class="topic" href="16-practice.html" style="border-color: var(--warn)">
+      <div class="num">16 — โจทย์</div>
+      <h3>📝 Practice Bank</h3>
+      <p>โจทย์ 60+ ข้อจาก PDF ทุกไฟล์ — Big O, recurrence, D&amp;C, DP, greedy, BT, exhaustive, graph พร้อมเฉลย step-by-step</p>
+      <span class="tag">60+ exercises</span>
+    </a>
+
+    <a class="topic" href="17-final-extras.html" style="border-color: var(--accent)">
+      <div class="num">17 — ปิดท้าย</div>
+      <h3>🏁 ครบ PDF ทั้งหมด</h3>
+      <p>14 หัวข้อสุดท้าย: Quick Select 3-way (L,E,G), Huffman worked example, Multi-CPU job, recurrence patterns, series formulas, counting/bucket sort, GCD, basic vs elementary counting</p>
+      <span class="tag">final coverage</span>
+    </a>
+
+    <a class="topic" href="18-walkthroughs.html" style="border-color: var(--accent-2); background: linear-gradient(135deg, rgba(126,231,135,0.08), transparent)">
+      <div class="num">18 — เน้นสอบ</div>
+      <h3>💡 Solution Walkthroughs</h3>
+      <p>10 โจทย์สำคัญ — แสดง<strong>วิธีคิด</strong>ทุก step (อ่านโจทย์ → เลือก algorithm → trace → กับดัก) ไม่ใช่แค่เฉลย</p>
+      <span class="tag">10 detailed solutions</span>
+    </a>
+
+    <a class="topic" href="19-mistakes.html" style="border-color: var(--bad); background: linear-gradient(135deg, rgba(248,81,73,0.08), transparent)">
+      <div class="num">19 — เน้นสอบ</div>
+      <h3>⚠️ Common Mistakes</h3>
+      <p>25 กับดักที่ทำให้สอบตก — Big O traps, DP loop ผิดด้าน, ลืม backtrack, BFS/DFS สับสน, Floyd vs Warshall</p>
+      <span class="tag">25 traps</span>
+    </a>
+
+    <a class="topic" href="20-mock-exam.html" style="border-color: var(--warn); background: linear-gradient(135deg, rgba(240,136,62,0.08), transparent)">
+      <div class="num">20 — เน้นสอบ</div>
+      <h3>📝 Mock Exam</h3>
+      <p>ข้อสอบจำลอง Midterm + Final แบบจับเวลา — เฉลย step-by-step + กลยุทธ์ทำข้อสอบ + 7-day plan</p>
+      <span class="tag">2 sets timed</span>
+    </a>
+
+    <a class="topic" href="21-visualizers.html" style="border-color: var(--accent); background: linear-gradient(135deg, rgba(88,166,255,0.08), transparent)">
+      <div class="num">21 — เห็นภาพ</div>
+      <h3>🎬 Step Visualizers</h3>
+      <p>Karatsuba/Strassen M1-M7/Floyd-Warshall/Quick Select 3-way — ดูทำงานทีละ step มี recursion tree</p>
+      <span class="tag">4 visualizers</span>
+    </a>
+
+    <a class="topic" href="22-race.html" style="border-color: var(--good); background: linear-gradient(135deg, rgba(63,185,80,0.08), transparent)">
+      <div class="num">22 — สนุก</div>
+      <h3>🏁 Algorithm Race</h3>
+      <p>5 sort algorithms วิ่งแข่งกันบน array เดียวกัน — เลือก pattern (random/sorted/reversed/few-unique) ดูใครชนะ</p>
+      <span class="tag">live race</span>
+    </a>
+
+    <a class="topic" href="23-pattern-trainer.html" style="border-color: var(--accent-2); background: linear-gradient(135deg, rgba(126,231,135,0.08), transparent)">
+      <div class="num">23 — ฝึกตา</div>
+      <h3>🎯 Pattern Trainer</h3>
+      <p>15 code snippets — เลือก pattern (DP/Greedy/D&amp;C/BT/Brute/Two Pointers/Sliding Window) เช็คคะแนน + streak</p>
+      <span class="tag">interactive quiz</span>
+    </a>
+
+    <a class="topic" href="24-master-calc.html" style="border-color: var(--accent); background: linear-gradient(135deg, rgba(88,166,255,0.08), transparent)">
+      <div class="num">24 — เครื่องมือ</div>
+      <h3>🧮 Master Calc + Recurrence Solver</h3>
+      <p>Master Theorem calculator (ใส่ a, b, d → เห็น case + result), Recurrence solver แบบ substitution step-by-step</p>
+      <span class="tag">2 calculators</span>
+    </a>
+
+    <a class="topic" href="25-tools.html" style="border-color: var(--warn); background: linear-gradient(135deg, rgba(240,136,62,0.08), transparent)">
+      <div class="num">25 — เครื่องมือ</div>
+      <h3>🛠️ Study Tools</h3>
+      <p>Concept Map (คลิก node ไปหน้านั้น), Progress Tracker (ติ๊กหน้าที่อ่านแล้ว, เก็บใน browser), Glossary 50+ ศัพท์</p>
+      <span class="tag">3-in-1 utility</span>
+    </a>
+
+    <a class="topic" href="10-cheatsheet.html" style="border-color: var(--accent-2)">
+      <div class="num">10 — ทบทวน</div>
+      <h3>📋 Cheat Sheet</h3>
+      <p>หน้าเดียวสรุปทุก algorithm พร้อม complexity และ template code — print ได้</p>
+      <span class="tag">printable</span>
+    </a>
+
+    <a class="topic" href="11-quiz.html" style="border-color: var(--warn)">
+      <div class="num">11 — ทดสอบ</div>
+      <h3>🎯 Practice Quiz</h3>
+      <p>20 ข้อ multiple choice ครอบคลุมทุกหัวข้อ — feedback ทันที + เฉลยอธิบาย</p>
+      <span class="tag">interactive</span>
+    </a>
+  </div>
+
+  <h2 id="how">วิธีเรียนให้เข้าใจจริง</h2>
+  <ol>
+    <li>
+      <strong>อ่านทฤษฎีก่อน</strong> — แต่ละหน้าเริ่มด้วย "หลักคิด" สั้น ๆ
+      อย่ารีบข้ามไปดูโค้ด ถ้ายังไม่เห็นภาพในหัว
+    </li>
+    <li>
+      <strong>กด Play อนิเมชัน</strong> — ดู input ที่ตัวอย่างให้มาก่อน 1 รอบ
+      แล้วลองเปลี่ยน input เอง (เช่น เปลี่ยนขนาด array, เปลี่ยนกระดาน N-queens)
+      ถ้าเดาไม่ออกว่าจะเกิดอะไร = ยังไม่เข้าใจ
+    </li>
+    <li>
+      <strong>อ่านโค้ด ทีละบรรทัด</strong> — แต่ละหน้ามีโค้ด C++ ครบ
+      เปิดไฟล์ในโฟลเดอร์ <code>lab/</code>, <code>labSortLab2/</code>, <code>labWeak2/</code>, <code>tranning/</code>
+      ของจริงคู่ไปด้วย แล้ว trace ตามมือ
+    </li>
+    <li>
+      <strong>ทำแบบฝึก</strong> — ทุกหน้ามี exercises พร้อม
+      <code>&lt;details&gt;</code> ปิดเฉลยไว้ พยายามทำเองก่อน 10 นาที ค่อยเปิดดู
+    </li>
+    <li>
+      <strong>เขียน-รัน</strong> ในเทอร์มินัล:
+      <pre><code class="cpp">g++ -std=c++17 -Wall myfile.cpp -o run &amp;&amp; ./run</code></pre>
+    </li>
+  </ol>
+
+  <h2 id="cpp">โน้ต C++ ที่ใช้ในทุกตัวอย่าง</h2>
+  <p>โค้ดในเว็บนี้เขียน <strong>style เดียวกับไฟล์ในโฟลเดอร์</strong> (มี <code>using namespace std;</code>,
+  ใช้ global variable, บางที่ใช้ 1-indexed เพื่อให้ตรงกับ pseudocode ในเลกเชอร์)</p>
+
+  <table>
+    <tr><th>เครื่องมือ C++ ที่ใช้บ่อย</th><th>ใช้ทำอะไร</th></tr>
+    <tr><td><code>vector&lt;int&gt; v;</code></td><td>array ที่ขยายขนาดได้ — ใช้แทน array แบบเก่าเสมอ</td></tr>
+    <tr><td><code>v.push_back(x);</code></td><td>เติม element ท้าย vector</td></tr>
+    <tr><td><code>v.size()</code></td><td>คืนจำนวน element (เป็น <code>size_t</code> — ระวังเปรียบเทียบกับ <code>int</code>)</td></tr>
+    <tr><td><code>swap(a, b)</code></td><td>สลับค่า a, b — เร็วกว่าเขียน temp เอง</td></tr>
+    <tr><td><code>sort(v.begin(), v.end())</code></td><td>เรียงน้อย→มาก, complexity <span class="complexity c-nlog">O(n log n)</span></td></tr>
+    <tr><td><code>cin &gt;&gt; x;</code></td><td>รับ input</td></tr>
+    <tr><td><code>cout &lt;&lt; x &lt;&lt; endl;</code></td><td>print + ขึ้นบรรทัดใหม่</td></tr>
+  </table>
+
+  <div class="note tip">
+    <strong>เทคนิคอ่านโค้ดเร็ว:</strong> เริ่มที่ <code>main()</code> ก่อนเสมอ
+    ดูว่ามันเรียกฟังก์ชันอะไร แล้วค่อยตามไปอ่านฟังก์ชันนั้น
+    อย่าอ่านจากบนลงล่างเรียง ๆ จะหลง
+  </div>
+</main>
+
+<footer>
+  <div class="container">
+    Algorithm Learning Hub · เนื้อหาตรงตามไฟล์ในโฟลเดอร์ <code>algorithm/</code>
+  </div>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>

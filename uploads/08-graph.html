@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>08 · Graph Algorithms</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="site">
+  <div class="container">
+    <h1><a href="index.html" style="color: var(--fg)">← Hub</a> · 08 Graph</h1>
+    <nav class="top">
+      <a href="07-backtracking.html">← Backtracking</a>
+      <a href="09-exhaustive.html">Exhaustive →</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+  <h1>Graph Algorithms — เดินใน graph</h1>
+  <p class="lead">
+    Graph = node + edge — โมเดลเกือบทุกอย่างเป็น graph ได้:
+    เพื่อนใน Facebook, ถนน, internet, dependency ของ task ในงาน
+    เราจะเรียนการ <strong>เก็บ</strong> graph และ <strong>ท่อง</strong> graph (BFS, DFS) แล้วต่อยอดถึง shortest path
+  </p>
+
+  <h2>คำศัพท์</h2>
+  <ul>
+    <li><strong>Node / Vertex</strong> (V) — จุดยอด</li>
+    <li><strong>Edge</strong> (E) — เส้นเชื่อม 2 node</li>
+    <li><strong>Directed</strong> — edge มีทิศทาง (เช่น Twitter follow), <strong>Undirected</strong> — สองทาง (เช่น Facebook friend)</li>
+    <li><strong>Weighted</strong> — edge มี cost (เช่น ระยะทาง)</li>
+    <li><strong>Path</strong> — sequence ของ node ที่เชื่อมกันด้วย edge</li>
+    <li><strong>Cycle</strong> — path ที่กลับมา node เดิม</li>
+    <li><strong>Connected</strong> — มี path เชื่อมทุกคู่ของ node</li>
+  </ul>
+
+  <h2>วิธีเก็บ graph: 2 แบบหลัก</h2>
+
+  <h3>1. Adjacency Matrix</h3>
+  <p><code>adj[i][j] = 1</code> ถ้ามี edge i → j</p>
+<pre><code class="cpp">int n = 5;
+vector&lt;vector&lt;int&gt;&gt; adj(n, vector&lt;int&gt;(n, 0));
+adj[0][1] = adj[1][0] = 1;    // undirected: ใส่ทั้ง 2 ฝั่ง
+adj[1][2] = adj[2][1] = 1;
+// ...
+// ถ้ามีน้ำหนัก: ใส่ค่าน้ำหนักแทน 1</code></pre>
+  <ul>
+    <li>✓ เช็ค edge ระหว่าง 2 node = O(1)</li>
+    <li>✗ memory O(V²) — สิ้นเปลืองถ้า edge น้อย</li>
+    <li>เหมาะกับ graph <strong>หนาแน่น</strong></li>
+  </ul>
+
+  <h3>2. Adjacency List (ใช้บ่อยกว่ามาก)</h3>
+<pre><code class="cpp">int n = 5;
+vector&lt;vector&lt;int&gt;&gt; adj(n);
+adj[0].push_back(1); adj[1].push_back(0);
+adj[1].push_back(2); adj[2].push_back(1);
+// ...
+
+// ถ้า weighted: pair&lt;int,int&gt; (neighbor, weight)
+vector&lt;vector&lt;pair&lt;int,int&gt;&gt;&gt; wadj(n);
+wadj[0].push_back({1, 5});</code></pre>
+  <ul>
+    <li>✓ memory O(V + E) — ประหยัดถ้า edge น้อย (sparse graph)</li>
+    <li>✗ เช็ค edge u-v ต้องวน list = O(degree)</li>
+    <li>เหมาะกับ <strong>graph ทั่วไปในชีวิตจริง</strong></li>
+  </ul>
+
+  <h2>BFS — Breadth-First Search (ค้นกว้าง)</h2>
+  <p><strong>Idea:</strong> เริ่มจาก source → เยี่ยม "เพื่อนบ้าน" ก่อน → แล้วค่อยเพื่อนของเพื่อน → ใช้ <code>queue</code></p>
+
+<pre><code class="cpp">void bfs(vector&lt;vector&lt;int&gt;&gt;&amp; adj, int src) {
+    int n = adj.size();
+    vector&lt;bool&gt; visited(n, false);
+    queue&lt;int&gt; q;
+    q.push(src);
+    visited[src] = true;
+    while (!q.empty()) {
+        int u = q.front(); q.pop();
+        cout &lt;&lt; u &lt;&lt; " ";                    // visit u
+        for (int v : adj[u]) {
+            if (!visited[v]) {
+                visited[v] = true;
+                q.push(v);
+            }
+        }
+    }
+}
+// O(V + E)</code></pre>
+
+  <p><strong>BFS ให้ "shortest path" ในแง่จำนวน edge</strong> (สำหรับ unweighted graph)</p>
+
+  <h2>DFS — Depth-First Search (ค้นลึก)</h2>
+  <p><strong>Idea:</strong> เริ่มจาก source → เดินลึกไปจุดสุด → ถอยขึ้นเมื่อตัน → ใช้ recursion (หรือ stack)</p>
+
+<pre><code class="cpp">void dfs(vector&lt;vector&lt;int&gt;&gt;&amp; adj, int u, vector&lt;bool&gt;&amp; visited) {
+    visited[u] = true;
+    cout &lt;&lt; u &lt;&lt; " ";
+    for (int v : adj[u]) {
+        if (!visited[v]) dfs(adj, v, visited);
+    }
+}
+// เรียก: vector&lt;bool&gt; vis(n, false); dfs(adj, src, vis);</code></pre>
+
+  <h2>เห็นภาพ: BFS vs DFS บน graph เดียวกัน</h2>
+  <div class="viz">
+    <div class="controls">
+      <button id="bfs-play">▶ Play BFS</button>
+      <button id="dfs-play">▶ Play DFS</button>
+      <button id="g-reset" class="ghost">Reset</button>
+    </div>
+    <svg id="g-svg" class="graph-svg" width="900" height="400"></svg>
+    <div class="status" id="g-status">เลือก algorithm</div>
+    <div class="legend">
+      <span><i style="background: var(--bad)"></i>กำลัง visit</span>
+      <span><i style="background: var(--warn)"></i>อยู่ใน queue/stack</span>
+      <span><i style="background: var(--good)"></i>เยี่ยมแล้ว</span>
+    </div>
+  </div>
+
+  <h2>เปรียบเทียบ BFS vs DFS</h2>
+  <table>
+    <tr><th></th><th>BFS</th><th>DFS</th></tr>
+    <tr><td>โครงสร้าง</td><td>queue</td><td>stack / recursion</td></tr>
+    <tr><td>หา shortest path?</td><td>ได้ (unweighted)</td><td>ไม่ได้</td></tr>
+    <tr><td>memory</td><td>กว้าง (BF tree ทั้งระดับ)</td><td>ลึก (depth ของ tree)</td></tr>
+    <tr><td>ใช้กับ</td><td>shortest path, level order, web crawl</td><td>cycle detect, topo sort, connected component, maze</td></tr>
+  </table>
+
+  <h2>ปัญหาคลาสสิกที่ใช้ BFS/DFS</h2>
+
+  <h3>Connected Components (จำนวนกลุ่มใน graph)</h3>
+<pre><code class="cpp">int countComponents(vector&lt;vector&lt;int&gt;&gt;&amp; adj) {
+    int n = adj.size(), count = 0;
+    vector&lt;bool&gt; visited(n, false);
+    for (int i = 0; i &lt; n; i++) {
+        if (!visited[i]) {
+            dfs(adj, i, visited);    // เยี่ยมทุกคนในกลุ่ม
+            count++;
+        }
+    }
+    return count;
+}</code></pre>
+
+  <h3>Cycle Detection (Directed graph)</h3>
+<pre><code class="cpp">// ใช้สี: 0=ขาว(ยังไม่เยี่ยม), 1=เทา(กำลังอยู่ในเส้นทาง), 2=ดำ(เสร็จแล้ว)
+bool hasCycle(vector&lt;vector&lt;int&gt;&gt;&amp; adj, int u, vector&lt;int&gt;&amp; color) {
+    color[u] = 1;                       // เทา
+    for (int v : adj[u]) {
+        if (color[v] == 1) return true; // เจอเทา → cycle!
+        if (color[v] == 0 &amp;&amp; hasCycle(adj, v, color)) return true;
+    }
+    color[u] = 2;                       // ดำ
+    return false;
+}</code></pre>
+
+  <h3>Topological Sort (เรียงลำดับ DAG)</h3>
+  <p>ใช้กับ task ที่มี dependency เช่น "ต้องเรียน A ก่อน B"</p>
+<pre><code class="cpp">void topoDFS(vector&lt;vector&lt;int&gt;&gt;&amp; adj, int u, vector&lt;bool&gt;&amp; visited, stack&lt;int&gt;&amp; st) {
+    visited[u] = true;
+    for (int v : adj[u]) if (!visited[v]) topoDFS(adj, v, visited, st);
+    st.push(u);                         // push หลังเยี่ยมเสร็จ
+}
+
+vector&lt;int&gt; topoSort(vector&lt;vector&lt;int&gt;&gt;&amp; adj) {
+    int n = adj.size();
+    vector&lt;bool&gt; visited(n, false);
+    stack&lt;int&gt; st;
+    for (int i = 0; i &lt; n; i++) if (!visited[i]) topoDFS(adj, i, visited, st);
+    vector&lt;int&gt; order;
+    while (!st.empty()) { order.push_back(st.top()); st.pop(); }
+    return order;
+}</code></pre>
+
+  <h2>Dijkstra — Shortest Path บน Weighted Graph</h2>
+  <p>BFS หา shortest path ได้แค่ unweighted — ถ้า edge มีน้ำหนัก (เช่น ระยะทาง) ใช้ Dijkstra</p>
+
+  <p><strong>Idea (greedy):</strong> ในแต่ละ step เลือก unvisited node ที่ <em>ใกล้ source ที่สุด</em>
+  → update distance ของเพื่อนบ้าน → mark visited</p>
+
+<pre><code class="cpp">vector&lt;int&gt; dijkstra(vector&lt;vector&lt;pair&lt;int,int&gt;&gt;&gt;&amp; adj, int src) {
+    int n = adj.size();
+    vector&lt;int&gt; dist(n, INT_MAX);
+    dist[src] = 0;
+    // priority_queue ขั้นต่ำ: (distance, node)
+    priority_queue&lt;pair&lt;int,int&gt;, vector&lt;pair&lt;int,int&gt;&gt;, greater&lt;&gt;&gt; pq;
+    pq.push({0, src});
+    while (!pq.empty()) {
+        auto [d, u] = pq.top(); pq.pop();
+        if (d &gt; dist[u]) continue;          // outdated
+        for (auto&amp; [v, w] : adj[u]) {
+            if (dist[u] + w &lt; dist[v]) {
+                dist[v] = dist[u] + w;
+                pq.push({dist[v], v});
+            }
+        }
+    }
+    return dist;
+}
+// O((V + E) log V)</code></pre>
+
+  <div class="note bad">
+    <strong>Dijkstra ใช้ไม่ได้กับ negative edge!</strong> ถ้ามี negative edge ใช้ <strong>Bellman-Ford</strong> O(VE) แทน
+  </div>
+
+  <h2>เห็นภาพ: Dijkstra</h2>
+  <div class="viz">
+    <button id="dij-play">▶ Play Dijkstra (start = node 0)</button>
+    <button id="dij-reset" class="ghost">Reset</button>
+    <svg id="dij-svg" class="graph-svg" width="900" height="400"></svg>
+    <div class="status" id="dij-status">รอเริ่ม</div>
+    <div id="dij-dist" style="font-family: monospace; font-size: 13px; color: var(--muted); margin-top: 8px"></div>
+  </div>
+
+  <h2>MST — Minimum Spanning Tree</h2>
+  <p>ใน connected weighted graph — หา tree ที่เชื่อมทุก node โดยรวมน้ำหนักน้อยสุด</p>
+  <p>ดูโค้ด <strong>Kruskal</strong> ในหน้า <a href="06-greedy.html">Greedy</a> — มีอีก algorithm ชื่อ <strong>Prim</strong></p>
+
+  <h3>Prim — เริ่มจาก node 1 ตัว ขยาย tree ทีละ edge</h3>
+<pre><code class="cpp">int prim(vector&lt;vector&lt;pair&lt;int,int&gt;&gt;&gt;&amp; adj) {
+    int n = adj.size();
+    vector&lt;bool&gt; inMST(n, false);
+    priority_queue&lt;pair&lt;int,int&gt;, vector&lt;pair&lt;int,int&gt;&gt;, greater&lt;&gt;&gt; pq;
+    pq.push({0, 0});                    // (weight, node)
+    int total = 0;
+    while (!pq.empty()) {
+        auto [w, u] = pq.top(); pq.pop();
+        if (inMST[u]) continue;
+        inMST[u] = true;
+        total += w;
+        for (auto&amp; [v, wt] : adj[u])
+            if (!inMST[v]) pq.push({wt, v});
+    }
+    return total;
+}
+// O(E log V)</code></pre>
+
+  <h2>เปรียบเทียบ Path / Tree algorithms</h2>
+  <table>
+    <tr><th>Problem</th><th>Algorithm</th><th>Time</th></tr>
+    <tr><td>Shortest path (unweighted)</td><td>BFS</td><td>O(V + E)</td></tr>
+    <tr><td>Shortest path (positive weight)</td><td>Dijkstra</td><td>O((V+E) log V)</td></tr>
+    <tr><td>Shortest path (negative ok, no neg cycle)</td><td>Bellman-Ford</td><td>O(V·E)</td></tr>
+    <tr><td>All pairs shortest path</td><td>Floyd-Warshall</td><td>O(V³)</td></tr>
+    <tr><td>MST</td><td>Kruskal / Prim</td><td>O(E log V)</td></tr>
+  </table>
+
+  <h2>แบบฝึก</h2>
+
+  <div class="exercise">
+    <span class="qnum">Q1</span>
+    <strong>Number of Islands:</strong> grid 2D ของ '1' (land) และ '0' (water) — นับจำนวนเกาะ
+    (เกาะ = group ของ 1 ที่เชื่อมกัน 4 ทิศ)
+    <details>
+      <summary>เฉลย — DFS</summary>
+<pre><code class="cpp">void dfs(vector&lt;vector&lt;char&gt;&gt;&amp; g, int r, int c) {
+    int m = g.size(), n = g[0].size();
+    if (r &lt; 0 || r &gt;= m || c &lt; 0 || c &gt;= n || g[r][c] != '1') return;
+    g[r][c] = '0';                      // mark visited (sink the island)
+    dfs(g, r+1, c); dfs(g, r-1, c);
+    dfs(g, r, c+1); dfs(g, r, c-1);
+}
+
+int numIslands(vector&lt;vector&lt;char&gt;&gt;&amp; g) {
+    int count = 0;
+    for (int r = 0; r &lt; g.size(); r++)
+        for (int c = 0; c &lt; g[0].size(); c++)
+            if (g[r][c] == '1') { dfs(g, r, c); count++; }
+    return count;
+}</code></pre>
+    </details>
+  </div>
+
+  <div class="exercise">
+    <span class="qnum">Q2</span>
+    <strong>Shortest Path in Maze:</strong> grid 0/1 — 0 ผ่านได้, 1 กำแพง — หาเส้นทางสั้นสุดจาก
+    (0,0) ไป (m-1, n-1)
+    <details>
+      <summary>เฉลย — BFS</summary>
+<pre><code class="cpp">int shortestPath(vector&lt;vector&lt;int&gt;&gt;&amp; g) {
+    int m = g.size(), n = g[0].size();
+    if (g[0][0] || g[m-1][n-1]) return -1;
+    vector&lt;vector&lt;int&gt;&gt; dist(m, vector&lt;int&gt;(n, -1));
+    queue&lt;pair&lt;int,int&gt;&gt; q;
+    q.push({0, 0}); dist[0][0] = 0;
+    int dr[] = {-1, 1, 0, 0}, dc[] = {0, 0, -1, 1};
+    while (!q.empty()) {
+        auto [r, c] = q.front(); q.pop();
+        if (r == m-1 &amp;&amp; c == n-1) return dist[r][c];
+        for (int k = 0; k &lt; 4; k++) {
+            int nr = r + dr[k], nc = c + dc[k];
+            if (nr &gt;= 0 &amp;&amp; nr &lt; m &amp;&amp; nc &gt;= 0 &amp;&amp; nc &lt; n
+                &amp;&amp; g[nr][nc] == 0 &amp;&amp; dist[nr][nc] == -1) {
+                dist[nr][nc] = dist[r][c] + 1;
+                q.push({nr, nc});
+            }
+        }
+    }
+    return -1;
+}</code></pre>
+    </details>
+  </div>
+
+  <div class="exercise">
+    <span class="qnum">Q3</span>
+    <strong>Course Schedule:</strong> มี n course มี prerequisite [a, b] = ต้องเรียน b ก่อน a
+    เช็คว่าเรียนครบทุก course ได้หรือไม่ (ไม่มี dependency เป็นวงกลม)
+    <details>
+      <summary>เฉลย — cycle detect ใน directed graph</summary>
+<pre><code class="cpp">bool canFinish(int n, vector&lt;vector&lt;int&gt;&gt;&amp; pre) {
+    vector&lt;vector&lt;int&gt;&gt; adj(n);
+    for (auto&amp; p : pre) adj[p[1]].push_back(p[0]);
+    vector&lt;int&gt; color(n, 0);
+    function&lt;bool(int)&gt; dfs = [&amp;](int u) {
+        color[u] = 1;
+        for (int v : adj[u]) {
+            if (color[v] == 1) return true;             // cycle
+            if (color[v] == 0 &amp;&amp; dfs(v)) return true;
+        }
+        color[u] = 2;
+        return false;
+    };
+    for (int i = 0; i &lt; n; i++)
+        if (color[i] == 0 &amp;&amp; dfs(i)) return false;
+    return true;
+}</code></pre>
+    </details>
+  </div>
+
+  <div class="exercise">
+    <span class="qnum">Q4</span>
+    <strong>เหตุใด Dijkstra พังเมื่อมี negative edge?</strong>
+    <details>
+      <summary>เฉลย</summary>
+      <p>Dijkstra ตั้งสมมติฐานว่า "node ที่ extract จาก PQ ออกมามี dist ที่ <em>final</em> แล้ว"</p>
+      <p>แต่ถ้ามี negative edge — node ที่ดูใกล้ในตอนนี้ อาจเอื้อมถึงได้สั้นกว่าผ่านเส้นทางอื่นที่ผ่าน negative edge ในอนาคต</p>
+      <p>Bellman-Ford ทำซ้ำ V-1 รอบเพื่อ guarantee ว่าทุก path ถูกพิจารณา → จัดการ negative ได้</p>
+    </details>
+  </div>
+
+</main>
+
+<footer>
+  <div class="container"><a href="index.html">← Hub</a> · <a href="09-exhaustive.html">ถัดไป: Exhaustive →</a></div>
+</footer>
+
+<script src="script.js"></script>
+<script>
+// ==== Common graph ====
+const NS = 'http://www.w3.org/2000/svg';
+const graph = {
+  nodes: [
+    {id: 0, x: 100, y: 80},
+    {id: 1, x: 280, y: 60},
+    {id: 2, x: 460, y: 80},
+    {id: 3, x: 640, y: 60},
+    {id: 4, x: 180, y: 200},
+    {id: 5, x: 380, y: 200},
+    {id: 6, x: 560, y: 200},
+    {id: 7, x: 760, y: 200},
+    {id: 8, x: 280, y: 340},
+    {id: 9, x: 480, y: 340},
+  ],
+  edges: [
+    [0,1,4],[0,4,3],[1,2,2],[1,5,5],[2,3,4],[2,5,1],[2,6,3],
+    [3,7,2],[4,5,6],[4,8,4],[5,8,2],[5,9,3],[6,7,1],[6,9,4],[8,9,5]
+  ]
+};
+
+function buildAdjList(directed = false) {
+  const adj = graph.nodes.map(() => []);
+  for (const [u, v, w] of graph.edges) {
+    adj[u].push({to: v, w});
+    if (!directed) adj[v].push({to: u, w});
+  }
+  return adj;
+}
+
+function renderGraph(svgEl, opts = {}) {
+  while (svgEl.firstChild) svgEl.removeChild(svgEl.firstChild);
+  svgEl.setAttribute('viewBox', '0 0 900 400');
+  // edges
+  for (const [u, v, w] of graph.edges) {
+    const a = graph.nodes[u], b = graph.nodes[v];
+    const e = document.createElementNS(NS, 'line');
+    e.setAttribute('class', 'edge');
+    e.setAttribute('x1', a.x); e.setAttribute('y1', a.y);
+    e.setAttribute('x2', b.x); e.setAttribute('y2', b.y);
+    e.dataset.uv = u + '-' + v;
+    svgEl.appendChild(e);
+    if (opts.showWeight) {
+      const t = document.createElementNS(NS, 'text');
+      t.setAttribute('x', (a.x + b.x) / 2);
+      t.setAttribute('y', (a.y + b.y) / 2 - 6);
+      t.setAttribute('class', 'label');
+      t.setAttribute('fill', '#8b949e');
+      t.textContent = w;
+      svgEl.appendChild(t);
+    }
+  }
+  // nodes
+  for (const n of graph.nodes) {
+    const c = document.createElementNS(NS, 'circle');
+    c.setAttribute('class', 'node');
+    c.setAttribute('cx', n.x); c.setAttribute('cy', n.y);
+    c.setAttribute('r', 22);
+    c.dataset.id = n.id;
+    svgEl.appendChild(c);
+    const t = document.createElementNS(NS, 'text');
+    t.setAttribute('x', n.x); t.setAttribute('y', n.y);
+    t.setAttribute('class', 'label');
+    t.textContent = n.id;
+    svgEl.appendChild(t);
+  }
+}
+
+function setNodeClass(svg, id, cls) {
+  const c = svg.querySelector('circle[data-id="' + id + '"]');
+  if (c) {
+    c.classList.remove('visited', 'frontier', 'current');
+    if (cls) c.classList.add(cls);
+  }
+}
+
+// ==== BFS / DFS ====
+(function() {
+  const svg = document.getElementById('g-svg');
+  const bfsBtn = document.getElementById('bfs-play');
+  const dfsBtn = document.getElementById('dfs-play');
+  const resetBtn = document.getElementById('g-reset');
+  const statusEl = document.getElementById('g-status');
+  let running = false;
+
+  renderGraph(svg);
+  const adj = buildAdjList();
+
+  function reset() {
+    graph.nodes.forEach(n => setNodeClass(svg, n.id, ''));
+  }
+
+  async function bfs() {
+    if (running) return; running = true;
+    reset();
+    const visited = new Array(graph.nodes.length).fill(false);
+    const q = [0]; visited[0] = true;
+    setNodeClass(svg, 0, 'frontier');
+    statusEl.textContent = 'BFS เริ่มจาก 0, queue = [0]';
+    await sleep(700);
+    const order = [];
+    while (q.length) {
+      const u = q.shift();
+      setNodeClass(svg, u, 'current');
+      statusEl.textContent = 'visit ' + u + ', queue = [' + q.join(',') + ']';
+      order.push(u);
+      await sleep(700);
+      for (const {to: v} of adj[u]) {
+        if (!visited[v]) {
+          visited[v] = true;
+          setNodeClass(svg, v, 'frontier');
+          q.push(v);
+        }
+      }
+      setNodeClass(svg, u, 'visited');
+      await sleep(400);
+    }
+    statusEl.innerHTML = '<strong>BFS order:</strong> ' + order.join(' → ');
+    running = false;
+  }
+
+  async function dfs() {
+    if (running) return; running = true;
+    reset();
+    const visited = new Array(graph.nodes.length).fill(false);
+    const order = [];
+    async function go(u) {
+      visited[u] = true;
+      setNodeClass(svg, u, 'current');
+      statusEl.textContent = 'DFS visit ' + u;
+      order.push(u);
+      await sleep(700);
+      setNodeClass(svg, u, 'frontier');
+      for (const {to: v} of adj[u]) {
+        if (!visited[v]) await go(v);
+      }
+      setNodeClass(svg, u, 'visited');
+      await sleep(300);
+    }
+    await go(0);
+    statusEl.innerHTML = '<strong>DFS order:</strong> ' + order.join(' → ');
+    running = false;
+  }
+
+  bfsBtn.onclick = bfs;
+  dfsBtn.onclick = dfs;
+  resetBtn.onclick = reset;
+})();
+
+// ==== Dijkstra ====
+(function() {
+  const svg = document.getElementById('dij-svg');
+  const playBtn = document.getElementById('dij-play');
+  const resetBtn = document.getElementById('dij-reset');
+  const statusEl = document.getElementById('dij-status');
+  const distEl = document.getElementById('dij-dist');
+  let running = false;
+
+  renderGraph(svg, { showWeight: true });
+  const adj = buildAdjList();
+
+  function showDist(dist) {
+    distEl.innerHTML = 'dist[] = ' + dist.map((d, i) => 'd['+i+']=' + (d === Infinity ? '∞' : d)).join(', ');
+  }
+
+  function reset() {
+    graph.nodes.forEach(n => setNodeClass(svg, n.id, ''));
+    distEl.innerHTML = '';
+    statusEl.textContent = 'รอเริ่ม';
+  }
+
+  async function play() {
+    if (running) return; running = true;
+    reset();
+    const n = graph.nodes.length;
+    const dist = new Array(n).fill(Infinity);
+    const visited = new Array(n).fill(false);
+    dist[0] = 0;
+    showDist(dist);
+    setNodeClass(svg, 0, 'frontier');
+    statusEl.textContent = 'เริ่มจาก node 0, dist[0] = 0';
+    await sleep(700);
+
+    for (let it = 0; it < n; it++) {
+      // pick min unvisited
+      let u = -1, best = Infinity;
+      for (let i = 0; i < n; i++) if (!visited[i] && dist[i] < best) { best = dist[i]; u = i; }
+      if (u === -1) break;
+      visited[u] = true;
+      setNodeClass(svg, u, 'current');
+      statusEl.textContent = 'extract node ' + u + ' (dist=' + dist[u] + '), update neighbors';
+      await sleep(750);
+      for (const {to: v, w} of adj[u]) {
+        if (visited[v]) continue;
+        if (dist[u] + w < dist[v]) {
+          dist[v] = dist[u] + w;
+          setNodeClass(svg, v, 'frontier');
+        }
+      }
+      showDist(dist);
+      setNodeClass(svg, u, 'visited');
+      await sleep(500);
+    }
+    statusEl.innerHTML = '<strong>เสร็จ!</strong> ดูค่า dist[] ด้านล่าง — distance สั้นสุดจาก node 0';
+    running = false;
+  }
+  playBtn.onclick = play;
+  resetBtn.onclick = reset;
+})();
+</script>
+</body>
+</html>

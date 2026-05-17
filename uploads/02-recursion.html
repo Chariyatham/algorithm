@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>02 · Recursion</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="site">
+  <div class="container">
+    <h1><a href="index.html" style="color: var(--fg)">← Hub</a> · 02 Recursion</h1>
+    <nav class="top">
+      <a href="01-bigo.html">← Big O</a>
+      <a href="03-sorting.html">Sorting →</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+  <h1>Recursion — ฟังก์ชันที่เรียกตัวเอง</h1>
+  <p class="lead">
+    Recursion = ฟังก์ชันแก้ปัญหาโดย <strong>เรียกตัวเองด้วยปัญหาที่เล็กลง</strong>
+    ถ้าเข้าใจเรื่องนี้ลึก คุณจะเข้าใจ Divide &amp; Conquer, DP, Backtracking, Graph DFS ทั้งหมดในชั่วพริบ
+  </p>
+
+  <h2>หลักคิด: 2 อย่างที่ต้องมีเสมอ</h2>
+  <div class="card">
+    <ol>
+      <li>
+        <strong>Base case</strong> — เคสที่เล็กสุดที่ตอบได้ทันทีไม่ต้องเรียกตัวเอง
+        ถ้าลืม → infinite recursion → stack overflow
+      </li>
+      <li>
+        <strong>Recursive case</strong> — แก้ปัญหาขนาด n โดยเรียกตัวเองด้วย n ที่เล็กลง
+        แล้วเอาผลลัพธ์มาประกอบ
+      </li>
+    </ol>
+  </div>
+
+  <h3>Pattern พื้นฐาน</h3>
+<pre><code class="cpp">type solve(input) {
+    if (base_case)
+        return answer_directly;       // 1. base case
+
+    // 2. recursive case: ลดปัญหาให้เล็กลง
+    type sub_answer = solve(smaller_input);
+
+    // 3. ประกอบคำตอบจาก sub_answer
+    return combine(current_data, sub_answer);
+}</code></pre>
+
+  <h2>ตัวอย่าง 1 — Factorial: n! = n · (n-1)!</h2>
+<pre><code class="cpp">int factorial(int n) {
+    if (n &lt;= 1) return 1;            // base case
+    return n * factorial(n - 1);     // recursive case
+}
+// factorial(4) = 4 * factorial(3)
+//              = 4 * 3 * factorial(2)
+//              = 4 * 3 * 2 * factorial(1)
+//              = 4 * 3 * 2 * 1 = 24</code></pre>
+
+  <h2>เห็นภาพ: Call Stack ทำงานยังไง?</h2>
+  <p>
+    ทุกครั้งที่เรียกฟังก์ชัน คอมจะ <strong>push frame ใหม่</strong> ลง stack
+    เมื่อ return จะ <strong>pop frame</strong> ออก กด Play เพื่อดู
+  </p>
+
+  <div class="viz">
+    <div class="controls">
+      <label class="label">n =</label>
+      <input type="number" id="fact-n" value="4" min="1" max="7" style="width: 70px">
+      <button id="fact-play">▶ Play factorial(n)</button>
+      <button id="fact-reset" class="ghost">Reset</button>
+    </div>
+    <div id="fact-stack" style="min-height: 280px; font-family: monospace; font-size: 14px;"></div>
+    <div class="status" id="fact-status">กด Play เพื่อเริ่ม</div>
+  </div>
+
+  <h2>ตัวอย่าง 2 — Fibonacci: f(n) = f(n-1) + f(n-2)</h2>
+<pre><code class="cpp">int fib(int n) {
+    if (n &lt;= 1) return n;            // base: fib(0)=0, fib(1)=1
+    return fib(n - 1) + fib(n - 2);  // เรียก 2 ครั้ง!
+}</code></pre>
+
+  <p>
+    เพราะเรียกตัวเอง <strong>2 ครั้ง</strong> ต้นไม้ recursion จึงโตเป็น 2ⁿ — ดูได้ชัดในรูปด้านล่าง
+    มี <span style="color: var(--bad)">node สีแดง</span> ที่คำนวณซ้ำ! (เราจะแก้ในหน้า DP)
+  </p>
+
+  <div class="viz">
+    <div class="controls">
+      <label class="label">n =</label>
+      <input type="number" id="fib-n" value="5" min="1" max="6" style="width: 70px">
+      <button id="fib-play">▶ Play fib(n)</button>
+    </div>
+    <svg id="fib-tree" class="tree-svg" width="980" height="380"></svg>
+    <div class="status" id="fib-status">รอเริ่ม...</div>
+    <div class="legend">
+      <span><i style="background: var(--warn)"></i>กำลังคำนวณ</span>
+      <span><i style="background: var(--good)"></i>คำนวณเสร็จ</span>
+      <span><i style="background: var(--bad)"></i>ซ้ำกับที่เคยคำนวณแล้ว</span>
+    </div>
+  </div>
+
+  <h2>ตัวอย่าง 3 — findMax (จาก labWeak2/findMax.cpp)</h2>
+<pre><code class="cpp">int findMax(int arr[], int n) {
+    if (n == 1) return arr[0];                       // base: array 1 ตัว
+    int maxRest = findMax(arr, n - 1);               // หา max ของ n-1 ตัวแรก
+    return (arr[n-1] &gt; maxRest) ? arr[n-1] : maxRest;
+}
+
+// เทียบ "ตัวสุดท้าย" กับ "max ของส่วนที่เหลือ"
+// ลด n ทีละ 1 → T(n) = T(n-1) + O(1) → O(n)</code></pre>
+
+  <div class="note tip">
+    <strong>Trace ตามมือ:</strong> input <code>arr = [3, 7, 2, 9]</code>, n=4
+    <ul>
+      <li>findMax([3,7,2,9], 4) → เทียบ 9 กับ findMax([3,7,2], 3)</li>
+      <li>findMax([3,7,2], 3) → เทียบ 2 กับ findMax([3,7], 2)</li>
+      <li>findMax([3,7], 2) → เทียบ 7 กับ findMax([3], 1)</li>
+      <li>findMax([3], 1) → return 3 (base case)</li>
+      <li>return ขึ้นมา: max(7,3)=7, max(2,7)=7, max(9,7)=9 ✓</li>
+    </ul>
+  </div>
+
+  <h2>กฎเหล็ก 4 ข้อของ Recursion</h2>
+  <ol>
+    <li><strong>มี base case ทุกครั้ง</strong> — เช็คก่อนเรียกตัวเอง ไม่งั้น stack overflow</li>
+    <li><strong>การเรียก recursive ต้อง <em>ลดขนาดปัญหา</em></strong> เข้าใกล้ base case
+      <br>เช่น <code>solve(n-1)</code>, <code>solve(n/2)</code>, <code>solve(left, mid)</code> ✓
+      <br><code>solve(n)</code> หรือ <code>solve(n+1)</code> ✗ — วนไม่จบ</li>
+    <li><strong>เชื่อ recursion</strong> — assume <code>solve(n-1)</code> ทำงานถูก
+      แล้วใช้ผลของมัน อย่าพยายาม trace ทุกชั้นในหัว</li>
+    <li><strong>ระวัง stack memory</strong> — แต่ละ call กิน stack ~MB
+      n &gt; 10,000 ในบาง compiler อาจ overflow</li>
+  </ol>
+
+  <h2>เปรียบเทียบ: Recursion vs Loop</h2>
+  <table>
+    <tr><th>แบบ recursion</th><th>แบบ loop</th></tr>
+    <tr>
+      <td>
+<pre style="margin: 0"><code class="cpp">int sumLoop(int a[], int n) {
+    int s = 0;
+    for (int i = 0; i &lt; n; i++)
+        s += a[i];
+    return s;
+}</code></pre>
+      </td>
+      <td>
+<pre style="margin: 0"><code class="cpp">int sumRec(int a[], int n) {
+    if (n &lt;= 0) return 0;
+    return a[n-1] + sumRec(a, n-1);
+}</code></pre>
+      </td>
+    </tr>
+  </table>
+  <p>ทั้งคู่ <span class="complexity c-n">O(n)</span> เหมือนกัน — ผลลัพธ์เท่ากัน
+  แต่แบบ recursion <em>กิน memory เพิ่ม</em> เพราะใช้ call stack</p>
+
+  <h2>แบบฝึก</h2>
+
+  <div class="exercise">
+    <span class="qnum">Q1</span> <strong>เขียน <code>power(b, e)</code> ที่คำนวณ b<sup>e</sup> แบบ recursive</strong>
+    <details>
+      <summary>เฉลย</summary>
+<pre><code class="cpp">int power(int b, int e) {
+    if (e == 0) return 1;          // base: anything^0 = 1
+    return b * power(b, e - 1);    // b^e = b * b^(e-1)
+}</code></pre>
+      <p>Complexity: <span class="complexity c-n">O(e)</span> — ลด e ทีละ 1</p>
+    </details>
+  </div>
+
+  <div class="exercise">
+    <span class="qnum">Q2</span> <strong>ปรับ <code>power</code> ให้เป็น O(log e)</strong>
+    <details>
+      <summary>เฉลย</summary>
+<pre><code class="cpp">int powerFast(int b, int e) {
+    if (e == 0) return 1;
+    int half = powerFast(b, e / 2);
+    if (e % 2 == 0) return half * half;   // b^e = (b^(e/2))^2
+    else return half * half * b;          // เลขคี่: คูณ b เพิ่มอีก 1 ตัว
+}</code></pre>
+      <p>เพราะแบ่งครึ่งทุกรอบ → <span class="complexity c-log">O(log e)</span> เร็วกว่ามาก!</p>
+      <p><em>เคล็ด:</em> เก็บ <code>half</code> ไว้ตัวแปรเดียว ไม่ใช่เรียก recursive 2 ครั้ง — ไม่งั้นกลับเป็น O(e)</p>
+    </details>
+  </div>
+
+  <div class="exercise">
+    <span class="qnum">Q3</span> <strong>เขียน <code>reverseStr(s)</code> ที่กลับ string แบบ recursive</strong>
+    <details>
+      <summary>เฉลย</summary>
+<pre><code class="cpp">string reverseStr(string s) {
+    if (s.size() &lt;= 1) return s;
+    return reverseStr(s.substr(1)) + s[0];
+    //     ^กลับส่วนที่เหลือ           ^เอาตัวแรกไปท้าย
+}
+// reverseStr("abc") = reverseStr("bc") + 'a'
+//                   = (reverseStr("c") + 'b') + 'a'
+//                   = ("c" + 'b') + 'a' = "cba"</code></pre>
+    </details>
+  </div>
+
+  <div class="exercise">
+    <span class="qnum">Q4</span>
+    <strong>ฟังก์ชันต่อไปนี้ถูกหรือไม่? ถ้าผิด แก้ยังไง?</strong>
+<pre><code class="cpp">int countDigits(int n) {
+    return countDigits(n / 10) + 1;
+}</code></pre>
+    <details>
+      <summary>เฉลย</summary>
+      <p><strong>ผิด</strong> — ขาด base case! เมื่อ <code>n = 0</code> จะเรียก <code>countDigits(0)</code> ตลอดไป → stack overflow</p>
+<pre><code class="cpp">int countDigits(int n) {
+    if (n &lt; 10) return 1;          // เลขหลักเดียว = 1 หลัก
+    return countDigits(n / 10) + 1;
+}</code></pre>
+      <p>(หรือถ้าต้องการให้ <code>countDigits(0) = 0</code> เปลี่ยน base เป็น <code>if (n == 0) return 0;</code>)</p>
+    </details>
+  </div>
+
+  <div class="note tip">
+    <strong>ก้าวต่อไป:</strong> ถัดไป <a href="03-sorting.html">Sorting</a>
+    จะใช้ recursion จริงจัง (Merge Sort, Quick Sort) — ดูอนิเมชัน sort ทำงานทีละ step
+  </div>
+
+</main>
+
+<footer>
+  <div class="container"><a href="index.html">← Hub</a> · <a href="03-sorting.html">ถัดไป: Sorting →</a></div>
+</footer>
+
+<script src="script.js"></script>
+<script>
+// ==== Factorial call stack animation ====
+(function() {
+  const playBtn = document.getElementById('fact-play');
+  const resetBtn = document.getElementById('fact-reset');
+  const nInput = document.getElementById('fact-n');
+  const stackEl = document.getElementById('fact-stack');
+  const statusEl = document.getElementById('fact-status');
+  let running = false;
+
+  function frame(label, color) {
+    return `<div style="background:${color};color:#0d1117;padding:8px 14px;margin:4px 0;border-radius:6px;font-weight:600;font-family:monospace">${label}</div>`;
+  }
+
+  async function animate() {
+    if (running) return;
+    running = true;
+    stackEl.innerHTML = '';
+    const n = Math.max(1, Math.min(7, parseInt(nInput.value) || 4));
+    const frames = [];
+
+    // Push down (calling)
+    for (let i = n; i >= 1; i--) {
+      frames.push({ label: `factorial(${i})`, idx: n - i });
+      stackEl.innerHTML = frames.map(f => frame(f.label + (f.idx === frames.length - 1 ? '  ← active' : ''), '#f0883e')).join('');
+      statusEl.textContent = `เรียก factorial(${i})  →  push frame ลง stack`;
+      await sleep(700);
+    }
+
+    // Pop up (returning), compute result
+    let result = 1;
+    for (let i = 1; i <= n; i++) {
+      result = result * i;
+      frames.pop();
+      stackEl.innerHTML = frames.map((f,idx) => frame(f.label + (idx === frames.length - 1 ? '  ← active' : ''), '#f0883e')).join('');
+      stackEl.innerHTML += frame(`return ${result}  ← จาก factorial(${i})`, '#3fb950');
+      statusEl.textContent = `factorial(${i}) return ${result}  →  pop frame`;
+      await sleep(900);
+    }
+    statusEl.innerHTML = `<strong>เสร็จ!</strong> factorial(${n}) = ${result}`;
+    running = false;
+  }
+
+  playBtn.onclick = animate;
+  resetBtn.onclick = () => { stackEl.innerHTML = ''; statusEl.textContent = 'พร้อม'; };
+})();
+
+// ==== Fibonacci recursion tree ====
+(function() {
+  const svg = document.getElementById('fib-tree');
+  const playBtn = document.getElementById('fib-play');
+  const nInput = document.getElementById('fib-n');
+  const statusEl = document.getElementById('fib-status');
+  const NS = 'http://www.w3.org/2000/svg';
+  let running = false;
+
+  function buildTree(n, depth = 0, x0 = 0, x1 = 1) {
+    const id = (depth + ':' + x0 + ':' + x1);
+    const node = { n, depth, x: (x0 + x1) / 2, id, children: [], status: 'pending' };
+    if (n > 1) {
+      const mid = (x0 + x1) / 2;
+      node.children.push(buildTree(n - 1, depth + 1, x0, mid));
+      node.children.push(buildTree(n - 2, depth + 1, mid, x1));
+    }
+    return node;
+  }
+
+  function flatten(node, list = []) {
+    list.push(node);
+    node.children.forEach(c => flatten(c, list));
+    return list;
+  }
+
+  function render(root, W, H) {
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    const all = flatten(root);
+    const maxDepth = Math.max(...all.map(n => n.depth));
+    // edges
+    all.forEach(node => {
+      node.children.forEach(c => {
+        const e = document.createElementNS(NS, 'line');
+        e.setAttribute('class', 'te');
+        e.setAttribute('x1', node.x * W);
+        e.setAttribute('y1', 30 + node.depth * (H - 60) / Math.max(maxDepth, 1));
+        e.setAttribute('x2', c.x * W);
+        e.setAttribute('y2', 30 + c.depth * (H - 60) / Math.max(maxDepth, 1));
+        svg.appendChild(e);
+      });
+    });
+    // nodes
+    all.forEach(node => {
+      const g = document.createElementNS(NS, 'g');
+      const cx = node.x * W;
+      const cy = 30 + node.depth * (H - 60) / Math.max(maxDepth, 1);
+      const c = document.createElementNS(NS, 'circle');
+      c.setAttribute('class', 'tn');
+      c.setAttribute('cx', cx);
+      c.setAttribute('cy', cy);
+      c.setAttribute('r', 16);
+      c.dataset.id = node.id;
+      g.appendChild(c);
+      const t = document.createElementNS(NS, 'text');
+      t.setAttribute('x', cx);
+      t.setAttribute('y', cy);
+      t.textContent = 'f(' + node.n + ')';
+      g.appendChild(t);
+      svg.appendChild(g);
+      node._circle = c;
+    });
+    return all;
+  }
+
+  async function animate() {
+    if (running) return;
+    running = true;
+    const n = Math.max(1, Math.min(6, parseInt(nInput.value) || 5));
+    const root = buildTree(n);
+    const W = 980, H = 380;
+    const all = render(root, W, H);
+    const seen = new Map();
+
+    async function visit(node) {
+      // mark active
+      node._circle.classList.add('active');
+      statusEl.textContent = `กำลังคำนวณ fib(${node.n})`;
+      await sleep(280);
+      let val;
+      const key = node.n;
+      if (seen.has(key)) {
+        // duplicate - flash red
+        node._circle.classList.remove('active');
+        node._circle.classList.add('pruned');
+        statusEl.textContent = `fib(${node.n}) เคยคำนวณแล้ว = ${seen.get(key)} (คำนวณซ้ำ!)`;
+        await sleep(350);
+        val = seen.get(key);
+      } else if (node.n <= 1) {
+        val = node.n;
+      } else {
+        val = (await visit(node.children[0])) + (await visit(node.children[1]));
+      }
+      seen.set(key, val);
+      node._circle.classList.remove('active');
+      node._circle.classList.remove('pruned');
+      node._circle.classList.add('done');
+      // update label
+      const t = node._circle.parentElement.querySelector('text');
+      t.textContent = val;
+      return val;
+    }
+
+    const ans = await visit(root);
+    statusEl.innerHTML = `<strong>เสร็จ!</strong> fib(${n}) = ${ans}  ·  ดู node สีแดง — คำนวณซ้ำเปลือง! (DP จะแก้)`;
+    running = false;
+  }
+
+  playBtn.onclick = animate;
+  // initial render
+  const root = buildTree(5);
+  render(root, 980, 380);
+})();
+</script>
+</body>
+</html>

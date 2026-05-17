@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>24 · Master Calc + Recurrence Solver</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .calc-card {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px 28px;
+    margin: 20px 0;
+  }
+  .calc-input-row {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin: 14px 0;
+  }
+  .calc-input-row .group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .calc-input-row label {
+    font-size: 12px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .calc-input-row input {
+    width: 80px;
+    font-size: 18px;
+    text-align: center;
+  }
+  .formula-display {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    padding: 16px 22px;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 20px;
+    margin: 14px 0;
+    font-family: 'Cambria Math', serif;
+  }
+  .formula-display .var { color: var(--accent); font-weight: 700; }
+  .case-display {
+    padding: 18px 22px;
+    border-radius: 8px;
+    margin: 12px 0;
+    border-left: 4px solid var(--accent);
+  }
+  .case-display.active {
+    background: rgba(63, 185, 80, 0.1);
+    border-left-color: var(--good);
+  }
+  .case-display.inactive {
+    background: var(--bg-3);
+    opacity: 0.5;
+  }
+  .case-display .case-label {
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+  .case-display.active .case-label { color: var(--good); }
+  .result-big {
+    text-align: center;
+    font-size: 32px;
+    padding: 24px;
+    background: linear-gradient(135deg, rgba(88, 166, 255, 0.1), rgba(126, 231, 135, 0.1));
+    border-radius: 12px;
+    margin: 20px 0;
+    font-family: monospace;
+    color: var(--accent-2);
+    font-weight: 700;
+  }
+  .step-line {
+    background: var(--bg-3);
+    padding: 10px 16px;
+    margin: 6px 0;
+    border-radius: 6px;
+    border-left: 3px solid var(--accent);
+    font-family: monospace;
+  }
+  .substitution-step .num {
+    display: inline-block;
+    background: var(--accent);
+    color: #0d1117;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    margin-right: 8px;
+    font-weight: 700;
+  }
+  .preset-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 10px 0;
+  }
+  .preset-row button {
+    background: var(--bg-3);
+    color: var(--fg);
+    border: 1px solid var(--border);
+    font-size: 12px;
+    padding: 6px 12px;
+  }
+  .preset-row button:hover {
+    border-color: var(--accent);
+    background: var(--bg-3);
+  }
+</style>
+</head>
+<body>
+<header class="site">
+  <div class="container">
+    <h1><a href="index.html" style="color: var(--fg)">← Hub</a> · 24 Master Calc</h1>
+    <nav class="top">
+      <a href="23-pattern-trainer.html">← Pattern Trainer</a>
+      <a href="25-tools.html">Tools →</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+  <h1>Master Theorem Calculator + Recurrence Solver 🧮</h1>
+  <p class="lead">
+    เครื่องมือ 2 ตัว — ใส่ recurrence แล้วดูคำตอบ + วิธีคิด step-by-step
+    ใช้ทบทวนก่อนสอบหรือเช็คคำตอบเองได้
+  </p>
+
+  <!-- ============ MASTER THEOREM ============ -->
+  <div class="calc-card">
+    <h2 style="margin-top: 0">📐 Master Theorem Calculator</h2>
+    <p>สำหรับ recurrence รูปแบบ <code>T(n) = a · T(n/b) + O(n^d)</code></p>
+
+    <div class="formula-display">
+      T(n) = <span class="var" id="show-a">2</span> · T(n / <span class="var" id="show-b">2</span>) + O(n<sup><span class="var" id="show-d">1</span></sup>)
+    </div>
+
+    <div class="calc-input-row">
+      <div class="group">
+        <label>a (sub-problems)</label>
+        <input type="number" id="m-a" value="2" min="1" max="100" step="1">
+      </div>
+      <div class="group">
+        <label>b (divide by)</label>
+        <input type="number" id="m-b" value="2" min="2" max="20" step="1">
+      </div>
+      <div class="group">
+        <label>d (combine work n^d)</label>
+        <input type="number" id="m-d" value="1" min="0" max="5" step="0.5">
+      </div>
+      <button id="m-calc">⚡ Calculate</button>
+    </div>
+
+    <div class="preset-row">
+      <span style="color: var(--muted); font-size: 12px; align-self: center">Preset:</span>
+      <button data-preset="merge">Merge Sort (2,2,1)</button>
+      <button data-preset="binary">Binary Search (1,2,0)</button>
+      <button data-preset="strassen">Strassen (7,2,2)</button>
+      <button data-preset="karatsuba">Karatsuba (3,2,1)</button>
+      <button data-preset="naive-mat">Naive Matrix (8,2,2)</button>
+      <button data-preset="findmax">findMax D&amp;C (2,2,0)</button>
+    </div>
+
+    <div id="m-output"></div>
+  </div>
+
+  <!-- ============ RECURRENCE SOLVER ============ -->
+  <div class="calc-card">
+    <h2 style="margin-top: 0">🔁 Recurrence Solver (Substitution Method)</h2>
+    <p>สำหรับ recurrence ที่ไม่ใช่ Master form — ใช้ <strong>substitution</strong> หรือ <strong>iteration method</strong></p>
+
+    <div class="calc-input-row">
+      <div class="group">
+        <label>เลือก recurrence</label>
+        <select id="r-type" style="font-size: 14px; padding: 8px 12px">
+          <option value="lin-1">T(n) = T(n-1) + c</option>
+          <option value="lin-n">T(n) = T(n-1) + n</option>
+          <option value="lin-2">T(n) = 2T(n-1) + 1</option>
+          <option value="half-1">T(n) = T(n/2) + 1</option>
+          <option value="half-n">T(n) = T(n/2) + n</option>
+          <option value="2half-1">T(n) = 2T(n/2) + 1</option>
+          <option value="2half-n">T(n) = 2T(n/2) + n</option>
+          <option value="2half-n2">T(n) = 2T(n/2) + n²</option>
+          <option value="fib">T(n) = T(n-1) + T(n-2) + 1 (Fibonacci)</option>
+        </select>
+      </div>
+      <button id="r-solve">⚡ Solve step-by-step</button>
+    </div>
+
+    <div id="r-output"></div>
+  </div>
+
+  <!-- ============ COMPARISON TABLE ============ -->
+  <div class="calc-card">
+    <h2 style="margin-top: 0">📊 Quick Reference Table</h2>
+    <table style="width: 100%">
+      <tr><th>Recurrence</th><th>a</th><th>b</th><th>d</th><th>log_b(a)</th><th>Case</th><th>Result</th></tr>
+      <tr><td>2T(n/2) + 1</td><td>2</td><td>2</td><td>0</td><td>1</td><td>1 (d &lt; log_b a)</td><td>O(n)</td></tr>
+      <tr><td>2T(n/2) + n</td><td>2</td><td>2</td><td>1</td><td>1</td><td>2 (d = log_b a)</td><td>O(n log n)</td></tr>
+      <tr><td>2T(n/2) + n²</td><td>2</td><td>2</td><td>2</td><td>1</td><td>3 (d &gt; log_b a)</td><td>O(n²)</td></tr>
+      <tr><td>3T(n/2) + n</td><td>3</td><td>2</td><td>1</td><td>1.585</td><td>1</td><td>O(n^1.585)</td></tr>
+      <tr><td>4T(n/2) + n²</td><td>4</td><td>2</td><td>2</td><td>2</td><td>2</td><td>O(n² log n)</td></tr>
+      <tr><td>7T(n/2) + n²</td><td>7</td><td>2</td><td>2</td><td>2.807</td><td>1</td><td>O(n^2.81)</td></tr>
+      <tr><td>8T(n/2) + n²</td><td>8</td><td>2</td><td>2</td><td>3</td><td>1</td><td>O(n³)</td></tr>
+      <tr><td>T(n/2) + 1</td><td>1</td><td>2</td><td>0</td><td>0</td><td>2</td><td>O(log n)</td></tr>
+      <tr><td>T(n/2) + n</td><td>1</td><td>2</td><td>1</td><td>0</td><td>3</td><td>O(n)</td></tr>
+    </table>
+  </div>
+
+</main>
+
+<footer>
+  <div class="container"><a href="index.html">← Hub</a> · <a href="25-tools.html">ถัดไป: Tools →</a></div>
+</footer>
+
+<script src="script.js"></script>
+<script>
+// ============ Master Theorem ============
+function updFormula() {
+  document.getElementById('show-a').textContent = document.getElementById('m-a').value;
+  document.getElementById('show-b').textContent = document.getElementById('m-b').value;
+  document.getElementById('show-d').textContent = document.getElementById('m-d').value;
+}
+['m-a', 'm-b', 'm-d'].forEach(id => document.getElementById(id).addEventListener('input', updFormula));
+
+function calculateMaster() {
+  const a = parseFloat(document.getElementById('m-a').value);
+  const b = parseFloat(document.getElementById('m-b').value);
+  const d = parseFloat(document.getElementById('m-d').value);
+  if (a < 1 || b <= 1 || d < 0) {
+    document.getElementById('m-output').innerHTML = '<div class="note bad">⚠️ a ≥ 1, b &gt; 1, d ≥ 0 เท่านั้น</div>';
+    return;
+  }
+
+  const logBA = Math.log(a) / Math.log(b);
+  const logBAStr = logBA.toFixed(3);
+
+  let caseNum, result, resultPretty, explanation;
+
+  const epsilon = 0.001;
+  if (d < logBA - epsilon) {
+    caseNum = 1;
+    const exp = logBA;
+    result = `O(n^${exp.toFixed(3)})`;
+    if (Math.abs(exp - Math.round(exp)) < 0.01) {
+      resultPretty = `O(n${exp >= 1 ? '^' + Math.round(exp) : ''})`;
+    } else {
+      resultPretty = `O(n^${exp.toFixed(2)})`;
+    }
+    explanation = `d (${d}) &lt; log_${b}(${a}) = ${logBAStr} → recursion ครอบงำ`;
+  } else if (Math.abs(d - logBA) < epsilon) {
+    caseNum = 2;
+    if (d === 0) resultPretty = 'O(log n)';
+    else if (d === 1) resultPretty = 'O(n log n)';
+    else resultPretty = `O(n^${d} log n)`;
+    explanation = `d (${d}) = log_${b}(${a}) = ${logBAStr} → balanced — เพิ่ม log n factor`;
+  } else {
+    caseNum = 3;
+    if (d === 0) resultPretty = 'O(1)';
+    else if (d === 1) resultPretty = 'O(n)';
+    else if (d === 2) resultPretty = 'O(n²)';
+    else if (d === 3) resultPretty = 'O(n³)';
+    else resultPretty = `O(n^${d})`;
+    explanation = `d (${d}) &gt; log_${b}(${a}) = ${logBAStr} → combine work ครอบงำ`;
+  }
+
+  let html = '';
+  html += `<div class="step-line"><strong>Step 1:</strong> a = ${a}, b = ${b}, d = ${d}</div>`;
+  html += `<div class="step-line"><strong>Step 2:</strong> log_${b}(${a}) = log(${a})/log(${b}) = ${logBAStr}</div>`;
+  html += `<div class="step-line"><strong>Step 3:</strong> เปรียบเทียบ d vs log_b(a)</div>`;
+
+  // Cases display
+  html += '<div style="margin-top: 16px"><strong>3 cases ของ Master Theorem:</strong></div>';
+  html += `<div class="case-display ${caseNum === 1 ? 'active' : 'inactive'}">
+    <div class="case-label">Case 1: d &lt; log_b(a)</div>
+    <div>T(n) = O(n^log_b(a))</div>
+    ${caseNum === 1 ? '<div style="margin-top: 6px">→ ' + d + ' &lt; ' + logBAStr + ' ✓</div>' : ''}
+  </div>`;
+  html += `<div class="case-display ${caseNum === 2 ? 'active' : 'inactive'}">
+    <div class="case-label">Case 2: d = log_b(a)</div>
+    <div>T(n) = O(n^d · log n)</div>
+    ${caseNum === 2 ? '<div style="margin-top: 6px">→ ' + d + ' = ' + logBAStr + ' ✓</div>' : ''}
+  </div>`;
+  html += `<div class="case-display ${caseNum === 3 ? 'active' : 'inactive'}">
+    <div class="case-label">Case 3: d &gt; log_b(a)</div>
+    <div>T(n) = O(n^d)</div>
+    ${caseNum === 3 ? '<div style="margin-top: 6px">→ ' + d + ' &gt; ' + logBAStr + ' ✓</div>' : ''}
+  </div>`;
+
+  html += '<div style="margin-top: 14px; color: var(--accent-2)"><strong>Explanation:</strong> ' + explanation + '</div>';
+
+  html += '<div class="result-big">T(n) = ' + resultPretty + '</div>';
+
+  document.getElementById('m-output').innerHTML = html;
+}
+
+document.getElementById('m-calc').onclick = calculateMaster;
+
+const presets = {
+  merge: { a: 2, b: 2, d: 1 },
+  binary: { a: 1, b: 2, d: 0 },
+  strassen: { a: 7, b: 2, d: 2 },
+  karatsuba: { a: 3, b: 2, d: 1 },
+  'naive-mat': { a: 8, b: 2, d: 2 },
+  findmax: { a: 2, b: 2, d: 0 }
+};
+document.querySelectorAll('[data-preset]').forEach(btn => {
+  btn.onclick = () => {
+    const p = presets[btn.dataset.preset];
+    document.getElementById('m-a').value = p.a;
+    document.getElementById('m-b').value = p.b;
+    document.getElementById('m-d').value = p.d;
+    updFormula();
+    calculateMaster();
+  };
+});
+
+// ============ Recurrence Solver ============
+const recurrences = {
+  'lin-1': {
+    name: 'T(n) = T(n-1) + c',
+    base: 'T(0) = 0',
+    steps: [
+      'T(n) = T(n-1) + c',
+      'แทน T(n-1): T(n) = [T(n-2) + c] + c = T(n-2) + 2c',
+      'แทน T(n-2): T(n) = [T(n-3) + c] + 2c = T(n-3) + 3c',
+      'ทั่วไป: T(n) = T(n-k) + k·c',
+      'หา k ที่ T เข้า base: n - k = 0 → k = n',
+      'แทน k=n: T(n) = T(0) + n·c = 0 + n·c = n·c'
+    ],
+    result: 'O(n)'
+  },
+  'lin-n': {
+    name: 'T(n) = T(n-1) + n',
+    base: 'T(0) = 0',
+    steps: [
+      'T(n) = T(n-1) + n',
+      'แทน T(n-1): T(n) = T(n-2) + (n-1) + n',
+      'แทน T(n-2): T(n) = T(n-3) + (n-2) + (n-1) + n',
+      'ทั่วไป: T(n) = T(0) + 1 + 2 + ... + n',
+      'ใช้สูตร arithmetic series: 1+2+...+n = n(n+1)/2',
+      'T(n) = n(n+1)/2'
+    ],
+    result: 'O(n²)'
+  },
+  'lin-2': {
+    name: 'T(n) = 2T(n-1) + 1',
+    base: 'T(0) = 1',
+    steps: [
+      'T(n) = 2·T(n-1) + 1',
+      'แทน T(n-1): T(n) = 2·[2·T(n-2) + 1] + 1 = 4·T(n-2) + 2 + 1',
+      'แทน T(n-2): T(n) = 8·T(n-3) + 4 + 2 + 1',
+      'ทั่วไป: T(n) = 2^k · T(n-k) + (2^(k-1) + ... + 1)',
+      'ผลรวม geometric: 2^(k-1) + ... + 1 = 2^k - 1',
+      'ที่ k=n: T(n) = 2^n · T(0) + 2^n - 1 = 2^(n+1) - 1'
+    ],
+    result: 'O(2ⁿ)'
+  },
+  'half-1': {
+    name: 'T(n) = T(n/2) + 1',
+    base: 'T(1) = 1',
+    steps: [
+      'T(n) = T(n/2) + 1',
+      'แทน T(n/2): T(n) = T(n/4) + 1 + 1 = T(n/4) + 2',
+      'แทน T(n/4): T(n) = T(n/8) + 3',
+      'ทั่วไป: T(n) = T(n/2^k) + k',
+      'หา k ที่ n/2^k = 1 → 2^k = n → k = log₂(n)',
+      'T(n) = T(1) + log₂(n) = 1 + log₂(n)'
+    ],
+    result: 'O(log n)'
+  },
+  'half-n': {
+    name: 'T(n) = T(n/2) + n',
+    base: 'T(1) = 1',
+    steps: [
+      'T(n) = T(n/2) + n',
+      'แทน T(n/2): T(n) = T(n/4) + n/2 + n',
+      'แทน T(n/4): T(n) = T(n/8) + n/4 + n/2 + n',
+      'ทั่วไป: T(n) = T(n/2^k) + n + n/2 + n/4 + ... + n/2^(k-1)',
+      'ผลรวม: n(1 + 1/2 + 1/4 + ...) ≤ 2n (geometric series)',
+      'T(n) = T(1) + 2n = 1 + 2n'
+    ],
+    result: 'O(n)'
+  },
+  '2half-1': {
+    name: 'T(n) = 2T(n/2) + 1',
+    base: 'T(1) = 1',
+    steps: [
+      'T(n) = 2·T(n/2) + 1',
+      'แทน T(n/2): T(n) = 2·[2·T(n/4) + 1] + 1 = 4·T(n/4) + 2 + 1',
+      'แทน T(n/4): T(n) = 8·T(n/8) + 4 + 2 + 1',
+      'ทั่วไป: T(n) = 2^k · T(n/2^k) + (2^(k-1) + ... + 1)',
+      'ที่ k=log₂(n): 2^k = n',
+      'T(n) = n · T(1) + (n - 1) = 2n - 1'
+    ],
+    result: 'O(n)'
+  },
+  '2half-n': {
+    name: 'T(n) = 2T(n/2) + n',
+    base: 'T(1) = 1',
+    steps: [
+      'T(n) = 2·T(n/2) + n',
+      'แทน T(n/2): T(n) = 2·[2·T(n/4) + n/2] + n = 4·T(n/4) + n + n = 4·T(n/4) + 2n',
+      'แทน T(n/4): T(n) = 8·T(n/8) + 3n',
+      'ทั่วไป: T(n) = 2^k · T(n/2^k) + k·n',
+      'ที่ k=log₂(n): T(n) = n·T(1) + n·log₂(n)',
+      'T(n) = n + n·log₂(n)'
+    ],
+    result: 'O(n log n)'
+  },
+  '2half-n2': {
+    name: 'T(n) = 2T(n/2) + n²',
+    base: 'T(1) = 1',
+    steps: [
+      'T(n) = 2·T(n/2) + n²',
+      'แทน T(n/2): T(n) = 2·[2·T(n/4) + (n/2)²] + n² = 4·T(n/4) + n²/2 + n²',
+      'แทน T(n/4): T(n) = 8·T(n/8) + n²/4 + n²/2 + n²',
+      'ทั่วไป: T(n) = 2^k · T(n/2^k) + n² · (1 + 1/2 + 1/4 + ...)',
+      'ผลรวม geometric (decreasing): ≤ 2',
+      'T(n) ≤ 2n²'
+    ],
+    result: 'O(n²)'
+  },
+  'fib': {
+    name: 'T(n) = T(n-1) + T(n-2) + 1',
+    base: 'T(0) = T(1) = 1',
+    steps: [
+      'T(n) = T(n-1) + T(n-2) + 1',
+      'นี่เป็น Fibonacci-like — Master ใช้ไม่ได้!',
+      'ใช้ characteristic equation: x² = x + 1',
+      'รากคือ φ = (1+√5)/2 ≈ 1.618 (golden ratio)',
+      'T(n) ≈ φⁿ',
+      'T(n) ∈ O(φⁿ) ⊂ O(2ⁿ)'
+    ],
+    result: 'O(2ⁿ) (tighter: O(φⁿ))'
+  }
+};
+
+document.getElementById('r-solve').onclick = () => {
+  const type = document.getElementById('r-type').value;
+  const r = recurrences[type];
+  let html = '<div class="formula-display">' + r.name + '</div>';
+  html += '<div style="color: var(--muted); margin: 8px 0">Base case: ' + r.base + '</div>';
+  html += '<div style="margin: 14px 0"><strong>Substitution method:</strong></div>';
+  r.steps.forEach((s, i) => {
+    html += '<div class="step-line substitution-step"><span class="num">' + (i + 1) + '</span>' + s + '</div>';
+  });
+  html += '<div class="result-big">T(n) = ' + r.result + '</div>';
+  document.getElementById('r-output').innerHTML = html;
+};
+
+// Auto-calc on load
+calculateMaster();
+</script>
+</body>
+</html>

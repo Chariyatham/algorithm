@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>25 · Tools (Concept Map + Progress + Glossary)</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .tab-bar {
+    display: flex;
+    gap: 4px;
+    border-bottom: 2px solid var(--border);
+    margin-bottom: 24px;
+  }
+  .tab-bar button {
+    background: transparent;
+    color: var(--muted);
+    border: none;
+    border-bottom: 3px solid transparent;
+    border-radius: 0;
+    padding: 14px 24px;
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: -2px;
+  }
+  .tab-bar button.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* Concept Map */
+  .concept-svg {
+    width: 100%;
+    background: #0a0e14;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+  }
+  .concept-svg .node {
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+  .concept-svg .node:hover circle {
+    stroke: var(--warn);
+    stroke-width: 3;
+  }
+  .concept-svg .node circle {
+    transition: stroke 0.2s;
+  }
+
+  /* Progress */
+  .progress-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+  }
+  .progress-card {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .progress-card:hover { border-color: var(--accent); }
+  .progress-card.done {
+    background: rgba(63, 185, 80, 0.1);
+    border-color: var(--good);
+  }
+  .progress-card .check {
+    float: right;
+    color: var(--good);
+    font-size: 22px;
+  }
+  .progress-card.done .check::after { content: '✓'; }
+  .progress-card .title {
+    font-weight: 700;
+    font-size: 14px;
+    margin-bottom: 4px;
+  }
+  .progress-card .desc {
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .progress-summary {
+    background: var(--bg-2);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  .progress-summary .big {
+    font-size: 48px;
+    color: var(--accent-2);
+    font-family: monospace;
+    font-weight: 700;
+  }
+  .progress-summary .progressbar {
+    height: 12px;
+    background: var(--bg-3);
+    border-radius: 6px;
+    overflow: hidden;
+    margin: 12px 0;
+  }
+  .progress-summary .fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    transition: width 0.6s;
+  }
+
+  /* Glossary */
+  .gloss-search {
+    width: 100%;
+    padding: 12px 18px;
+    font-size: 16px;
+    background: var(--bg-3);
+    border: 2px solid var(--border);
+    color: var(--fg);
+    border-radius: 8px;
+    margin-bottom: 16px;
+  }
+  .gloss-search:focus {
+    border-color: var(--accent);
+    outline: none;
+  }
+  .gloss-letter {
+    margin: 24px 0 12px;
+    padding-bottom: 4px;
+    border-bottom: 2px solid var(--border);
+    font-size: 22px;
+    color: var(--accent);
+  }
+  .gloss-item {
+    background: var(--bg-2);
+    border-left: 3px solid var(--accent);
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin: 8px 0;
+  }
+  .gloss-item .term {
+    font-weight: 700;
+    color: var(--accent-2);
+    margin-bottom: 4px;
+  }
+  .gloss-item .def {
+    font-size: 14px;
+    color: var(--fg);
+  }
+  .gloss-item .related {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+</style>
+</head>
+<body>
+<header class="site">
+  <div class="container">
+    <h1><a href="index.html" style="color: var(--fg)">← Hub</a> · 25 Tools</h1>
+    <nav class="top">
+      <a href="24-master-calc.html">← Master Calc</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+  <h1>Study Tools 🛠️</h1>
+  <p class="lead">
+    เครื่องมือเสริมการเรียน — Concept Map, Progress Tracker, Glossary รวมในหน้าเดียว
+  </p>
+
+  <div class="tab-bar">
+    <button class="tab-btn active" data-tab="map">🗺️ Concept Map</button>
+    <button class="tab-btn" data-tab="progress">📊 Progress Tracker</button>
+    <button class="tab-btn" data-tab="glossary">📖 Glossary</button>
+  </div>
+
+  <!-- ============ CONCEPT MAP ============ -->
+  <div class="tab-content active" id="tab-map">
+    <p>คลิกที่ node เพื่อไปหน้านั้น — เส้นเชื่อมแสดงความสัมพันธ์ระหว่างหัวข้อ</p>
+    <svg class="concept-svg" id="concept-svg" viewBox="0 0 1000 700"></svg>
+    <div class="card" style="margin-top: 14px">
+      <strong>📚 Reading Order ที่แนะนำ:</strong>
+      <ol style="margin: 8px 0 0">
+        <li><strong>รากฐาน:</strong> Foundations → Big O → Recursion</li>
+        <li><strong>Algorithm Design:</strong> Sort/Search → D&amp;C → DP → Greedy</li>
+        <li><strong>Search Strategy:</strong> Backtracking → Graph → Exhaustive</li>
+        <li><strong>ลึก:</strong> Data Structures → Advanced Techniques</li>
+        <li><strong>ปฏิบัติ:</strong> Practice Bank → Walkthroughs → Mock Exam</li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- ============ PROGRESS ============ -->
+  <div class="tab-content" id="tab-progress">
+    <div class="progress-summary">
+      <div class="big"><span id="prog-pct">0</span>%</div>
+      <div style="color: var(--muted); margin-bottom: 6px">
+        <span id="prog-done">0</span> / <span id="prog-total">0</span> หน้าอ่านแล้ว
+      </div>
+      <div class="progressbar">
+        <div class="fill" id="prog-fill" style="width: 0%"></div>
+      </div>
+      <button id="prog-reset" class="ghost" style="margin-top: 8px">🔄 Reset progress</button>
+    </div>
+
+    <h3>คลิกการ์ดเพื่อเช็คว่าอ่านแล้ว — ข้อมูลเก็บใน localStorage</h3>
+    <div class="progress-grid" id="prog-grid"></div>
+  </div>
+
+  <!-- ============ GLOSSARY ============ -->
+  <div class="tab-content" id="tab-glossary">
+    <input type="text" class="gloss-search" id="gloss-search" placeholder="🔍 ค้นหาศัพท์ (ไทย หรือ English)..." />
+    <div id="gloss-content"></div>
+  </div>
+
+</main>
+
+<footer>
+  <div class="container"><a href="index.html">← กลับ Hub</a></div>
+</footer>
+
+<script src="script.js"></script>
+<script>
+// ========== TABS ==========
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+  };
+});
+
+// ========== CONCEPT MAP ==========
+(function() {
+  const svg = document.getElementById('concept-svg');
+  const NS = 'http://www.w3.org/2000/svg';
+
+  const nodes = [
+    {id: '00', x: 500, y: 50, r: 35, label: 'Foundations', file: '00-foundations.html', cat: 'base'},
+    {id: '01', x: 300, y: 130, r: 32, label: 'Big O', file: '01-bigo.html', cat: 'base'},
+    {id: '02', x: 700, y: 130, r: 32, label: 'Recursion', file: '02-recursion.html', cat: 'base'},
+    {id: '03', x: 200, y: 250, r: 30, label: 'Sorting', file: '03-sorting.html', cat: 'main'},
+    {id: '04', x: 500, y: 220, r: 32, label: 'D&C', file: '04-divide-conquer.html', cat: 'main'},
+    {id: '05', x: 800, y: 230, r: 32, label: 'DP', file: '05-dp.html', cat: 'main'},
+    {id: '06', x: 850, y: 350, r: 30, label: 'Greedy', file: '06-greedy.html', cat: 'main'},
+    {id: '07', x: 700, y: 420, r: 32, label: 'Backtracking', file: '07-backtracking.html', cat: 'adv'},
+    {id: '08', x: 500, y: 430, r: 32, label: 'Graph', file: '08-graph.html', cat: 'adv'},
+    {id: '09', x: 300, y: 420, r: 30, label: 'Exhaustive', file: '09-exhaustive.html', cat: 'adv'},
+    {id: '12', x: 100, y: 350, r: 28, label: 'Search', file: '12-search.html', cat: 'deep'},
+    {id: '13', x: 100, y: 200, r: 30, label: 'Data Struct', file: '13-datastructures.html', cat: 'deep'},
+    {id: '14', x: 100, y: 500, r: 32, label: 'Advanced', file: '14-advanced.html', cat: 'deep'},
+    {id: '15', x: 300, y: 540, r: 28, label: 'Extras', file: '15-extras.html', cat: 'extra'},
+    {id: '16', x: 500, y: 560, r: 30, label: 'Practice', file: '16-practice.html', cat: 'extra'},
+    {id: '17', x: 700, y: 560, r: 28, label: 'Final Extras', file: '17-final-extras.html', cat: 'extra'},
+    {id: '18', x: 880, y: 480, r: 32, label: 'Walkthroughs', file: '18-walkthroughs.html', cat: 'exam'},
+    {id: '19', x: 880, y: 600, r: 28, label: 'Mistakes', file: '19-mistakes.html', cat: 'exam'},
+    {id: '20', x: 500, y: 640, r: 32, label: 'Mock Exam', file: '20-mock-exam.html', cat: 'exam'},
+    {id: '21', x: 300, y: 640, r: 28, label: 'Visualizers', file: '21-visualizers.html', cat: 'tool'},
+    {id: '22', x: 100, y: 640, r: 28, label: 'Race', file: '22-race.html', cat: 'tool'},
+    {id: '23', x: 700, y: 660, r: 28, label: 'Pattern', file: '23-pattern-trainer.html', cat: 'tool'},
+    {id: '24', x: 880, y: 240, r: 28, label: 'Master Calc', file: '24-master-calc.html', cat: 'tool'},
+  ];
+
+  const edges = [
+    ['00', '01'], ['00', '02'],
+    ['01', '03'], ['01', '04'], ['02', '04'], ['02', '05'],
+    ['04', '03'], ['05', '06'], ['04', '05'],
+    ['07', '09'], ['08', '07'], ['07', '04'], ['08', '06'],
+    ['13', '03'], ['13', '08'], ['12', '04'],
+    ['14', '12'], ['14', '13'],
+    ['15', '04'], ['15', '05'], ['15', '07'], ['15', '08'],
+    ['16', '15'], ['17', '16'],
+    ['18', '16'], ['19', '18'], ['20', '19'],
+    ['21', '15'], ['22', '03'], ['23', '04'], ['23', '05'], ['23', '06'],
+    ['24', '04'], ['24', '01'],
+  ];
+
+  const colors = {
+    base: '#79c0ff',
+    main: '#7ee787',
+    adv: '#f0883e',
+    deep: '#d2a8ff',
+    extra: '#58a6ff',
+    exam: '#f85149',
+    tool: '#79c0ff'
+  };
+
+  // Draw edges
+  const nodeMap = {};
+  nodes.forEach(n => nodeMap[n.id] = n);
+  edges.forEach(([a, b]) => {
+    const n1 = nodeMap[a], n2 = nodeMap[b];
+    const line = document.createElementNS(NS, 'line');
+    line.setAttribute('x1', n1.x); line.setAttribute('y1', n1.y);
+    line.setAttribute('x2', n2.x); line.setAttribute('y2', n2.y);
+    line.setAttribute('stroke', '#30363d'); line.setAttribute('stroke-width', '1.5');
+    line.setAttribute('stroke-dasharray', '4,4');
+    svg.appendChild(line);
+  });
+  // Draw nodes
+  nodes.forEach(n => {
+    const g = document.createElementNS(NS, 'g');
+    g.setAttribute('class', 'node');
+    g.onclick = () => location.href = n.file;
+    const c = document.createElementNS(NS, 'circle');
+    c.setAttribute('cx', n.x); c.setAttribute('cy', n.y);
+    c.setAttribute('r', n.r);
+    c.setAttribute('fill', '#161b22');
+    c.setAttribute('stroke', colors[n.cat]);
+    c.setAttribute('stroke-width', '2');
+    g.appendChild(c);
+    const idText = document.createElementNS(NS, 'text');
+    idText.setAttribute('x', n.x); idText.setAttribute('y', n.y - 4);
+    idText.setAttribute('text-anchor', 'middle');
+    idText.setAttribute('fill', colors[n.cat]);
+    idText.setAttribute('font-family', 'monospace');
+    idText.setAttribute('font-size', '14');
+    idText.setAttribute('font-weight', '700');
+    idText.textContent = n.id;
+    g.appendChild(idText);
+    const labelText = document.createElementNS(NS, 'text');
+    labelText.setAttribute('x', n.x); labelText.setAttribute('y', n.y + 12);
+    labelText.setAttribute('text-anchor', 'middle');
+    labelText.setAttribute('fill', '#e6edf3');
+    labelText.setAttribute('font-size', '11');
+    labelText.textContent = n.label;
+    g.appendChild(labelText);
+    svg.appendChild(g);
+  });
+
+  // Legend
+  const legend = [
+    {cat: 'base', label: 'รากฐาน'},
+    {cat: 'main', label: 'หลัก'},
+    {cat: 'adv', label: 'ขั้นสูง'},
+    {cat: 'deep', label: 'ลึก'},
+    {cat: 'extra', label: 'เสริม'},
+    {cat: 'exam', label: 'เน้นสอบ'},
+    {cat: 'tool', label: 'เครื่องมือ'},
+  ];
+  legend.forEach((l, i) => {
+    const x = 30 + i * 130, y = 680;
+    const c = document.createElementNS(NS, 'circle');
+    c.setAttribute('cx', x); c.setAttribute('cy', y);
+    c.setAttribute('r', 6); c.setAttribute('fill', colors[l.cat]);
+    svg.appendChild(c);
+    const t = document.createElementNS(NS, 'text');
+    t.setAttribute('x', x + 12); t.setAttribute('y', y + 4);
+    t.setAttribute('fill', '#8b949e');
+    t.setAttribute('font-size', '12');
+    t.textContent = l.label;
+    svg.appendChild(t);
+  });
+})();
+
+// ========== PROGRESS TRACKER ==========
+(function() {
+  const PAGES = [
+    {id: '00', file: '00-foundations.html', title: '00 Foundations', desc: 'C++ พื้นฐาน + วิธีคิด algorithm'},
+    {id: '01', file: '01-bigo.html', title: '01 Big O', desc: 'Time complexity analysis'},
+    {id: '02', file: '02-recursion.html', title: '02 Recursion', desc: 'Call stack, fibonacci, factorial'},
+    {id: '03', file: '03-sorting.html', title: '03 Sorting', desc: '5 sort algorithms'},
+    {id: '04', file: '04-divide-conquer.html', title: '04 D&C', desc: 'Master Theorem, binary search'},
+    {id: '05', file: '05-dp.html', title: '05 DP', desc: 'Memo, tabulation, knapsack'},
+    {id: '06', file: '06-greedy.html', title: '06 Greedy', desc: 'Activity, knapsack, Huffman'},
+    {id: '07', file: '07-backtracking.html', title: '07 Backtracking', desc: 'N-Queens, subset sum'},
+    {id: '08', file: '08-graph.html', title: '08 Graph', desc: 'BFS, DFS, Dijkstra'},
+    {id: '09', file: '09-exhaustive.html', title: '09 Exhaustive', desc: 'Brute force patterns'},
+    {id: '12', file: '12-search.html', title: '12 Search', desc: 'Binary search variants'},
+    {id: '13', file: '13-datastructures.html', title: '13 Data Structures', desc: 'STL containers'},
+    {id: '14', file: '14-advanced.html', title: '14 Advanced', desc: 'Two pointers, sliding window'},
+    {id: '15', file: '15-extras.html', title: '15 Extras', desc: 'Quick Select, Karatsuba'},
+    {id: '16', file: '16-practice.html', title: '16 Practice Bank', desc: '60+ exercises'},
+    {id: '17', file: '17-final-extras.html', title: '17 Final Extras', desc: 'Series, recurrence patterns'},
+    {id: '18', file: '18-walkthroughs.html', title: '18 Walkthroughs', desc: '10 detailed solutions'},
+    {id: '19', file: '19-mistakes.html', title: '19 Mistakes', desc: '25 traps to avoid'},
+    {id: '20', file: '20-mock-exam.html', title: '20 Mock Exam', desc: 'Midterm + Final timed'},
+    {id: '21', file: '21-visualizers.html', title: '21 Visualizers', desc: 'Karatsuba, Strassen, FW'},
+    {id: '22', file: '22-race.html', title: '22 Algorithm Race', desc: '5 sorts racing'},
+    {id: '23', file: '23-pattern-trainer.html', title: '23 Pattern Trainer', desc: 'Identify pattern'},
+    {id: '24', file: '24-master-calc.html', title: '24 Master Calc', desc: 'Recurrence solver'},
+    {id: '10', file: '10-cheatsheet.html', title: '10 Cheat Sheet', desc: 'Print-friendly summary'},
+    {id: '11', file: '11-quiz.html', title: '11 Quiz', desc: '20 multiple choice'},
+  ];
+
+  function getProgress() {
+    try { return JSON.parse(localStorage.getItem('algo-progress') || '{}'); } catch (e) { return {}; }
+  }
+  function setProgress(p) {
+    localStorage.setItem('algo-progress', JSON.stringify(p));
+  }
+
+  function render() {
+    const grid = document.getElementById('prog-grid');
+    grid.innerHTML = '';
+    const prog = getProgress();
+    let done = 0;
+    PAGES.forEach(p => {
+      const isDone = !!prog[p.id];
+      if (isDone) done++;
+      const card = document.createElement('div');
+      card.className = 'progress-card' + (isDone ? ' done' : '');
+      card.innerHTML = `<div class="check"></div>
+        <div class="title">${p.title}</div>
+        <div class="desc">${p.desc}</div>`;
+      card.onclick = () => {
+        prog[p.id] = !prog[p.id];
+        setProgress(prog);
+        render();
+      };
+      grid.appendChild(card);
+    });
+    document.getElementById('prog-done').textContent = done;
+    document.getElementById('prog-total').textContent = PAGES.length;
+    const pct = PAGES.length === 0 ? 0 : Math.round(done * 100 / PAGES.length);
+    document.getElementById('prog-pct').textContent = pct;
+    document.getElementById('prog-fill').style.width = pct + '%';
+  }
+
+  document.getElementById('prog-reset').onclick = () => {
+    if (confirm('ลบ progress ทั้งหมด?')) {
+      localStorage.removeItem('algo-progress');
+      render();
+    }
+  };
+  render();
+})();
+
+// ========== GLOSSARY ==========
+(function() {
+  const TERMS = [
+    {term: 'Adjacency List', th: 'ลิสต์ประชิด', def: 'การเก็บ graph ด้วย vector ของ list ของ neighbor — ประหยัด memory O(V+E) เหมาะกับ sparse graph', see: 'graph_representation'},
+    {term: 'Adjacency Matrix', th: 'เมตริกซ์ประชิด', def: 'การเก็บ graph ด้วย 2D array — เช็ค edge O(1) แต่ memory O(V²) เหมาะกับ dense graph', see: 'graph_representation'},
+    {term: 'Amortized Complexity', th: 'เฉลี่ยตามเวลา', def: 'ค่าเฉลี่ยของ operation หลายครั้ง — เช่น vector::push_back ใช้ O(1) amortized แม้บาง resize ใช้ O(n)', see: 'data structures'},
+    {term: 'Backtracking', th: 'ย้อนรอย', def: 'เทคนิคแก้ปัญหาด้วย DFS + undo เมื่อตัน — เช่น N-Queens, Sudoku', see: 'page 07'},
+    {term: 'Base Case', th: 'กรณีฐาน', def: 'เคสที่เล็กสุดในฟังก์ชัน recursive ที่หยุดการเรียกตัวเอง — ขาดไม่ได้!', see: 'page 02'},
+    {term: 'BFS', th: 'ค้นกว้างก่อน', def: 'Breadth-First Search — ใช้ queue เยี่ยม node แบบกว้าง (level by level) เหมาะกับ shortest path unweighted', see: 'page 08'},
+    {term: 'Big O', th: 'ขอบบน', def: 'Upper bound ของ running time — เช่น O(n²) แปลว่า "ไม่เกิน n²" สำหรับ n ใหญ่', see: 'page 01'},
+    {term: 'Binary Search', th: 'ค้นหาทวิภาค', def: 'แบ่งช่วงครึ่งเพื่อค้นหาบน sorted array — O(log n)', see: 'page 04, 12'},
+    {term: 'Binary Tree', th: 'ต้นไม้ทวิภาค', def: 'tree ที่ทุก node มี ≤ 2 children', see: 'data structures'},
+    {term: 'Bottom-up DP', th: 'DP จากล่างขึ้นบน', def: 'เริ่มจาก subproblem เล็กสุด สร้างขึ้นเรื่อย ๆ จนถึงปัญหาเดิม — iterative', see: 'page 05'},
+    {term: 'BFS / DFS', th: 'BFS/DFS', def: 'อัลกอริทึมท่อง graph — BFS = queue, DFS = stack/recursion', see: 'page 08'},
+    {term: 'Combination', th: 'การจัด', def: 'เลือก k จาก n โดยไม่นับลำดับ — C(n,k) = n!/(k!(n-k)!)', see: 'page 07, 15'},
+    {term: 'Connected Component', th: 'ส่วนเชื่อม', def: 'subgraph ของ graph ที่ทุก node มี path ถึงกัน', see: 'page 08'},
+    {term: 'Cycle', th: 'วงวน', def: 'path ใน graph ที่กลับมาที่ node เดิม — directed graph มี cycle ตรวจด้วย DFS color', see: 'page 08'},
+    {term: 'D&C (Divide & Conquer)', th: 'แบ่งและเอาชนะ', def: 'แบ่งปัญหาใหญ่เป็นเล็ก → แก้ → รวม — เช่น merge sort', see: 'page 04'},
+    {term: 'DAG', th: 'กราฟทิศทางไร้วงวน', def: 'Directed Acyclic Graph — ทำ topological sort ได้', see: 'page 08'},
+    {term: 'DFS', th: 'ค้นลึกก่อน', def: 'Depth-First Search — เดินลึกสุดก่อนถอย ใช้ recursion หรือ stack', see: 'page 08'},
+    {term: 'Dijkstra', th: 'ไดจ์สตรา', def: 'หา shortest path single-source บน graph ที่มี positive weight — O((V+E) log V)', see: 'page 08'},
+    {term: 'DP (Dynamic Programming)', th: 'การโปรแกรมเชิงพลวัต', def: 'recursion + memoization เพื่อไม่คำนวณซ้ำ — ใช้กับปัญหาที่มี optimal substructure + overlapping subproblems', see: 'page 05'},
+    {term: 'Edge', th: 'เอจด์', def: 'เส้นเชื่อมระหว่าง 2 vertex ใน graph — มีทิศทาง (directed) หรือไม่มี (undirected)', see: 'page 08'},
+    {term: 'Exhaustive Search', th: 'ค้นแบบครอบจักรวาล', def: 'ลองทุก case ที่เป็นไปได้ — ใช้ได้กับ n เล็ก', see: 'page 09'},
+    {term: 'Floyd-Warshall', th: 'ฟลอยด์-วาร์แชล', def: 'หา shortest path ทุกคู่ใน graph — O(V³) จัดการ negative edge ได้', see: 'page 15'},
+    {term: 'Greedy', th: 'ละโมบ', def: 'เลือก local optimum ในแต่ละ step โดยไม่ย้อนแก้ — ใช้ได้เมื่อมี greedy choice property', see: 'page 06'},
+    {term: 'Hash Table', th: 'ตารางแฮช', def: 'data structure ที่ map key→value ในเวลา O(1) average — ใช้ hash function แปลง key เป็น index', see: 'page 13'},
+    {term: 'Heap', th: 'ฮีป', def: 'binary tree ที่ parent ≤ children (min-heap) — ใช้ใน priority queue', see: 'page 13'},
+    {term: 'Huffman Coding', th: 'การเข้ารหัสฮัฟแมน', def: 'อัลกอริทึม greedy สร้าง prefix code ที่ optimal — ตัวอักษรบ่อยใช้ bit น้อย', see: 'page 06, 17'},
+    {term: 'Karatsuba', th: 'การัตซูบา', def: 'อัลกอริทึม D&C คูณเลขใหญ่ใน O(n^1.585) — ใช้ 3 multiply แทน 4', see: 'page 15, 21'},
+    {term: 'Knapsack', th: 'ปัญหาถุงเป้', def: '0/1 = ใช้ DP O(nW); Fractional = ใช้ Greedy O(n log n)', see: 'page 05, 06'},
+    {term: 'LCS (Longest Common Subsequence)', th: 'ลำดับร่วมยาวสุด', def: 'หา subsequence ยาวสุดที่อยู่ใน 2 strings — DP O(m·n)', see: 'page 05'},
+    {term: 'Master Theorem', th: 'ทฤษฎีบทแม่บท', def: 'สูตรแก้ recurrence T(n) = aT(n/b) + O(n^d) — แบ่ง 3 cases', see: 'page 04, 24'},
+    {term: 'Memoization', th: 'การจดจำ', def: 'เก็บผลลัพธ์ใน cache เพื่อไม่คำนวณซ้ำ — top-down DP', see: 'page 05'},
+    {term: 'Merge Sort', th: 'การเรียงผสาน', def: 'D&C sort O(n log n) stable — แบ่งครึ่ง sort สอง half merge', see: 'page 03'},
+    {term: 'MST (Minimum Spanning Tree)', th: 'ต้นไม้แผ่ทั่วน้อยสุด', def: 'tree ที่เชื่อมทุก vertex ด้วยน้ำหนักรวมน้อยสุด — Kruskal/Prim', see: 'page 06'},
+    {term: 'NP-hard', th: 'NP-ยาก', def: 'class ของปัญหาที่ไม่มี polynomial algorithm (ที่รู้กัน) — เช่น TSP, 3-SAT', see: 'general'},
+    {term: 'Optimal Substructure', th: 'โครงสร้างย่อยที่เหมาะสม', def: 'คำตอบของปัญหาประกอบจากคำตอบของ subproblem — เงื่อนไขใช้ DP/Greedy', see: 'page 05, 06'},
+    {term: 'Partition', th: 'การแบ่งกลุ่ม', def: 'แบ่ง array ออกเป็นกลุ่มตาม pivot — ใช้ใน Quick Sort, Quick Select', see: 'page 03, 15'},
+    {term: 'Permutation', th: 'การเรียงสับเปลี่ยน', def: 'การเรียง n ตัวให้ครบ — มี n! แบบ', see: 'page 07'},
+    {term: 'Pivot', th: 'พิวอต', def: 'element ที่เลือกเป็นตัวแบ่งใน partition (Quick Sort)', see: 'page 03'},
+    {term: 'Prefix Sum', th: 'ผลรวมสะสม', def: 'array ที่เก็บผลรวม a[0..i-1] — query range sum O(1)', see: 'page 14'},
+    {term: 'Priority Queue', th: 'คิวลำดับความสำคัญ', def: 'queue ที่ extract element ที่สำคัญสุด (heap-based) O(log n)', see: 'page 13'},
+    {term: 'Quick Select', th: 'ควิกซีเล็กต์', def: 'หาตัวที่ k-th ของ sorted array — O(n) average ผ่าน partition', see: 'page 15'},
+    {term: 'Quick Sort', th: 'การเรียงเร็ว', def: 'D&C sort เลือก pivot + partition + recurse — O(n log n) avg, O(n²) worst', see: 'page 03'},
+    {term: 'Recurrence Relation', th: 'สมการเวียน', def: 'สมการที่ T(n) ขึ้นกับ T ของ n เล็กกว่า — เช่น T(n) = 2T(n/2) + n', see: 'page 04, 24'},
+    {term: 'Recursion', th: 'การเรียกตัวเอง', def: 'ฟังก์ชันที่เรียกตัวเองด้วย input ที่เล็กลง — ต้องมี base case', see: 'page 02'},
+    {term: 'Sliding Window', th: 'หน้าต่างเลื่อน', def: 'เทคนิครักษาช่วง [l, r] บน array — เลื่อนแทนที่จะ recompute', see: 'page 14'},
+    {term: 'Stable Sort', th: 'sort คงที่', def: 'sort ที่รักษาลำดับเดิมของ element ที่เท่ากัน — Merge ✓ Quick ✗', see: 'page 03'},
+    {term: 'Stack', th: 'สแต็ก', def: 'LIFO data structure — ใช้ใน DFS, expression parsing', see: 'page 13'},
+    {term: 'Strassen', th: 'สตราสเซน', def: 'อัลกอริทึมคูณเมตริกซ์ O(n^2.81) — ใช้ 7 multiply แทน 8', see: 'page 04, 15, 21'},
+    {term: 'Substitution Method', th: 'วิธีแทนค่า', def: 'แก้ recurrence โดยแทนสมการ T(n-1) ลงใน T(n) ซ้ำ ๆ จนถึง base', see: 'page 17, 24'},
+    {term: 'Topological Sort', th: 'การเรียงตามลำดับโครงสร้าง', def: 'เรียง vertex ใน DAG ตาม dependency — ใช้ DFS', see: 'page 08'},
+    {term: 'Two Pointers', th: 'สองตัวชี้', def: 'pointer 2 ตัวเดินบน array — แทน loop ซ้อน → O(n²) → O(n)', see: 'page 14'},
+    {term: 'Union-Find (DSU)', th: 'ยูเนี่ยน-ไฟด์', def: 'data structure เก็บกลุ่ม + union operation O(α(n)) — ใช้ใน Kruskal', see: 'page 14'},
+    {term: 'Vertex', th: 'เวอร์เท็กซ์', def: 'จุดยอดใน graph (โหนด)', see: 'page 08'},
+    {term: 'Warshall', th: 'วาร์แชล', def: 'transitive closure — ตอบ "i ถึง j ได้ไหม" (yes/no) ด้วย O(V³)', see: 'page 15'},
+  ];
+
+  function letterOf(s) {
+    return s[0].toUpperCase();
+  }
+
+  function render(filter = '') {
+    const sorted = [...TERMS].sort((a, b) => a.term.localeCompare(b.term));
+    const f = filter.toLowerCase();
+    const filtered = sorted.filter(t =>
+      t.term.toLowerCase().includes(f) ||
+      t.th.toLowerCase().includes(f) ||
+      t.def.toLowerCase().includes(f)
+    );
+    let h = '';
+    let lastLetter = '';
+    if (filtered.length === 0) {
+      h = '<div style="color: var(--muted); padding: 20px; text-align: center">ไม่เจอศัพท์ที่ค้น</div>';
+    } else {
+      filtered.forEach(t => {
+        const L = letterOf(t.term);
+        if (L !== lastLetter) {
+          h += '<div class="gloss-letter">' + L + '</div>';
+          lastLetter = L;
+        }
+        h += '<div class="gloss-item">';
+        h += '<div class="term">' + t.term + ' <span style="color: var(--muted); font-weight: 400; font-size: 13px">— ' + t.th + '</span></div>';
+        h += '<div class="def">' + t.def + '</div>';
+        h += '<div class="related">↗ ดูเพิ่ม: ' + t.see + '</div>';
+        h += '</div>';
+      });
+    }
+    document.getElementById('gloss-content').innerHTML = h;
+  }
+
+  document.getElementById('gloss-search').addEventListener('input', e => render(e.target.value));
+  render();
+})();
+</script>
+</body>
+</html>

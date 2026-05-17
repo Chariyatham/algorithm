@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>04 · Divide &amp; Conquer</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="site">
+  <div class="container">
+    <h1><a href="index.html" style="color: var(--fg)">← Hub</a> · 04 Divide &amp; Conquer</h1>
+    <nav class="top">
+      <a href="03-sorting.html">← Sorting</a>
+      <a href="05-dp.html">DP →</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+  <h1>Divide &amp; Conquer — แบ่ง · แก้ · รวม</h1>
+  <p class="lead">
+    "ปัญหาใหญ่แก้ไม่ได้ ก็แบ่งให้เล็กลงครึ่งนึง แก้ครึ่งนึงก่อน อีกครึ่งค่อยว่ากัน"
+    หลักง่าย ๆ นี้ก่อให้เกิดอัลกอริทึมที่เร็วที่สุดในวงการ — Merge sort, Quick sort, Binary search,
+    Strassen matrix multiply, FFT
+  </p>
+
+  <h2>Pattern 3 ขั้น</h2>
+  <div class="card">
+    <ol>
+      <li><strong>Divide</strong> — แบ่งปัญหาเป็น sub-problem ที่เล็กลง (ปกติ ½)</li>
+      <li><strong>Conquer</strong> — แก้ sub-problem แต่ละอันแบบ recursive
+        จนถึง base case (เล็กพอจะแก้ตรง ๆ)</li>
+      <li><strong>Combine</strong> — รวมคำตอบของ sub-problem เป็นคำตอบของปัญหาเดิม</li>
+    </ol>
+  </div>
+
+<pre><code class="cpp">type solve(problem) {
+    if (problem เล็กพอ) return คำตอบตรง ๆ;     // base
+    sub1, sub2 = divide(problem);                // 1. divide
+    ans1 = solve(sub1);                          // 2a. conquer
+    ans2 = solve(sub2);                          // 2b. conquer
+    return combine(ans1, ans2);                  // 3. combine
+}</code></pre>
+
+  <h2>ตัวอย่างที่ 1 — Binary Search</h2>
+  <p>ค้นหา <code>target</code> ใน <strong>array ที่เรียงแล้ว</strong></p>
+<pre><code class="cpp">int binarySearch(vector&lt;int&gt;&amp; a, int lo, int hi, int target) {
+    if (lo &gt; hi) return -1;                  // base: ไม่เจอ
+    int mid = lo + (hi - lo) / 2;            // divide
+
+    if (a[mid] == target) return mid;        // เจอ
+    if (a[mid] &lt; target)
+        return binarySearch(a, mid+1, hi, target);  // หาฝั่งขวา
+    else
+        return binarySearch(a, lo, mid-1, target);  // หาฝั่งซ้าย
+}</code></pre>
+
+  <p>Recurrence: <span class="math">T(n) = T(n/2) + O(1)</span> → <span class="complexity c-log">O(log n)</span></p>
+
+  <div class="viz">
+    <div class="controls">
+      <label class="label">target =</label>
+      <input type="number" id="bs-target" value="42" style="width: 70px">
+      <button id="bs-shuffle" class="ghost">🎲 array ใหม่</button>
+      <button id="bs-play">▶ Play binary search</button>
+    </div>
+    <div id="bs-bars"></div>
+    <div class="status" id="bs-status">เลือก target แล้วกด Play</div>
+    <div class="legend">
+      <span><i style="background: #79c0ff"></i>lo</span>
+      <span><i style="background: #f0a8d2"></i>hi</span>
+      <span><i style="background: #d2a8ff"></i>mid</span>
+      <span><i style="background: var(--bad)"></i>เลิกพิจารณา</span>
+      <span><i style="background: var(--good)"></i>เจอ!</span>
+    </div>
+  </div>
+
+  <h2>ตัวอย่างที่ 2 — Merge Sort (recursion tree)</h2>
+  <p>ดู <a href="03-sorting.html">หน้า Sorting</a> สำหรับโค้ดเต็ม — ที่นี่เน้น <strong>เห็น tree</strong></p>
+
+  <div class="viz">
+    <button id="ms-play">▶ Play merge sort tree</button>
+    <svg id="ms-tree" class="tree-svg" width="980" height="380"></svg>
+    <div class="status" id="ms-status">รอเริ่ม</div>
+  </div>
+
+  <h2>Master Theorem — สูตรคิด complexity D&amp;C</h2>
+  <p>ถ้า recurrence รูปแบบ:</p>
+  <p style="text-align: center; font-size: 18px; margin: 20px 0;">
+    <span class="math">T(n) = a · T(n/b) + O(n<sup>d</sup>)</span>
+  </p>
+  <p>โดย <code>a</code> = จำนวน sub-problem, <code>b</code> = อัตราการแบ่ง, <code>n<sup>d</sup></code> = งานนอก recursion (combine)</p>
+
+  <table>
+    <tr><th>เงื่อนไข</th><th>ผลลัพธ์</th><th>ตัวอย่าง</th></tr>
+    <tr>
+      <td><code>d &lt; log<sub>b</sub>(a)</code></td>
+      <td>O(n<sup>log<sub>b</sub>(a)</sup>)</td>
+      <td>Strassen: T(n) = 7T(n/2) + O(n²) → O(n<sup>2.81</sup>)</td>
+    </tr>
+    <tr>
+      <td><code>d = log<sub>b</sub>(a)</code></td>
+      <td>O(n<sup>d</sup> log n)</td>
+      <td>Merge sort: T(n) = 2T(n/2) + O(n) → O(n log n)</td>
+    </tr>
+    <tr>
+      <td><code>d &gt; log<sub>b</sub>(a)</code></td>
+      <td>O(n<sup>d</sup>)</td>
+      <td>T(n) = 2T(n/2) + O(n²) → O(n²)</td>
+    </tr>
+  </table>
+
+  <div class="note tip">
+    <strong>ข้อจำ:</strong> log<sub>2</sub>(2) = 1, log<sub>2</sub>(4) = 2, log<sub>2</sub>(7) ≈ 2.81, log<sub>2</sub>(8) = 3
+  </div>
+
+  <h3>วิเคราะห์ทีละกรณี</h3>
+
+  <h4>Merge Sort: T(n) = 2T(n/2) + O(n)</h4>
+  <p>a=2, b=2, d=1 → log<sub>2</sub>(2)=1=d → กรณีที่ 2 → <span class="complexity c-nlog">O(n log n)</span></p>
+
+  <h4>Binary Search: T(n) = T(n/2) + O(1)</h4>
+  <p>a=1, b=2, d=0 → log<sub>2</sub>(1)=0=d → กรณีที่ 2 → <span class="complexity c-log">O(n<sup>0</sup> log n) = O(log n)</span></p>
+
+  <h4>Naive matrix multiply (recursive): T(n) = 8T(n/2) + O(n²)</h4>
+  <p>a=8, b=2, d=2 → log<sub>2</sub>(8)=3 &gt; d=2 → กรณีที่ 1 → <span class="complexity c-n2">O(n³)</span> (เท่า iterative)</p>
+
+  <h4>Strassen matrix multiply: T(n) = 7T(n/2) + O(n²)</h4>
+  <p>a=7, b=2, d=2 → log<sub>2</sub>(7)≈2.81 &gt; 2 → <strong>O(n<sup>2.81</sup>)</strong> เร็วกว่า naive!</p>
+
+  <h2>ตัวอย่างที่ 3 — Recursive Matrix Multiply</h2>
+  <p>(เนื้อหาตรงกับไฟล์ <code>recursive_multiplication.txt</code> ในโฟลเดอร์)</p>
+  <p>กระจาย matrix n×n เป็น 4 บล็อก n/2 × n/2:</p>
+
+<pre style="white-space: pre">A = | A11  A12 |     B = | B11  B12 |
+    | A21  A22 |         | B21  B22 |
+
+C = A·B = | A11·B11 + A12·B21    A11·B12 + A12·B22 |
+          | A21·B11 + A22·B21    A21·B12 + A22·B22 |</pre>
+
+  <p>การคูณ block ก็ <em>recursive matrix multiply</em> อีก!</p>
+  <ul>
+    <li><strong>Naive:</strong> 8 sub-multiply + 4 add → T(n) = 8T(n/2) + O(n²) = O(n³)</li>
+    <li><strong>Strassen (1969):</strong> ใช้แค่ 7 sub-multiply (เพิ่ม add แทน) → O(n<sup>2.81</sup>)</li>
+  </ul>
+
+<pre><code class="cpp">// แบบ naive 8 multiply (จากไฟล์ recursive_multiplication.txt)
+void rmm(int n, int A[N][N], int B[N][N], int C[N][N]) {
+    if (n == 1) { C[0][0] = A[0][0] * B[0][0]; return; }
+    int k = n / 2;
+    // แบ่งเป็น A11, A12, A21, A22, B11, ..., B22
+    // ...คำนวณ:
+    // C11 = A11*B11 + A12*B21
+    // C12 = A11*B12 + A12*B22
+    // C21 = A21*B11 + A22*B21
+    // C22 = A21*B12 + A22*B22
+    // 8 ครั้งที่เรียก rmm(k, ...), 4 ครั้งที่ add(k, ...)
+}</code></pre>
+
+  <h2>ตัวอย่างที่ 4 — Maximum Subarray (Kadane vs D&amp;C)</h2>
+  <p>หา subarray ที่ผลรวมสูงสุด เช่น <code>[-2, 1, -3, 4, -1, 2, 1, -5, 4]</code> → <code>[4,-1,2,1]</code> sum=6</p>
+
+<pre><code class="cpp">int maxCrossingSum(vector&lt;int&gt;&amp; a, int l, int m, int r) {
+    int leftSum = INT_MIN, sum = 0;
+    for (int i = m; i &gt;= l; i--) { sum += a[i]; leftSum = max(leftSum, sum); }
+    int rightSum = INT_MIN; sum = 0;
+    for (int i = m+1; i &lt;= r; i++) { sum += a[i]; rightSum = max(rightSum, sum); }
+    return leftSum + rightSum;
+}
+
+int maxSubarray(vector&lt;int&gt;&amp; a, int l, int r) {
+    if (l == r) return a[l];                     // base
+    int m = (l + r) / 2;
+    int left = maxSubarray(a, l, m);             // 1. ซ้าย
+    int right = maxSubarray(a, m+1, r);          // 2. ขวา
+    int cross = maxCrossingSum(a, l, m, r);      // 3. ข้ามกลาง
+    return max({left, right, cross});            // combine
+}
+// T(n) = 2T(n/2) + O(n) → O(n log n)</code></pre>
+
+  <div class="note">
+    <strong>หมายเหตุ:</strong> ปัญหานี้ Kadane's algorithm แก้ได้ <strong>O(n)</strong> เร็วกว่า
+    — แต่เป็นตัวอย่างที่เห็นภาพ D&amp;C ชัดเจน
+  </div>
+
+  <h2>เทคนิคจำง่าย: เมื่อไหร่ใช้ D&amp;C?</h2>
+  <ul>
+    <li>ปัญหา <strong>แบ่งครึ่งได้ตามธรรมชาติ</strong> (array แบ่ง ½, tree แบ่ง subtree ซ้าย-ขวา)</li>
+    <li>คำตอบของ sub-problem <strong>ประกอบเป็น</strong>คำตอบของปัญหาเดิมได้</li>
+    <li>sub-problem แต่ละอัน <strong>เป็นอิสระ</strong> (ไม่งั้นต้องใช้ DP — ดูบทถัดไป)</li>
+  </ul>
+
+  <h2>D&amp;C vs DP — ต่างกันยังไง?</h2>
+  <table>
+    <tr><th></th><th>Divide &amp; Conquer</th><th>Dynamic Programming</th></tr>
+    <tr><td>sub-problem</td><td><strong>ไม่ทับซ้อน</strong> (disjoint)</td><td><strong>ทับซ้อน</strong> (overlapping)</td></tr>
+    <tr><td>ตัวอย่าง</td><td>merge sort, binary search</td><td>fibonacci, knapsack</td></tr>
+    <tr><td>เก็บคำตอบเก่า?</td><td>ไม่ต้อง</td><td>เก็บใน table/memo</td></tr>
+  </table>
+
+  <h2>แบบฝึก</h2>
+
+  <div class="exercise">
+    <span class="qnum">Q1</span> <strong>หา complexity ของ recurrence: T(n) = 4T(n/2) + O(n)</strong>
+    <details>
+      <summary>เฉลย</summary>
+      <p>a=4, b=2, d=1 → log<sub>2</sub>(4)=2 &gt; 1 → กรณีที่ 1 → <span class="complexity c-n2">O(n²)</span></p>
+    </details>
+  </div>
+
+  <div class="exercise">
+    <span class="qnum">Q2</span> <strong>เขียน recursive function หา <em>ค่าที่ปรากฏมากกว่า n/2 ครั้ง</em> (majority element) แบบ D&amp;C</strong>
+    <details>
+      <summary>เฉลย</summary>
+<pre><code class="cpp">int countInRange(vector&lt;int&gt;&amp; a, int x, int l, int r) {
+    int c = 0;
+    for (int i = l; i &lt;= r; i++) if (a[i] == x) c++;
+    return c;
+}
+
+int majority(vector&lt;int&gt;&amp; a, int l, int r) {
+    if (l == r) return a[l];                    // base
+    int m = (l + r) / 2;
+    int leftMaj = majority(a, l, m);
+    int rightMaj = majority(a, m+1, r);
+    if (leftMaj == rightMaj) return leftMaj;
+    int lc = countInRange(a, leftMaj, l, r);
+    int rc = countInRange(a, rightMaj, l, r);
+    return (lc &gt; rc) ? leftMaj : rightMaj;
+}
+// T(n) = 2T(n/2) + O(n) → O(n log n)
+// (Boyer-Moore voting ทำได้ O(n))</code></pre>
+    </details>
+  </div>
+
+  <div class="exercise">
+    <span class="qnum">Q3</span> <strong>ทำไม binary search ต้องการ array ที่เรียงแล้ว?</strong>
+    <details>
+      <summary>เฉลย</summary>
+      <p>เพราะการตัดสินใจไปฝั่งซ้ายหรือขวาขึ้นอยู่กับ <code>a[mid] &lt; target</code>
+      ถ้า array ไม่เรียง ค่าฝั่งซ้าย/ขวาของ mid อาจมีอะไรก็ได้ — เลิกหวังเดาทิศได้</p>
+      <p>ค่าที่ <em>คาดเดาได้</em> ของ array เรียงคือ "ทุกตัวฝั่งซ้าย mid ≤ a[mid]"</p>
+    </details>
+  </div>
+
+  <div class="exercise">
+    <span class="qnum">Q4</span> <strong>วิเคราะห์ Strassen วิธีนี้ทำไมเร็วกว่า naive</strong>
+    <details>
+      <summary>เฉลย</summary>
+      <p>Naive: 8 multiply, 4 add → T(n) = 8T(n/2) + O(n²)</p>
+      <p>Strassen: ใช้สูตร 7 ตัว (M1..M7) แทน 8 multiply</p>
+      <p>โดยเสียค่า addition เพิ่มขึ้น (จาก 4 เป็น ~18) — แต่ multiply <em>ครอบงำ</em> ใน recursion</p>
+      <p>Master: 7T(n/2) + O(n²): a=7, b=2 → log<sub>2</sub>(7)≈2.81 → O(n<sup>2.81</sup>)</p>
+      <p>n=1000: naive ทำ 10⁹ ops, Strassen ~10⁸·⁴ — ช้ากว่าน้อยกว่า ~3 เท่า แต่ const factor สูง
+      ในทางปฏิบัติคุ้มเฉพาะ n &gt; ~100</p>
+    </details>
+  </div>
+
+</main>
+
+<footer>
+  <div class="container"><a href="index.html">← Hub</a> · <a href="05-dp.html">ถัดไป: DP →</a></div>
+</footer>
+
+<script src="script.js"></script>
+<script>
+// ==== Binary search animation ====
+(function() {
+  const barsEl = document.getElementById('bs-bars');
+  const targetIn = document.getElementById('bs-target');
+  const playBtn = document.getElementById('bs-play');
+  const shuffleBtn = document.getElementById('bs-shuffle');
+  const statusEl = document.getElementById('bs-status');
+  let arr = [];
+  let running = false;
+
+  function shuffle() {
+    arr = randArray(15, 1, 99);
+    arr.sort((a, b) => a - b);
+    renderBars(barsEl, arr);
+    statusEl.textContent = 'array sorted แล้ว เลือก target';
+    targetIn.value = arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  function setClass(idx, cls) {
+    const bs = barsEl.querySelectorAll('.bar');
+    if (bs[idx]) bs[idx].classList.add(cls);
+  }
+  function clearAll() {
+    barsEl.querySelectorAll('.bar').forEach(b => b.className = 'bar');
+  }
+
+  async function play() {
+    if (running) return;
+    running = true;
+    clearAll();
+    const target = parseInt(targetIn.value);
+    let lo = 0, hi = arr.length - 1;
+    while (lo <= hi) {
+      const mid = Math.floor((lo + hi) / 2);
+      // mark
+      clearAll();
+      for (let i = 0; i < lo; i++) setClass(i, 'swap');
+      for (let i = hi + 1; i < arr.length; i++) setClass(i, 'swap');
+      setClass(lo, 'left');
+      setClass(hi, 'right');
+      setClass(mid, 'pivot');
+      statusEl.textContent = `lo=${lo}, hi=${hi}, mid=${mid}, a[mid]=${arr[mid]}`;
+      await sleep(900);
+      if (arr[mid] === target) {
+        clearAll();
+        setClass(mid, 'sorted');
+        statusEl.innerHTML = `<strong>เจอที่ index ${mid}!</strong>`;
+        running = false;
+        return;
+      }
+      if (arr[mid] < target) lo = mid + 1;
+      else hi = mid - 1;
+    }
+    statusEl.innerHTML = `<strong>ไม่เจอ target ${target} ใน array</strong>`;
+    running = false;
+  }
+
+  shuffleBtn.onclick = shuffle;
+  playBtn.onclick = play;
+  shuffle();
+})();
+
+// ==== Merge sort recursion tree ====
+(function() {
+  const svg = document.getElementById('ms-tree');
+  const playBtn = document.getElementById('ms-play');
+  const statusEl = document.getElementById('ms-status');
+  const NS = 'http://www.w3.org/2000/svg';
+  let running = false;
+
+  function buildTree(arr, depth = 0, x0 = 0, x1 = 1) {
+    const node = { arr: [...arr], depth, x: (x0+x1)/2, children: [], _refs: {} };
+    if (arr.length > 1) {
+      const m = Math.floor(arr.length / 2);
+      const mid = (x0+x1)/2;
+      node.children.push(buildTree(arr.slice(0, m), depth+1, x0, mid));
+      node.children.push(buildTree(arr.slice(m), depth+1, mid, x1));
+    }
+    return node;
+  }
+
+  function flatten(n, list = []) { list.push(n); n.children.forEach(c => flatten(c, list)); return list; }
+
+  function render(root) {
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    const W = 980, H = 380;
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    const all = flatten(root);
+    const maxDepth = Math.max(...all.map(n => n.depth));
+    all.forEach(n => {
+      n.children.forEach(c => {
+        const e = document.createElementNS(NS, 'line');
+        e.setAttribute('class', 'te');
+        e.setAttribute('x1', n.x * W); e.setAttribute('y1', 30 + n.depth * (H - 60) / Math.max(maxDepth, 1));
+        e.setAttribute('x2', c.x * W); e.setAttribute('y2', 30 + c.depth * (H - 60) / Math.max(maxDepth, 1));
+        svg.appendChild(e);
+      });
+    });
+    all.forEach(n => {
+      const cx = n.x * W, cy = 30 + n.depth * (H - 60) / Math.max(maxDepth, 1);
+      const r = document.createElementNS(NS, 'rect');
+      const w = Math.max(40, n.arr.length * 14);
+      r.setAttribute('class', 'tn');
+      r.setAttribute('x', cx - w/2); r.setAttribute('y', cy - 14);
+      r.setAttribute('width', w); r.setAttribute('height', 28);
+      r.setAttribute('rx', 6);
+      svg.appendChild(r);
+      const t = document.createElementNS(NS, 'text');
+      t.setAttribute('x', cx); t.setAttribute('y', cy);
+      t.textContent = '[' + n.arr.join(',') + ']';
+      svg.appendChild(t);
+      n._rect = r; n._text = t;
+    });
+  }
+
+  async function visit(node) {
+    node._rect.classList.add('active');
+    statusEl.textContent = 'split [' + node.arr.join(',') + ']';
+    await sleep(400);
+    if (node.children.length === 0) {
+      node._rect.classList.remove('active');
+      node._rect.classList.add('done');
+      return [...node.arr];
+    }
+    const left = await visit(node.children[0]);
+    const right = await visit(node.children[1]);
+    // merge
+    const merged = [];
+    let i = 0, j = 0;
+    while (i < left.length && j < right.length) {
+      if (left[i] <= right[j]) merged.push(left[i++]);
+      else merged.push(right[j++]);
+    }
+    while (i < left.length) merged.push(left[i++]);
+    while (j < right.length) merged.push(right[j++]);
+    node._text.textContent = '[' + merged.join(',') + ']';
+    node._rect.classList.remove('active');
+    node._rect.classList.add('done');
+    statusEl.textContent = 'merge → [' + merged.join(',') + ']';
+    await sleep(450);
+    return merged;
+  }
+
+  async function play() {
+    if (running) return;
+    running = true;
+    const arr = [38, 27, 43, 3, 9, 82, 10];
+    const root = buildTree(arr);
+    render(root);
+    await sleep(500);
+    await visit(root);
+    statusEl.innerHTML = '<strong>เสร็จ!</strong> ทุก node ใน tree merge เรียบร้อย';
+    running = false;
+  }
+  playBtn.onclick = play;
+  // initial
+  const root = buildTree([38, 27, 43, 3, 9, 82, 10]);
+  render(root);
+})();
+</script>
+</body>
+</html>

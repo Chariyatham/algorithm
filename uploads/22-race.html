@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>22 · Algorithm Race</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .race-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+    gap: 14px;
+    margin: 20px 0;
+  }
+  .race-card {
+    background: var(--bg-2);
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    transition: border-color 0.3s, transform 0.3s;
+  }
+  .race-card.winner {
+    border-color: var(--good);
+    transform: scale(1.02);
+    box-shadow: 0 0 20px rgba(63, 185, 80, 0.3);
+  }
+  .race-card.loser {
+    opacity: 0.7;
+  }
+  .race-card h3 {
+    margin: 0 0 6px;
+    font-size: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .race-card .stats {
+    display: flex;
+    gap: 14px;
+    font-family: monospace;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .race-card .stat-val { color: var(--accent); font-weight: 700; }
+  .race-bars {
+    display: flex;
+    gap: 1px;
+    align-items: flex-end;
+    height: 100px;
+    background: #0a0e14;
+    padding: 4px;
+    border-radius: 4px;
+  }
+  .race-bars .bar {
+    flex: 1;
+    background: var(--accent);
+    border-radius: 2px 2px 0 0;
+    transition: height 0.1s, background 0.05s;
+  }
+  .race-bars .bar.cmp { background: var(--warn); }
+  .race-bars .bar.swap { background: var(--bad); }
+  .race-bars .bar.sorted { background: var(--good); }
+  .race-bars .bar.pivot { background: #d2a8ff; }
+  .race-bars .bar.left { background: #79c0ff; }
+  .leaderboard {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 20px 0;
+  }
+  .lb-row {
+    display: grid;
+    grid-template-columns: 30px 1fr 80px 80px 80px;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-family: monospace;
+  }
+  .lb-row:last-child { border: none; }
+  .lb-row .rank { font-weight: 700; color: var(--accent); }
+  .medal { font-size: 18px; }
+</style>
+</head>
+<body>
+<header class="site">
+  <div class="container">
+    <h1><a href="index.html" style="color: var(--fg)">← Hub</a> · 22 Algorithm Race 🏁</h1>
+    <nav class="top">
+      <a href="21-visualizers.html">← Visualizers</a>
+      <a href="23-pattern-trainer.html">Pattern Trainer →</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+  <h1>Algorithm Race — แข่งกันบน input เดียวกัน 🏎️</h1>
+  <p class="lead">
+    เปรียบเทียบ <strong>5 sorting algorithms</strong> วิ่งบน array ตัวเดียวกัน — เห็นใครชนะ ใครแพ้
+    นับ comparisons + swaps ทุกขั้นตอน
+  </p>
+
+  <div class="card">
+    <div class="controls">
+      <label class="label">ขนาด:</label>
+      <input type="number" id="race-size" value="40" min="10" max="80" style="width: 70px">
+      <label class="label">ความเร็ว:</label>
+      <input type="range" id="race-speed" min="1" max="100" value="80" style="width: 150px">
+      <label class="label">รูปแบบ input:</label>
+      <select id="race-pattern">
+        <option value="random">Random (สุ่ม)</option>
+        <option value="sorted">Sorted (เรียงแล้ว — worst case Quick)</option>
+        <option value="reversed">Reversed</option>
+        <option value="few-unique">Few unique (3-5 ค่า)</option>
+        <option value="nearly-sorted">Nearly sorted (เกือบเรียง)</option>
+      </select>
+      <button id="race-start">🏁 START RACE</button>
+      <button id="race-reset" class="ghost">🔄 Reset</button>
+    </div>
+  </div>
+
+  <div class="race-grid" id="race-cards"></div>
+
+  <div class="leaderboard" id="leaderboard">
+    <h3 style="margin-top: 0">🏆 Leaderboard (sort by time)</h3>
+    <div id="lb-list">รอเริ่ม race</div>
+  </div>
+
+  <div class="card" style="margin-top: 30px">
+    <h3 style="margin-top: 0">💡 ดูยังไงให้เข้าใจ</h3>
+    <ul>
+      <li><strong>Random input:</strong> ทุก sort วิ่งเหมือนทฤษฎี — Merge/Quick ชนะ Bubble/Insertion ชัดเจน</li>
+      <li><strong>Sorted input:</strong> Insertion เร็วที่สุด (O(n) best case), Quick worst case O(n²)!</li>
+      <li><strong>Reversed:</strong> Insertion worst (O(n²)), แต่ละ insert เลื่อนทุกตัวก่อนหน้า</li>
+      <li><strong>Few unique:</strong> ดูจำนวน swap น้อย แต่ comparison เยอะ</li>
+      <li><strong>Nearly sorted:</strong> Insertion ชนะแบบสบาย ๆ — เพราะแต่ละ element ต้องเลื่อนน้อย</li>
+    </ul>
+    <p style="margin-bottom: 0"><strong>Insight:</strong> "ดีที่สุด" ขึ้นกับ input — ไม่มี one-size-fits-all
+    นี่คือเหตุผลที่ <code>std::sort()</code> ใช้ <strong>introsort</strong> (quick + heap + insertion ผสม)</p>
+  </div>
+
+</main>
+
+<footer>
+  <div class="container"><a href="index.html">← Hub</a> · <a href="23-pattern-trainer.html">ถัดไป: Pattern Trainer →</a></div>
+</footer>
+
+<script src="script.js"></script>
+<script>
+const algorithms = [
+  { name: 'Bubble Sort', key: 'bubble', best: 'O(n)', worst: 'O(n²)', avg: 'O(n²)' },
+  { name: 'Selection Sort', key: 'selection', best: 'O(n²)', worst: 'O(n²)', avg: 'O(n²)' },
+  { name: 'Insertion Sort', key: 'insertion', best: 'O(n)', worst: 'O(n²)', avg: 'O(n²)' },
+  { name: 'Merge Sort', key: 'merge', best: 'O(n log n)', worst: 'O(n log n)', avg: 'O(n log n)' },
+  { name: 'Quick Sort', key: 'quick', best: 'O(n log n)', worst: 'O(n²)', avg: 'O(n log n)' }
+];
+
+let raceArrays = {};
+let raceStats = {};
+let raceTimings = {};
+let raceFinishOrder = [];
+let raceRunning = false;
+let raceStop = false;
+
+function delayMs() { return Math.max(2, 110 - parseInt(document.getElementById('race-speed').value)); }
+
+function renderCards() {
+  const grid = document.getElementById('race-cards');
+  grid.innerHTML = '';
+  for (const a of algorithms) {
+    const card = document.createElement('div');
+    card.className = 'race-card';
+    card.id = 'card-' + a.key;
+    card.innerHTML = `
+      <h3>${a.name} <span style="font-size: 11px; color: var(--muted); font-weight: 400">${a.avg}</span></h3>
+      <div class="stats">
+        <span>cmp: <span class="stat-val" id="cmp-${a.key}">0</span></span>
+        <span>swap: <span class="stat-val" id="swp-${a.key}">0</span></span>
+        <span id="time-${a.key}" style="margin-left: auto">⏱ -</span>
+      </div>
+      <div class="race-bars" id="bars-${a.key}"></div>
+    `;
+    grid.appendChild(card);
+  }
+}
+
+function genArray(size, pattern) {
+  let arr = [];
+  for (let i = 0; i < size; i++) arr.push(5 + Math.floor(Math.random() * 90));
+  if (pattern === 'sorted') arr.sort((a, b) => a - b);
+  else if (pattern === 'reversed') arr.sort((a, b) => b - a);
+  else if (pattern === 'few-unique') {
+    const vals = [10, 30, 60, 90];
+    arr = [];
+    for (let i = 0; i < size; i++) arr.push(vals[Math.floor(Math.random() * vals.length)]);
+  } else if (pattern === 'nearly-sorted') {
+    arr.sort((a, b) => a - b);
+    // swap 5% of pairs randomly
+    const swaps = Math.floor(size * 0.05);
+    for (let i = 0; i < swaps; i++) {
+      const a = Math.floor(Math.random() * size);
+      const b = Math.floor(Math.random() * size);
+      [arr[a], arr[b]] = [arr[b], arr[a]];
+    }
+  }
+  return arr;
+}
+
+function renderBars(key, classes = []) {
+  const arr = raceArrays[key];
+  const el = document.getElementById('bars-' + key);
+  if (!el) return;
+  const max = Math.max(...arr, 1);
+  el.innerHTML = '';
+  for (let i = 0; i < arr.length; i++) {
+    const b = document.createElement('div');
+    b.className = 'bar' + (classes[i] ? ' ' + classes[i] : '');
+    b.style.height = (5 + (arr[i] / max) * 95) + '%';
+    el.appendChild(b);
+  }
+}
+
+function updStats(key) {
+  document.getElementById('cmp-' + key).textContent = raceStats[key].cmp;
+  document.getElementById('swp-' + key).textContent = raceStats[key].swap;
+}
+
+function setTime(key, ms) {
+  document.getElementById('time-' + key).textContent = '⏱ ' + ms.toFixed(0) + 'ms';
+}
+
+function bumpStats(key, type) {
+  raceStats[key][type]++;
+  if (raceStats[key].cmp + raceStats[key].swap < 1000 || (raceStats[key].cmp + raceStats[key].swap) % 5 === 0)
+    updStats(key);
+}
+
+async function bubbleSort(key) {
+  const arr = raceArrays[key];
+  const n = arr.length;
+  const startTime = performance.now();
+  for (let i = 0; i < n - 1; i++) {
+    let swapped = false;
+    for (let j = 0; j < n - 1 - i; j++) {
+      if (raceStop) return;
+      bumpStats(key, 'cmp');
+      if (arr[j] > arr[j + 1]) {
+        [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
+        bumpStats(key, 'swap');
+        swapped = true;
+      }
+    }
+    renderBars(key, [...Array(n - 1 - i).fill(''), ...Array(i + 1).fill('sorted')]);
+    await sleep(delayMs());
+    if (!swapped) break;
+  }
+  finishAlgo(key, performance.now() - startTime);
+}
+
+async function selectionSort(key) {
+  const arr = raceArrays[key];
+  const n = arr.length;
+  const startTime = performance.now();
+  for (let i = 0; i < n - 1; i++) {
+    if (raceStop) return;
+    let minIdx = i;
+    for (let j = i + 1; j < n; j++) {
+      bumpStats(key, 'cmp');
+      if (arr[j] < arr[minIdx]) minIdx = j;
+    }
+    if (minIdx !== i) {
+      [arr[i], arr[minIdx]] = [arr[minIdx], arr[i]];
+      bumpStats(key, 'swap');
+    }
+    renderBars(key, Array(n).fill('').map((_, idx) => idx <= i ? 'sorted' : ''));
+    await sleep(delayMs());
+  }
+  finishAlgo(key, performance.now() - startTime);
+}
+
+async function insertionSort(key) {
+  const arr = raceArrays[key];
+  const n = arr.length;
+  const startTime = performance.now();
+  for (let i = 1; i < n; i++) {
+    if (raceStop) return;
+    const k = arr[i];
+    let j = i - 1;
+    while (j >= 0 && arr[j] > k) {
+      bumpStats(key, 'cmp');
+      arr[j + 1] = arr[j];
+      bumpStats(key, 'swap');
+      j--;
+    }
+    if (j >= 0) bumpStats(key, 'cmp');
+    arr[j + 1] = k;
+    renderBars(key, Array(n).fill('').map((_, idx) => idx <= i ? 'sorted' : ''));
+    await sleep(delayMs());
+  }
+  finishAlgo(key, performance.now() - startTime);
+}
+
+async function mergeSort(key) {
+  const arr = raceArrays[key];
+  const startTime = performance.now();
+  async function merge(l, m, r) {
+    const left = arr.slice(l, m + 1);
+    const right = arr.slice(m + 1, r + 1);
+    let i = 0, j = 0, k = l;
+    while (i < left.length && j < right.length) {
+      if (raceStop) return;
+      bumpStats(key, 'cmp');
+      if (left[i] <= right[j]) arr[k++] = left[i++];
+      else arr[k++] = right[j++];
+      bumpStats(key, 'swap');
+    }
+    while (i < left.length) { arr[k++] = left[i++]; bumpStats(key, 'swap'); }
+    while (j < right.length) { arr[k++] = right[j++]; bumpStats(key, 'swap'); }
+    renderBars(key);
+    await sleep(delayMs());
+  }
+  async function ms(l, r) {
+    if (l >= r) return;
+    if (raceStop) return;
+    const m = l + Math.floor((r - l) / 2);
+    await ms(l, m);
+    await ms(m + 1, r);
+    await merge(l, m, r);
+  }
+  await ms(0, arr.length - 1);
+  finishAlgo(key, performance.now() - startTime);
+}
+
+async function quickSort(key) {
+  const arr = raceArrays[key];
+  const startTime = performance.now();
+  async function partition(low, high) {
+    const pivot = arr[high];
+    let i = low - 1;
+    for (let j = low; j < high; j++) {
+      if (raceStop) return -1;
+      bumpStats(key, 'cmp');
+      if (arr[j] < pivot) {
+        i++;
+        if (i !== j) { [arr[i], arr[j]] = [arr[j], arr[i]]; bumpStats(key, 'swap'); }
+      }
+    }
+    [arr[i + 1], arr[high]] = [arr[high], arr[i + 1]];
+    bumpStats(key, 'swap');
+    renderBars(key);
+    await sleep(delayMs());
+    return i + 1;
+  }
+  async function qs(low, high) {
+    if (low < high) {
+      if (raceStop) return;
+      const p = await partition(low, high);
+      if (p === -1) return;
+      await qs(low, p - 1);
+      await qs(p + 1, high);
+    }
+  }
+  await qs(0, arr.length - 1);
+  finishAlgo(key, performance.now() - startTime);
+}
+
+function finishAlgo(key, time) {
+  raceTimings[key] = time;
+  raceFinishOrder.push(key);
+  setTime(key, time);
+  // mark all sorted
+  const arr = raceArrays[key];
+  renderBars(key, Array(arr.length).fill('sorted'));
+  updStats(key);
+  updateLeaderboard();
+}
+
+function updateLeaderboard() {
+  const lb = document.getElementById('lb-list');
+  if (raceFinishOrder.length === 0) { lb.innerHTML = 'รอเริ่ม race'; return; }
+  const sorted = [...raceFinishOrder].sort((a, b) => raceTimings[a] - raceTimings[b]);
+  const medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
+  let h = '<div class="lb-row" style="font-weight: 700; color: var(--muted)">';
+  h += '<span>#</span><span>Algorithm</span><span>Time</span><span>Cmp</span><span>Swap</span></div>';
+  sorted.forEach((key, i) => {
+    const a = algorithms.find(x => x.key === key);
+    h += `<div class="lb-row">
+      <span class="rank">${medals[i]}</span>
+      <span>${a.name}</span>
+      <span>${raceTimings[key].toFixed(0)}ms</span>
+      <span>${raceStats[key].cmp}</span>
+      <span>${raceStats[key].swap}</span>
+    </div>`;
+  });
+  // also mark winner card
+  document.querySelectorAll('.race-card').forEach(c => c.classList.remove('winner', 'loser'));
+  if (sorted.length === algorithms.length) {
+    document.getElementById('card-' + sorted[0]).classList.add('winner');
+    document.getElementById('card-' + sorted[sorted.length - 1]).classList.add('loser');
+  }
+  lb.innerHTML = h;
+}
+
+async function startRace() {
+  if (raceRunning) return;
+  raceRunning = true; raceStop = false;
+  raceFinishOrder = [];
+  raceTimings = {};
+  const size = Math.max(10, Math.min(80, parseInt(document.getElementById('race-size').value) || 40));
+  const pattern = document.getElementById('race-pattern').value;
+  const initial = genArray(size, pattern);
+
+  for (const a of algorithms) {
+    raceArrays[a.key] = [...initial];
+    raceStats[a.key] = { cmp: 0, swap: 0 };
+    updStats(a.key);
+    document.getElementById('time-' + a.key).textContent = '⏱ -';
+    renderBars(a.key);
+  }
+  updateLeaderboard();
+
+  // Start all 5 in parallel
+  await Promise.all([
+    bubbleSort('bubble'),
+    selectionSort('selection'),
+    insertionSort('insertion'),
+    mergeSort('merge'),
+    quickSort('quick')
+  ]);
+  raceRunning = false;
+}
+
+function reset() {
+  raceStop = true; raceRunning = false;
+  renderCards();
+  document.getElementById('lb-list').innerHTML = 'รอเริ่ม race';
+}
+
+document.getElementById('race-start').onclick = startRace;
+document.getElementById('race-reset').onclick = reset;
+renderCards();
+</script>
+</body>
+</html>

@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>00 · Foundations — เริ่มจากศูนย์</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .step {
+    display: grid;
+    grid-template-columns: 60px 1fr;
+    gap: 14px;
+    margin: 14px 0;
+    align-items: start;
+  }
+  .step .num {
+    background: var(--accent);
+    color: #0d1117;
+    font-weight: 700;
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .trace-step {
+    background: var(--code-bg);
+    border-left: 3px solid var(--accent);
+    padding: 10px 16px;
+    margin: 6px 0;
+    font-family: monospace;
+    font-size: 13px;
+    border-radius: 4px;
+  }
+  .trace-step .vars { color: var(--accent-2); }
+</style>
+</head>
+<body>
+<header class="site">
+  <div class="container">
+    <h1><a href="index.html" style="color: var(--fg)">← Hub</a> · 00 Foundations</h1>
+    <nav class="top">
+      <a href="01-bigo.html">ถัดไป: Big O →</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+  <h1>Foundations — เริ่มจากศูนย์จริงๆ</h1>
+  <p class="lead">
+    หน้านี้สำหรับคนที่ <strong>ยังไม่เคยเขียนโปรแกรม</strong> หรือ <strong>เพิ่งเริ่มเรียน C++</strong>
+    ก่อนเข้าสู่อัลกอริทึมจริง เราต้องเข้าใจพื้นฐานก่อน — อย่ารีบข้าม
+  </p>
+
+  <h2>Algorithm คืออะไร?</h2>
+  <div class="card">
+    <p>คือ <strong>ขั้นตอนการแก้ปัญหา</strong> ที่ชัดเจน ทำตามแล้วได้คำตอบเสมอ</p>
+    <p><strong>ตัวอย่างชีวิตประจำวัน — ทำไข่เจียว:</strong></p>
+    <ol>
+      <li>ตั้งกระทะ ใส่น้ำมัน</li>
+      <li>ตอกไข่ใส่ชาม คนให้เข้ากัน</li>
+      <li>เทไข่ลงกระทะ</li>
+      <li>รอ 1 นาที ใช้ตะหลิวพลิก</li>
+      <li>รออีก 30 วิ ตักออก</li>
+    </ol>
+    <p>นี่คือ algorithm! มี <strong>input</strong> (ไข่ + น้ำมัน), <strong>process</strong> (ขั้นตอน), <strong>output</strong> (ไข่เจียว)</p>
+  </div>
+
+  <p>ในการเขียนโปรแกรม algorithm คือ <strong>ลำดับคำสั่ง</strong> ที่บอกคอม:</p>
+  <ul>
+    <li>รับข้อมูลอะไรมา (input)</li>
+    <li>ประมวลผลอย่างไร (logic)</li>
+    <li>คืนคำตอบอะไรกลับ (output)</li>
+  </ul>
+
+  <h2>Hello World — โปรแกรมแรก</h2>
+<pre><code class="cpp">#include &lt;iostream&gt;       // ดึง library สำหรับ input/output
+using namespace std;       // ไม่ต้องเขียน std:: หน้าทุกคำ
+
+int main() {                // จุดเริ่มต้นของโปรแกรม
+    cout &lt;&lt; "Hello!" &lt;&lt; endl;
+    return 0;
+}</code></pre>
+
+  <p><strong>วิธี run:</strong> เปิด terminal แล้ว</p>
+<pre><code class="cpp">g++ hello.cpp -o hello   # compile
+./hello                   # run</code></pre>
+
+  <h2>Variable & Type — ตัวแปรและชนิดข้อมูล</h2>
+  <p>Variable คือ "กล่อง" ที่เก็บค่า — ต้องบอกชนิดก่อนเสมอ</p>
+<pre><code class="cpp">int    age = 20;            // จำนวนเต็ม
+double height = 175.5;       // ทศนิยม
+char   grade = 'A';          // อักขระตัวเดียว
+string name = "Kim";         // ข้อความ (ต้อง #include &lt;string&gt;)
+bool   isStudent = true;     // จริง/เท็จ
+
+cout &lt;&lt; age &lt;&lt; " " &lt;&lt; name &lt;&lt; endl;   // print: 20 Kim</code></pre>
+
+  <table>
+    <tr><th>Type</th><th>ขนาด</th><th>ค่าได้แค่</th></tr>
+    <tr><td><code>int</code></td><td>4 byte</td><td>−2.1×10⁹ ถึง 2.1×10⁹</td></tr>
+    <tr><td><code>long long</code></td><td>8 byte</td><td>±9.2×10¹⁸ — ใช้เมื่อจำนวนใหญ่</td></tr>
+    <tr><td><code>double</code></td><td>8 byte</td><td>ทศนิยม ~15 หลัก</td></tr>
+    <tr><td><code>char</code></td><td>1 byte</td><td>อักขระเดียว 'A', 'b', '0'</td></tr>
+    <tr><td><code>bool</code></td><td>1 byte</td><td><code>true</code> หรือ <code>false</code></td></tr>
+    <tr><td><code>string</code></td><td>หลาย byte</td><td>ข้อความ "..."</td></tr>
+  </table>
+
+  <h2>Input / Output — รับ–ส่งข้อมูล</h2>
+<pre><code class="cpp">#include &lt;iostream&gt;
+using namespace std;
+
+int main() {
+    int n;
+    cout &lt;&lt; "ใส่เลข: ";
+    cin &gt;&gt; n;                          // รับ int จาก keyboard
+    cout &lt;&lt; "เลขคูณ 2 = " &lt;&lt; n * 2 &lt;&lt; endl;
+    return 0;
+}</code></pre>
+
+  <p>รับหลายค่าในบรรทัดเดียว:</p>
+<pre><code class="cpp">int a, b, c;
+cin &gt;&gt; a &gt;&gt; b &gt;&gt; c;     // ผู้ใช้พิมพ์ "1 2 3" (เว้นวรรค)</code></pre>
+
+  <h2>If / Else — เงื่อนไข</h2>
+<pre><code class="cpp">int score;
+cin &gt;&gt; score;
+
+if (score &gt;= 80) {
+    cout &lt;&lt; "เกรด A";
+} else if (score &gt;= 70) {
+    cout &lt;&lt; "เกรด B";
+} else if (score &gt;= 60) {
+    cout &lt;&lt; "เกรด C";
+} else {
+    cout &lt;&lt; "ตก";
+}</code></pre>
+
+  <p>Operator เปรียบเทียบ:</p>
+  <table>
+    <tr><th>Operator</th><th>ความหมาย</th></tr>
+    <tr><td><code>==</code></td><td>เท่ากับ (ระวัง! ไม่ใช่ <code>=</code>)</td></tr>
+    <tr><td><code>!=</code></td><td>ไม่เท่ากับ</td></tr>
+    <tr><td><code>&lt; &gt; &lt;= &gt;=</code></td><td>น้อยกว่า, มากกว่า, ฯลฯ</td></tr>
+    <tr><td><code>&amp;&amp;</code></td><td>AND (และ)</td></tr>
+    <tr><td><code>||</code></td><td>OR (หรือ)</td></tr>
+    <tr><td><code>!</code></td><td>NOT (ไม่)</td></tr>
+  </table>
+
+  <div class="note bad">
+    <strong>กับดัก!</strong> <code>if (x = 5)</code> = assign, ไม่ใช่ compare!
+    ใช้ <code>if (x == 5)</code> เสมอ
+  </div>
+
+  <h2>Loop — วน</h2>
+
+  <h3>For loop — รู้จำนวนรอบล่วงหน้า</h3>
+<pre><code class="cpp">for (int i = 0; i &lt; 5; i++) {
+    cout &lt;&lt; i &lt;&lt; " ";    // print: 0 1 2 3 4
+}</code></pre>
+
+  <p>3 ส่วนของ for: <code>(เริ่มต้น; เงื่อนไขวนต่อ; เพิ่มทีละ)</code></p>
+
+  <h3>While loop — วนจนกว่าเงื่อนไขจะเท็จ</h3>
+<pre><code class="cpp">int n = 100;
+while (n &gt; 1) {
+    n = n / 2;        // หารครึ่ง
+    cout &lt;&lt; n &lt;&lt; " "; // 50 25 12 6 3 1
+}</code></pre>
+
+  <h2>Array & Vector — เก็บข้อมูลหลายตัว</h2>
+
+  <h3>Array แบบ C เก่า — ขนาดคงที่</h3>
+<pre><code class="cpp">int arr[5] = {3, 1, 4, 1, 5};
+cout &lt;&lt; arr[0];           // 3 (index เริ่มที่ 0)
+cout &lt;&lt; arr[4];           // 5
+arr[2] = 99;              // เปลี่ยนค่า
+
+// วน:
+for (int i = 0; i &lt; 5; i++) cout &lt;&lt; arr[i] &lt;&lt; " ";</code></pre>
+
+  <div class="note warn">
+    <strong>ระวัง!</strong> array C ไม่ check ขอบเขต — <code>arr[10]</code> ในโค้ดข้างบนจะอ่าน memory ที่ไม่ใช่ของ array
+    (undefined behavior!) ทำให้โปรแกรมพังโดยไม่บอกสาเหตุ
+  </div>
+
+  <h3>Vector — ขนาดเปลี่ยนได้ (ควรใช้แทน array เสมอ)</h3>
+<pre><code class="cpp">#include &lt;vector&gt;
+
+vector&lt;int&gt; v;            // เริ่มจากว่าง
+v.push_back(10);          // เพิ่มท้าย → v = [10]
+v.push_back(20);          // v = [10, 20]
+v.push_back(30);          // v = [10, 20, 30]
+
+cout &lt;&lt; v[0] &lt;&lt; endl;     // 10
+cout &lt;&lt; v.size() &lt;&lt; endl; // 3
+
+// วน 2 แบบ:
+for (int i = 0; i &lt; v.size(); i++) cout &lt;&lt; v[i];
+for (int x : v) cout &lt;&lt; x;         // range-based for (สวยกว่า)</code></pre>
+
+  <h2>Function — ฟังก์ชัน</h2>
+<pre><code class="cpp">int square(int x) {        // ↑รับ int, ↓คืน int
+    return x * x;
+}
+
+int main() {
+    cout &lt;&lt; square(5);     // 25
+    int y = square(10);    // y = 100
+    return 0;
+}</code></pre>
+
+  <p>ส่ง <code>vector</code> เข้า function — ใส่ <code>&amp;</code> เพื่อไม่ copy:</p>
+<pre><code class="cpp">int sumAll(vector&lt;int&gt;&amp; v) {     // & = ส่ง reference (เร็ว)
+    int s = 0;
+    for (int x : v) s += x;
+    return s;
+}</code></pre>
+
+  <div class="note tip">
+    <strong>ทำไมต้องใส่ <code>&amp;</code>?</strong>
+    ถ้าไม่ใส่ จะ <em>copy</em> vector ทั้งก้อน — vector ขนาด 10⁶ ก็ copy 10⁶ element ช้ามาก
+    การใส่ <code>&amp;</code> เป็น "ส่ง pointer" ไม่ copy — เร็วและประหยัด memory
+  </div>
+
+  <h2>คิดแบบ Algorithm — Trace ทีละบรรทัด</h2>
+  <p>เขียน algorithm เก่งต้อง <strong>อ่านโค้ดออก</strong> ลองทำตามมือ:</p>
+
+  <p><strong>โจทย์:</strong> หาจำนวนเต็มที่มากที่สุดใน array</p>
+<pre><code class="cpp">int findMax(vector&lt;int&gt;&amp; a) {
+    int maxVal = a[0];                 // เริ่มจากตัวแรก
+    for (int i = 1; i &lt; a.size(); i++) {
+        if (a[i] &gt; maxVal) {
+            maxVal = a[i];
+        }
+    }
+    return maxVal;
+}</code></pre>
+
+  <p><strong>Trace บน <code>a = [3, 7, 2, 9, 5]</code>:</strong></p>
+
+  <div class="trace-step">เริ่ม: <span class="vars">maxVal = 3</span> (a[0])</div>
+  <div class="trace-step">i=1: a[1]=7 &gt; 3? ใช่ → <span class="vars">maxVal = 7</span></div>
+  <div class="trace-step">i=2: a[2]=2 &gt; 7? ไม่</div>
+  <div class="trace-step">i=3: a[3]=9 &gt; 7? ใช่ → <span class="vars">maxVal = 9</span></div>
+  <div class="trace-step">i=4: a[4]=5 &gt; 9? ไม่</div>
+  <div class="trace-step">return <span class="vars">9</span> ✓</div>
+
+  <h2>Pattern พื้นฐาน 3 อย่าง</h2>
+
+  <h3>Pattern 1 — วนเก็บค่ารวม (accumulator)</h3>
+<pre><code class="cpp">int sum = 0;
+for (int x : v) sum += x;        // หาผลรวม
+
+int product = 1;
+for (int x : v) product *= x;    // หาผลคูณ</code></pre>
+
+  <h3>Pattern 2 — วนเก็บค่าดีที่สุด (best so far)</h3>
+<pre><code class="cpp">int maxVal = INT_MIN;            // ค่าเริ่มแย่สุด
+for (int x : v) maxVal = max(maxVal, x);
+
+int minVal = INT_MAX;
+for (int x : v) minVal = min(minVal, x);</code></pre>
+
+  <h3>Pattern 3 — วนนับ (counter)</h3>
+<pre><code class="cpp">int count = 0;
+for (int x : v) if (x &gt; 0) count++;     // นับเลขบวก</code></pre>
+
+  <h2>คิดเป็น algorithm — กระบวนการ 4 step</h2>
+  <div class="step">
+    <div class="num">1</div>
+    <div>
+      <strong>เข้าใจโจทย์</strong> — input คืออะไร? output คืออะไร? เขียนลงกระดาษ
+    </div>
+  </div>
+  <div class="step">
+    <div class="num">2</div>
+    <div>
+      <strong>ลองด้วยตัวอย่างเล็ก</strong> — ทำด้วยมือก่อน เช่นถ้าโจทย์ "หาผลรวม" ลองกับ [1,2,3] ก่อน
+    </div>
+  </div>
+  <div class="step">
+    <div class="num">3</div>
+    <div>
+      <strong>เขียนเป็น pseudocode</strong> — เขียนขั้นตอนเป็นภาษาไทย/อังกฤษก่อน อย่ารีบเขียน C++
+    </div>
+  </div>
+  <div class="step">
+    <div class="num">4</div>
+    <div>
+      <strong>แปลงเป็น code</strong> — แล้ว trace ตรวจสอบกับตัวอย่าง
+    </div>
+  </div>
+
+  <h2>Bug ที่มือใหม่เจอบ่อย</h2>
+  <ul>
+    <li><strong>ลืม <code>;</code> ท้ายบรรทัด</strong> — compiler error: expected ';'</li>
+    <li><strong>เขียน <code>=</code> แทน <code>==</code></strong> — เงื่อนไขไม่ทำงานถูก</li>
+    <li><strong>Off-by-one</strong> — <code>for (i=0; i&lt;=n; i++)</code> เขียนผิดเป็น <code>i&lt;=n</code> → เกินขอบ</li>
+    <li><strong>Index out of range</strong> — <code>a[size()]</code> เกินขอบ array</li>
+    <li><strong>ลืม <code>#include</code></strong> — ใช้ <code>vector</code> โดยไม่ <code>#include &lt;vector&gt;</code></li>
+    <li><strong>ลืม return</strong> — function บอกว่า return int แต่ไม่มี return</li>
+  </ul>
+
+  <h2>แบบฝึก — ลองทำเองก่อนเปิดเฉลย</h2>
+
+  <div class="exercise">
+    <span class="qnum">Q1</span>
+    <strong>เขียนโปรแกรมรับเลข n แล้ว print 1 ถึง n</strong>
+    <details>
+      <summary>เฉลย</summary>
+<pre><code class="cpp">#include &lt;iostream&gt;
+using namespace std;
+int main() {
+    int n;
+    cin &gt;&gt; n;
+    for (int i = 1; i &lt;= n; i++) cout &lt;&lt; i &lt;&lt; " ";
+    return 0;
+}</code></pre>
+    </details>
+  </div>
+
+  <div class="exercise">
+    <span class="qnum">Q2</span>
+    <strong>รับเลข n แล้ว print เลขคู่ตั้งแต่ 1 ถึง n</strong>
+    <details>
+      <summary>เฉลย</summary>
+<pre><code class="cpp">int n; cin &gt;&gt; n;
+for (int i = 2; i &lt;= n; i += 2) cout &lt;&lt; i &lt;&lt; " ";
+// หรือ: if (i % 2 == 0) cout &lt;&lt; i;</code></pre>
+    </details>
+  </div>
+
+  <div class="exercise">
+    <span class="qnum">Q3</span>
+    <strong>รับ array แล้วนับว่ามีเลข 0 กี่ตัว</strong>
+    <details>
+      <summary>เฉลย</summary>
+<pre><code class="cpp">int n; cin &gt;&gt; n;
+vector&lt;int&gt; v(n);
+for (int i = 0; i &lt; n; i++) cin &gt;&gt; v[i];
+int count = 0;
+for (int x : v) if (x == 0) count++;
+cout &lt;&lt; count;</code></pre>
+    </details>
+  </div>
+
+  <div class="exercise">
+    <span class="qnum">Q4</span>
+    <strong>รับเลข n แล้ว print n! (factorial)</strong>
+    <details>
+      <summary>เฉลย</summary>
+<pre><code class="cpp">int n; cin &gt;&gt; n;
+long long f = 1;        // ใช้ long long กัน overflow
+for (int i = 2; i &lt;= n; i++) f *= i;
+cout &lt;&lt; f;
+// 5! = 120, 10! = 3,628,800, 20! = 2,432,902,008,176,640,000</code></pre>
+    </details>
+  </div>
+
+  <div class="exercise">
+    <span class="qnum">Q5</span>
+    <strong>รับ array แล้วบอกว่าเรียงน้อย→มากแล้วหรือไม่</strong>
+    <details>
+      <summary>เฉลย</summary>
+<pre><code class="cpp">int n; cin &gt;&gt; n;
+vector&lt;int&gt; v(n);
+for (int i = 0; i &lt; n; i++) cin &gt;&gt; v[i];
+
+bool sorted = true;
+for (int i = 1; i &lt; n; i++) {
+    if (v[i] &lt; v[i-1]) { sorted = false; break; }
+}
+cout &lt;&lt; (sorted ? "yes" : "no");</code></pre>
+    </details>
+  </div>
+
+  <div class="note tip">
+    <strong>พร้อมแล้ว!</strong> ถ้าทำ 5 ข้อนี้ได้คล่อง ก็พร้อมเข้าหน้า <a href="01-bigo.html">Big O</a> แล้ว
+    หัวข้อต่อไปจะเริ่มเข้าสู่อัลกอริทึมจริง ๆ
+  </div>
+
+</main>
+
+<footer>
+  <div class="container"><a href="index.html">← Hub</a> · <a href="01-bigo.html">ถัดไป: Big O →</a></div>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>

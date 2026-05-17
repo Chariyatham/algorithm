@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>09 · Exhaustive Search</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="site">
+  <div class="container">
+    <h1><a href="index.html" style="color: var(--fg)">← Hub</a> · 09 Exhaustive Search</h1>
+    <nav class="top">
+      <a href="08-graph.html">← Graph</a>
+      <a href="12-search.html">Search →</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+  <h1>Exhaustive Search — ลองทุกความเป็นไปได้</h1>
+  <p class="lead">
+    "ไม่รู้อะไรเลย ก็ลองทุกแบบไปเลย" — เป็นวิธีที่ง่ายที่สุด ช้าที่สุด แต่ <strong>การันตี</strong> ว่าได้คำตอบ
+    เป็นพื้นฐานของ backtracking และ algorithm หลายตัว
+  </p>
+
+  <h2>หลักคิด</h2>
+  <div class="card">
+    <p>Exhaustive search (brute force) = <strong>เจาะปัญหาด้วยกำลังคอม</strong></p>
+    <ol>
+      <li>ระบุ <em>ทุก candidate solution</em></li>
+      <li>เช็คทีละตัวว่าตรงเงื่อนไขไหม</li>
+      <li>เก็บ solution ที่เจอ (หรือดีที่สุด)</li>
+    </ol>
+    <p>ใช้ได้เสมอ แต่ปกติช้า — เป็น <strong>last resort</strong> เมื่อยังไม่มี algorithm ที่ฉลาดกว่า</p>
+  </div>
+
+  <h2>ตัวอย่าง 1 — หาเลข 2 ตัวใน array ที่ผลรวม = target</h2>
+<pre><code class="cpp">// brute force O(n²)
+pair&lt;int,int&gt; twoSum(vector&lt;int&gt;&amp; a, int target) {
+    for (int i = 0; i &lt; a.size(); i++)
+        for (int j = i + 1; j &lt; a.size(); j++)
+            if (a[i] + a[j] == target) return {i, j};
+    return {-1, -1};
+}</code></pre>
+
+  <p><strong>แก้ให้เร็วขึ้น</strong> ด้วย hash map → O(n):</p>
+<pre><code class="cpp">pair&lt;int,int&gt; twoSumFast(vector&lt;int&gt;&amp; a, int target) {
+    unordered_map&lt;int, int&gt; seen;
+    for (int i = 0; i &lt; a.size(); i++) {
+        int need = target - a[i];
+        if (seen.count(need)) return {seen[need], i};
+        seen[a[i]] = i;
+    }
+    return {-1, -1};
+}</code></pre>
+
+  <h2>ตัวอย่าง 2 — Subset Sum (brute force vs backtracking)</h2>
+  <p>ใน <code>lab/w2.cpp</code> เราทำ subset sum ด้วย backtracking ซึ่งจริง ๆ ก็คือ exhaustive search ที่ <em>ฉลาดขึ้น</em></p>
+
+<pre><code class="cpp">// แบบ brute: enumerate ทุก subset ผ่าน bitmask
+void bruteSubsetSum(vector&lt;int&gt;&amp; A, int target) {
+    int n = A.size();
+    for (int mask = 0; mask &lt; (1 &lt;&lt; n); mask++) {  // 2ⁿ subset
+        int sum = 0;
+        for (int i = 0; i &lt; n; i++)
+            if (mask &amp; (1 &lt;&lt; i)) sum += A[i];
+        if (sum == target) {
+            cout &lt;&lt; "{ ";
+            for (int i = 0; i &lt; n; i++)
+                if (mask &amp; (1 &lt;&lt; i)) cout &lt;&lt; A[i] &lt;&lt; " ";
+            cout &lt;&lt; "}" &lt;&lt; endl;
+        }
+    }
+}
+// ทุก mask ทำงาน O(n) → รวม O(n · 2ⁿ)</code></pre>
+
+  <div class="note tip">
+    <strong>เทคนิค bitmask:</strong> เลขจำนวนเต็ม n bit แทน subset ของของ n ตัว
+    bit ที่ i = 1 หมายถึง "เอา A[i]" ใช้แทน vector&lt;bool&gt; ได้ memory ประหยัดมาก
+  </div>
+
+  <h3>เปรียบเทียบ — brute force vs backtracking</h3>
+<pre><code class="cpp">// แบบ backtracking (จาก lab/w2.cpp) — สามารถ prune ได้
+void bt(vector&lt;int&gt;&amp; A, int idx, int sum, int target) {
+    if (sum == target) { print(...); return; }
+    if (sum &gt; target) return;          // ← prune เร็วกว่า brute!
+    if (idx &gt;= A.size()) return;
+    bt(A, idx + 1, sum + A[idx], target);  // เอา
+    bt(A, idx + 1, sum, target);           // ไม่เอา
+}</code></pre>
+
+  <p><strong>Worst case ทั้งคู่ O(2ⁿ)</strong> — แต่ backtracking ในทางปฏิบัติเร็วกว่ามาก
+  เพราะหยุดเดินสาขาที่รู้แน่ ๆ ว่าไม่มีคำตอบ</p>
+
+  <h2>ตัวอย่าง 3 — Traveling Salesman (TSP)</h2>
+  <p>มีเมือง n เมือง ระยะระหว่างเมืองให้ — หาเส้นทางสั้นสุดที่เยี่ยมทุกเมืองครั้งเดียวแล้วกลับจุดเริ่ม</p>
+
+<pre><code class="cpp">int n;
+vector&lt;vector&lt;int&gt;&gt; dist;
+int bestCost = INT_MAX;
+
+void tspBrute(vector&lt;int&gt;&amp; tour, int start, int end) {
+    if (start == end) {
+        int cost = 0;
+        for (int i = 0; i &lt; end; i++) cost += dist[tour[i]][tour[i+1]];
+        cost += dist[tour[end]][tour[0]];        // กลับจุดเริ่ม
+        bestCost = min(bestCost, cost);
+        return;
+    }
+    for (int i = start; i &lt;= end; i++) {
+        swap(tour[start], tour[i]);
+        tspBrute(tour, start + 1, end);
+        swap(tour[start], tour[i]);
+    }
+}
+// O(n!) — n=10 = 3.6M, n=15 = 1300B, n=20 = 2.4×10¹⁸ ✗</code></pre>
+
+  <p><strong>ใช้ DP bitmask ได้ O(n²·2ⁿ)</strong> — เร็วกว่ามากสำหรับ n ≤ 20
+  (ดูเทคนิคในคอร์สขั้นสูง)</p>
+
+  <h2>ตัวอย่าง 4 — Permutation count</h2>
+  <p>(จาก <code>lab/p_fo_n.cpp</code>) สร้าง permutation ทั้งหมดของ {1, ..., n}</p>
+  <p>นับเลขเฉย ๆ คือ <code>n!</code> — แต่ถ้าต้อง <em>print</em> ก็ต้อง enumerate</p>
+
+  <table>
+    <tr><th>n</th><th>n!</th></tr>
+    <tr><td>5</td><td>120</td></tr>
+    <tr><td>10</td><td>3,628,800</td></tr>
+    <tr><td>12</td><td>479,001,600</td></tr>
+    <tr><td>15</td><td>1.3 × 10¹²</td></tr>
+    <tr><td>20</td><td>2.4 × 10¹⁸</td></tr>
+  </table>
+  <p>n=12 ก็ใช้เวลาเป็นวินาทีแล้ว!</p>
+
+  <h2>เมื่อไหร่ใช้ exhaustive ได้?</h2>
+  <ul>
+    <li><strong>n เล็กมาก</strong> (≤ 20-30 สำหรับ subset, ≤ 11 สำหรับ permutation)</li>
+    <li>ต้องการ <strong>print ทุก solution</strong> ไม่ใช่แค่นับ</li>
+    <li>ต้องการ <strong>verify</strong> algorithm ที่ฉลาดกว่า — ใช้ brute เช็ค correctness</li>
+    <li>ปัญหาเป็น <strong>NP-hard</strong> + n เล็ก (เช่น TSP n &lt; 20)</li>
+  </ul>
+
+  <h2>Pattern ของ exhaustive search</h2>
+  <table>
+    <tr><th>ต้องการ enumerate</th><th>วิธี</th><th>complexity</th></tr>
+    <tr><td>Subset ของ n ตัว</td><td>bitmask 0 ถึง 2ⁿ-1</td><td>O(n · 2ⁿ)</td></tr>
+    <tr><td>Permutation ของ n ตัว</td><td>swap recursion / next_permutation</td><td>O(n · n!)</td></tr>
+    <tr><td>Combination C(n,k)</td><td>recursion + start index</td><td>O(C(n,k) · k)</td></tr>
+    <tr><td>Tuple (k ช่อง × m option)</td><td>n loop ซ้อน หรือ recursion</td><td>O(mᵏ)</td></tr>
+  </table>
+
+  <h2>Tip: <code>std::next_permutation</code></h2>
+<pre><code class="cpp">#include &lt;algorithm&gt;
+
+vector&lt;int&gt; v = {1, 2, 3};
+sort(v.begin(), v.end());
+do {
+    for (int x : v) cout &lt;&lt; x &lt;&lt; " ";
+    cout &lt;&lt; endl;
+} while (next_permutation(v.begin(), v.end()));
+// print: 1 2 3 / 1 3 2 / 2 1 3 / 2 3 1 / 3 1 2 / 3 2 1</code></pre>
+
+  <p><code>next_permutation</code> สั้นกว่าเขียน recursion เอง ในทางปฏิบัติใช้บ่อย</p>
+
+  <h2>การเปรียบเทียบ approach ทั้งหมด</h2>
+  <p>เมื่อเจอปัญหาให้ลองคิดตามลำดับ:</p>
+  <ol>
+    <li><strong>Greedy</strong> — ลองคิด local choice → ถ้า work เสร็จ (เร็ว, code สั้น)</li>
+    <li><strong>DP</strong> — ถ้า greedy ไม่ work แต่มี optimal substructure + overlapping</li>
+    <li><strong>D&amp;C</strong> — ถ้าแบ่งปัญหาเป็นชิ้นเล็ก ๆ ที่ไม่ทับกันได้</li>
+    <li><strong>Backtracking</strong> — ถ้าต้องลองหลาย option แต่ prune ได้</li>
+    <li><strong>Exhaustive</strong> — last resort, ใช้เมื่อ n เล็ก</li>
+  </ol>
+
+  <h2>แบบฝึก</h2>
+
+  <div class="exercise">
+    <span class="qnum">Q1</span>
+    <strong>Generate Power Set:</strong> สร้าง subset ทั้งหมดของ <code>{1, 2, 3}</code>
+    (8 subsets รวมเซ็ตว่าง)
+    <details>
+      <summary>เฉลย — ใช้ bitmask</summary>
+<pre><code class="cpp">void powerSet(vector&lt;int&gt;&amp; A) {
+    int n = A.size();
+    for (int mask = 0; mask &lt; (1 &lt;&lt; n); mask++) {
+        cout &lt;&lt; "{ ";
+        for (int i = 0; i &lt; n; i++)
+            if (mask &amp; (1 &lt;&lt; i)) cout &lt;&lt; A[i] &lt;&lt; " ";
+        cout &lt;&lt; "}" &lt;&lt; endl;
+    }
+}</code></pre>
+    </details>
+  </div>
+
+  <div class="exercise">
+    <span class="qnum">Q2</span>
+    <strong>Magic Square:</strong> ตาราง 3×3 ใส่เลข 1-9 ให้ทุกแถว/คอลัมน์/แนวทแยงรวมเท่ากัน
+    หาทุกแบบที่เป็นไปได้
+    <details>
+      <summary>เฉลย — permutation 9!</summary>
+<pre><code class="cpp">int square[3][3];
+
+bool isMagic() {
+    int sum = square[0][0] + square[0][1] + square[0][2];
+    for (int i = 0; i &lt; 3; i++) {
+        if (square[i][0] + square[i][1] + square[i][2] != sum) return false;
+        if (square[0][i] + square[1][i] + square[2][i] != sum) return false;
+    }
+    if (square[0][0] + square[1][1] + square[2][2] != sum) return false;
+    if (square[0][2] + square[1][1] + square[2][0] != sum) return false;
+    return true;
+}
+
+void place(vector&lt;int&gt;&amp; v, int idx) {
+    if (idx == 9) {
+        for (int i = 0; i &lt; 9; i++) square[i/3][i%3] = v[i];
+        if (isMagic()) print();
+        return;
+    }
+    for (int i = idx; i &lt; 9; i++) {
+        swap(v[idx], v[i]);
+        place(v, idx + 1);
+        swap(v[idx], v[i]);
+    }
+}
+// 9! = 362880 — ทำได้ในเสี้ยววินาที</code></pre>
+    </details>
+  </div>
+
+  <div class="exercise">
+    <span class="qnum">Q3</span>
+    <strong>Maximum Subarray (brute force):</strong> หา subarray ที่ผลรวมสูงสุด
+    เปรียบเทียบ O(n³) → O(n²) → Kadane O(n)
+    <details>
+      <summary>เฉลย</summary>
+<pre><code class="cpp">// O(n³) brute
+int max1(vector&lt;int&gt;&amp; a) {
+    int n = a.size(), best = INT_MIN;
+    for (int i = 0; i &lt; n; i++)
+        for (int j = i; j &lt; n; j++) {
+            int sum = 0;
+            for (int k = i; k &lt;= j; k++) sum += a[k];
+            best = max(best, sum);
+        }
+    return best;
+}
+
+// O(n²) — เก็บ running sum
+int max2(vector&lt;int&gt;&amp; a) {
+    int n = a.size(), best = INT_MIN;
+    for (int i = 0; i &lt; n; i++) {
+        int sum = 0;
+        for (int j = i; j &lt; n; j++) {
+            sum += a[j];
+            best = max(best, sum);
+        }
+    }
+    return best;
+}
+
+// O(n) — Kadane's algorithm
+int kadane(vector&lt;int&gt;&amp; a) {
+    int best = a[0], cur = a[0];
+    for (int i = 1; i &lt; a.size(); i++) {
+        cur = max(a[i], cur + a[i]);    // เริ่ม subarray ใหม่ที่ i หรือต่อเดิม
+        best = max(best, cur);
+    }
+    return best;
+}</code></pre>
+      <p>n=10⁴ — O(n³) = 10¹² ใช้ไม่ได้, O(n²) = 10⁸ ใช้เวลา ~1 วิ, Kadane = 10⁴ ทันที</p>
+    </details>
+  </div>
+
+  <div class="note tip">
+    <strong>จบทุกหัวข้อ! 🎓</strong>
+    คุณได้เรียน Big O, Recursion, Sort/Search, D&amp;C, DP, Greedy, Backtracking, Graph, Exhaustive
+    — เป็นพื้นฐาน <em>ครบ</em> ของวิชา algorithm ลองกลับไปเปิดไฟล์ใน <code>lab/</code>, <code>labSortLab2/</code>, <code>labWeak2/</code>, <code>tranning/</code>
+    อ่านโค้ดอีกรอบ คุณจะเข้าใจมากขึ้นแน่นอน
+  </div>
+
+</main>
+
+<footer>
+  <div class="container"><a href="index.html">← กลับ Hub</a> · <a href="12-search.html">ถัดไป: Search Deep Dive →</a></div>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>

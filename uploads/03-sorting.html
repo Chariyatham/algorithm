@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>03 · Sorting Algorithms</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="site">
+  <div class="container">
+    <h1><a href="index.html" style="color: var(--fg)">← Hub</a> · 03 Sorting</h1>
+    <nav class="top">
+      <a href="02-recursion.html">← Recursion</a>
+      <a href="04-divide-conquer.html">D&amp;C →</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+  <h1>Sorting Algorithms — เรียงข้อมูล</h1>
+  <p class="lead">
+    เรียง array จากน้อยไปมาก ฟังดูง่าย แต่มีอัลกอริทึมเป็นสิบ ๆ แบบ
+    เราจะดู 5 ตัวที่สำคัญที่สุด พร้อมอนิเมชันให้เห็น <strong>ทุก compare ทุก swap</strong>
+  </p>
+
+  <div class="card">
+    <h3 style="margin-top: 0">ทำไมต้องรู้หลายแบบ?</h3>
+    <p>ในชีวิตจริงเราใช้ <code>std::sort()</code> ซึ่งเป็น quicksort + insertion sort + heapsort
+    ผสมกัน (called <em>introsort</em>) — แต่ถ้าจะเข้าใจว่าทำไมมันเร็ว ต้องรู้พื้นฐาน</p>
+    <p>นอกจากนี้ <strong>เทคนิค</strong> ของ sort แต่ละแบบยังเป็น pattern ที่ใช้ในปัญหาอื่น:</p>
+    <ul>
+      <li>Merge sort → divide &amp; conquer pattern</li>
+      <li>Quick sort → partition pattern (ใช้ใน selection problem)</li>
+      <li>Insertion sort → online algorithm pattern (sort ขณะรับข้อมูลทีละตัว)</li>
+    </ul>
+  </div>
+
+  <h2>เปรียบเทียบทั้ง 5 แบบ</h2>
+  <table>
+    <tr><th>Algorithm</th><th>Best</th><th>Average</th><th>Worst</th><th>Memory</th><th>Stable?</th></tr>
+    <tr><td><strong>Bubble</strong></td><td><span class="complexity c-n">O(n)</span></td><td><span class="complexity c-n2">O(n²)</span></td><td><span class="complexity c-n2">O(n²)</span></td><td>O(1)</td><td>✓</td></tr>
+    <tr><td><strong>Selection</strong></td><td><span class="complexity c-n2">O(n²)</span></td><td><span class="complexity c-n2">O(n²)</span></td><td><span class="complexity c-n2">O(n²)</span></td><td>O(1)</td><td>✗</td></tr>
+    <tr><td><strong>Insertion</strong></td><td><span class="complexity c-n">O(n)</span></td><td><span class="complexity c-n2">O(n²)</span></td><td><span class="complexity c-n2">O(n²)</span></td><td>O(1)</td><td>✓</td></tr>
+    <tr><td><strong>Merge</strong></td><td><span class="complexity c-nlog">O(n log n)</span></td><td><span class="complexity c-nlog">O(n log n)</span></td><td><span class="complexity c-nlog">O(n log n)</span></td><td>O(n)</td><td>✓</td></tr>
+    <tr><td><strong>Quick</strong></td><td><span class="complexity c-nlog">O(n log n)</span></td><td><span class="complexity c-nlog">O(n log n)</span></td><td><span class="complexity c-n2">O(n²)</span></td><td>O(log n)</td><td>✗</td></tr>
+  </table>
+
+  <div class="note">
+    <strong>Stable</strong> = ถ้ามี element ค่าเท่ากัน 2 ตัว ลำดับเดิมจะถูกรักษาไว้ —
+    สำคัญตอน sort ตามหลายเกณฑ์ (เช่น sort ตามอายุ แล้วได้ลำดับเรียงชื่อในกลุ่มอายุเดียวกัน)
+  </div>
+
+  <h2>เห็นภาพ: เลือก algorithm + กด Play</h2>
+
+  <div class="viz">
+    <div class="controls">
+      <select id="sort-algo">
+        <option value="bubble">Bubble Sort</option>
+        <option value="selection">Selection Sort</option>
+        <option value="insertion">Insertion Sort</option>
+        <option value="merge">Merge Sort</option>
+        <option value="quick" selected>Quick Sort</option>
+      </select>
+      <label class="label">ขนาด:</label>
+      <input type="number" id="sort-size" value="14" min="4" max="30" style="width: 70px">
+      <label class="label">ความเร็ว:</label>
+      <input type="range" id="sort-speed" min="1" max="100" value="60" style="width: 120px">
+      <button id="sort-shuffle" class="ghost">🎲 สุ่มใหม่</button>
+      <button id="sort-play">▶ Play</button>
+      <button id="sort-stop" class="ghost">■ Stop</button>
+    </div>
+    <div id="sort-bars"></div>
+    <div class="legend">
+      <span><i style="background: var(--accent)"></i>ปกติ</span>
+      <span><i style="background: var(--warn)"></i>กำลังเทียบ</span>
+      <span><i style="background: var(--bad)"></i>กำลังสลับ</span>
+      <span><i style="background: #d2a8ff"></i>pivot (quick sort)</span>
+      <span><i style="background: var(--good)"></i>เรียงเสร็จแล้ว</span>
+    </div>
+    <div class="status" id="sort-status">เลือก algorithm แล้วกด Play</div>
+    <div class="status" id="sort-stats" style="margin-top: 4px">comparisons: 0 · swaps: 0</div>
+  </div>
+
+  <h2>1. Bubble Sort — เรียงแบบฟองอากาศ</h2>
+  <p>เทียบ <strong>ทีละคู่ติดกัน</strong> ถ้าผิดให้สลับ วน n-1 รอบ ตัวใหญ่จะ "ลอย" ไปท้าย</p>
+
+<pre><code class="cpp">void bubbleSort(vector&lt;int&gt;&amp; a) {
+    int n = a.size();
+    for (int i = 0; i &lt; n - 1; i++) {
+        for (int j = 0; j &lt; n - 1 - i; j++) {
+            if (a[j] &gt; a[j+1])
+                swap(a[j], a[j+1]);
+        }
+    }
+}</code></pre>
+
+  <div class="note tip">
+    <strong>ปรับให้เร็วขึ้น:</strong> ใส่ flag <code>swapped</code> ถ้ารอบไหนไม่ swap เลย แสดงว่าเรียงเสร็จแล้ว → break
+    ทำให้ best case (input เรียงอยู่แล้ว) เป็น O(n)
+  </div>
+
+  <h2>2. Selection Sort — เลือกตัวน้อยที่สุดแล้วเอามาไว้หน้า</h2>
+<pre><code class="cpp">void selectionSort(vector&lt;int&gt;&amp; a) {
+    int n = a.size();
+    for (int i = 0; i &lt; n - 1; i++) {
+        int minIdx = i;
+        for (int j = i + 1; j &lt; n; j++)
+            if (a[j] &lt; a[minIdx]) minIdx = j;
+        swap(a[i], a[minIdx]);
+    }
+}</code></pre>
+  <p>ทุกรอบหาตัวที่น้อยสุดในส่วนที่ยังไม่เรียง แล้วเอามาวางตำแหน่ง <code>i</code>
+  → swap แค่ <strong>n-1 ครั้ง</strong> (ดีกว่า bubble) แต่ compare ก็ยัง O(n²)</p>
+
+  <h2>3. Insertion Sort — ค่อย ๆ แทรกเข้าที่</h2>
+<pre><code class="cpp">void insertionSort(vector&lt;int&gt;&amp; a) {
+    int n = a.size();
+    for (int i = 1; i &lt; n; i++) {
+        int key = a[i];
+        int j = i - 1;
+        while (j &gt;= 0 &amp;&amp; a[j] &gt; key) {
+            a[j+1] = a[j];   // เลื่อนไปขวา
+            j--;
+        }
+        a[j+1] = key;        // แทรก
+    }
+}</code></pre>
+  <p>เหมือนเรียงไพ่ในมือ — หยิบไพ่ใบใหม่ขึ้นมาแล้วเสียบเข้าตำแหน่งที่ถูกต้อง
+  <strong>เร็วมากเมื่อ array เกือบเรียงอยู่แล้ว</strong> (best case O(n))</p>
+
+  <h2>4. Merge Sort — แบ่งครึ่ง แล้วรวม (Divide &amp; Conquer)</h2>
+  <p><strong>Idea:</strong> แบ่ง array ครึ่ง → sort ทั้งสองครึ่ง (recursive) → merge เข้าด้วยกัน</p>
+
+<pre><code class="cpp">// from labSortLab2/merge_sort.cpp
+void merge(vector&lt;int&gt;&amp; arr, int l, int m, int r) {
+    int n1 = m - l + 1, n2 = r - m;
+    vector&lt;int&gt; L(n1), R(n2);
+    for (int i = 0; i &lt; n1; i++) L[i] = arr[l + i];
+    for (int j = 0; j &lt; n2; j++) R[j] = arr[m + 1 + j];
+
+    int i = 0, j = 0, k = l;
+    while (i &lt; n1 &amp;&amp; j &lt; n2) {
+        if (L[i] &lt;= R[j]) arr[k++] = L[i++];
+        else              arr[k++] = R[j++];
+    }
+    while (i &lt; n1) arr[k++] = L[i++];
+    while (j &lt; n2) arr[k++] = R[j++];
+}
+
+void mergeSort(vector&lt;int&gt;&amp; arr, int l, int r) {
+    if (l &gt;= r) return;             // base: 1 element
+    int m = l + (r - l) / 2;
+    mergeSort(arr, l, m);            // sort ครึ่งซ้าย
+    mergeSort(arr, m + 1, r);        // sort ครึ่งขวา
+    merge(arr, l, m, r);             // รวม
+}</code></pre>
+
+  <div class="note">
+    <strong>ทำไม O(n log n)?</strong>
+    <ul>
+      <li>ระดับลึก (depth) ของการแบ่ง = log₂(n)</li>
+      <li>ในแต่ละระดับ ต้องวน element ทั้งหมดเพื่อ merge = n</li>
+      <li>รวม = n × log n = O(n log n) ✓</li>
+    </ul>
+  </div>
+
+  <h2>5. Quick Sort — เลือก pivot แล้วแบ่ง</h2>
+  <p><strong>Idea:</strong> เลือก element 1 ตัวเป็น <em>pivot</em> → ย้ายตัวที่น้อยกว่าไปซ้าย ใหญ่กว่าไปขวา → sort 2 ฝั่ง recursive</p>
+
+<pre><code class="cpp">// from labSortLab2/quick_sort.cpp
+int partition(vector&lt;int&gt;&amp; arr, int low, int high) {
+    int pivot = arr[high];          // ใช้ตัวสุดท้ายเป็น pivot
+    int i = low - 1;
+    for (int j = low; j &lt;= high - 1; j++) {
+        if (arr[j] &lt; pivot) {
+            i++;
+            swap(arr[i], arr[j]);
+        }
+    }
+    swap(arr[i + 1], arr[high]);    // ย้าย pivot มาตรงกลาง
+    return i + 1;                    // คืน index ของ pivot
+}
+
+void quickSort(vector&lt;int&gt;&amp; arr, int low, int high) {
+    if (low &lt; high) {
+        int pi = partition(arr, low, high);
+        quickSort(arr, low, pi - 1);    // sort ฝั่งซ้าย
+        quickSort(arr, pi + 1, high);   // sort ฝั่งขวา
+    }
+}</code></pre>
+
+  <div class="note warn">
+    <strong>Worst case O(n²):</strong> ถ้า input เรียงอยู่แล้ว และเลือก pivot ตัวสุดท้ายเสมอ
+    → partition ไม่สมดุล (ฝั่งหนึ่งว่าง อีกฝั่งเต็ม) → recursion depth = n
+    <br><strong>วิธีแก้:</strong> สุ่ม pivot หรือใช้ "median-of-three"
+  </div>
+
+  <h2>เลือก sort ตัวไหนเมื่อไหร่?</h2>
+  <ul>
+    <li><strong>n เล็ก (≤ 30):</strong> insertion sort เร็วสุด (overhead น้อย)</li>
+    <li><strong>n กลาง-ใหญ่:</strong> quick sort (เร็วที่สุดในทางปฏิบัติ, cache friendly)</li>
+    <li><strong>ต้องการ stable:</strong> merge sort</li>
+    <li><strong>memory จำกัดมาก:</strong> heap sort หรือ in-place quick sort</li>
+    <li><strong>ในชีวิตจริง:</strong> ใช้ <code>std::sort()</code> ไปเลย</li>
+  </ul>
+
+  <h2>แบบฝึก</h2>
+
+  <div class="exercise">
+    <span class="qnum">Q1</span> <strong>Trace bubble sort บน <code>[5, 2, 4, 1]</code> เขียนผลแต่ละ pass</strong>
+    <details>
+      <summary>เฉลย</summary>
+      <p>เริ่ม: <code>[5, 2, 4, 1]</code></p>
+      <ul>
+        <li>Pass 1: 5↔2 → [2,5,4,1] → 5↔4 → [2,4,5,1] → 5↔1 → <code>[2,4,1,5]</code></li>
+        <li>Pass 2: 2≤4 → [2,4,1,5] → 4↔1 → <code>[2,1,4,5]</code></li>
+        <li>Pass 3: 2↔1 → <code>[1,2,4,5]</code> ✓</li>
+      </ul>
+      <p>ทุก pass ตัวใหญ่สุด "ลอย" ไปขวา</p>
+    </details>
+  </div>
+
+  <div class="exercise">
+    <span class="qnum">Q2</span> <strong>เขียน insertion sort ที่ print array ทุก pass (สำหรับ debug)</strong>
+    <details>
+      <summary>เฉลย</summary>
+<pre><code class="cpp">void insertionSortDebug(vector&lt;int&gt;&amp; a) {
+    int n = a.size();
+    for (int i = 1; i &lt; n; i++) {
+        int key = a[i], j = i - 1;
+        while (j &gt;= 0 &amp;&amp; a[j] &gt; key) {
+            a[j+1] = a[j]; j--;
+        }
+        a[j+1] = key;
+        cout &lt;&lt; "after pass " &lt;&lt; i &lt;&lt; ": ";
+        for (int x : a) cout &lt;&lt; x &lt;&lt; " ";
+        cout &lt;&lt; endl;
+    }
+}</code></pre>
+    </details>
+  </div>
+
+  <div class="exercise">
+    <span class="qnum">Q3</span> <strong>ทำไม merge sort ต้องใช้ memory O(n) แต่ quick sort ใช้แค่ O(log n)?</strong>
+    <details>
+      <summary>เฉลย</summary>
+      <ul>
+        <li><strong>Merge sort</strong> ตอน merge ต้อง <code>L</code>, <code>R</code> เก็บข้อมูลชั่วคราว — รวมขนาดทั้งหมดในแต่ละ depth = n</li>
+        <li><strong>Quick sort</strong> ทำ partition <em>in-place</em> (เปลี่ยนใน array เดิม) — memory ที่ใช้คือ call stack
+        ซึ่งลึกสุด log n ตอน partition แบ่งครึ่งสมบูรณ์</li>
+      </ul>
+    </details>
+  </div>
+
+  <div class="exercise">
+    <span class="qnum">Q4</span> <strong>(จาก <code>labSortLab2/lab2_q4.cpp</code>)</strong>
+    <p>กำหนด array ของจำนวนเต็ม จงหา <em>ความยาวของ subsequence ที่เป็นเลขติดกัน</em> ที่ยาวที่สุด
+    เช่น <code>[100, 4, 200, 1, 3, 2]</code> → 1,2,3,4 → ยาว 4</p>
+    <details>
+      <summary>เฉลย (วิธี sort)</summary>
+<pre><code class="cpp">int longestConsecutive(vector&lt;int&gt;&amp; arr) {
+    if (arr.empty()) return 0;
+    sort(arr.begin(), arr.end());
+    int maxLen = 1, cur = 1;
+    for (int i = 1; i &lt; (int)arr.size(); i++) {
+        if (arr[i] == arr[i-1] + 1) cur++;
+        else if (arr[i] != arr[i-1]) {
+            maxLen = max(maxLen, cur);
+            cur = 1;
+        }
+    }
+    return max(maxLen, cur);
+}
+// O(n log n) จาก sort + O(n) วน → O(n log n) รวม</code></pre>
+      <p><strong>โบนัส:</strong> ใช้ <code>unordered_set</code> ทำได้ O(n) — ลองคิด!</p>
+    </details>
+  </div>
+
+</main>
+
+<footer>
+  <div class="container"><a href="index.html">← Hub</a> · <a href="04-divide-conquer.html">ถัดไป: Divide &amp; Conquer →</a></div>
+</footer>
+
+<script src="script.js"></script>
+<script>
+// ==== Sorting visualizer ====
+(function() {
+  const algoSel = document.getElementById('sort-algo');
+  const sizeIn = document.getElementById('sort-size');
+  const speedIn = document.getElementById('sort-speed');
+  const playBtn = document.getElementById('sort-play');
+  const stopBtn = document.getElementById('sort-stop');
+  const shuffleBtn = document.getElementById('sort-shuffle');
+  const barsEl = document.getElementById('sort-bars');
+  const statusEl = document.getElementById('sort-status');
+  const statsEl = document.getElementById('sort-stats');
+
+  let arr = [];
+  let stop = false, running = false;
+  let comparisons = 0, swaps = 0;
+
+  function delay() { return Math.max(20, 600 - parseInt(speedIn.value) * 5); }
+  function updStats() { statsEl.textContent = `comparisons: ${comparisons} · swaps: ${swaps}`; }
+
+  function shuffle() {
+    const n = Math.max(4, Math.min(30, parseInt(sizeIn.value) || 14));
+    arr = randArray(n, 5, 90);
+    comparisons = 0; swaps = 0;
+    updStats();
+    renderBars(barsEl, arr);
+    statusEl.textContent = 'พร้อมเรียง';
+  }
+
+  function setClass(idx, cls) {
+    const bs = barsEl.querySelectorAll('.bar');
+    if (cls === null) bs[idx].className = 'bar';
+    else bs[idx].classList.add(cls);
+  }
+  function clearClass(idx, cls) {
+    const bs = barsEl.querySelectorAll('.bar');
+    bs[idx].classList.remove(cls);
+  }
+  function setHeight(idx, v) {
+    const bs = barsEl.querySelectorAll('.bar');
+    const max = Math.max(...arr, 1);
+    bs[idx].style.height = (8 + (v / max) * 92) + '%';
+    bs[idx].querySelector('.v').textContent = v;
+  }
+  function clearAll() {
+    barsEl.querySelectorAll('.bar').forEach(b => { b.className = 'bar'; });
+  }
+
+  // ---- Bubble ----
+  async function bubbleSort() {
+    const n = arr.length;
+    for (let i = 0; i < n - 1; i++) {
+      let swapped = false;
+      for (let j = 0; j < n - 1 - i; j++) {
+        if (stop) return;
+        setClass(j, 'compare'); setClass(j + 1, 'compare');
+        comparisons++; updStats();
+        statusEl.textContent = `เทียบ a[${j}]=${arr[j]} กับ a[${j+1}]=${arr[j+1]}`;
+        await sleep(delay());
+        if (arr[j] > arr[j + 1]) {
+          [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
+          setHeight(j, arr[j]); setHeight(j + 1, arr[j + 1]);
+          setClass(j, 'swap'); setClass(j + 1, 'swap');
+          swaps++; updStats();
+          await sleep(delay());
+          swapped = true;
+        }
+        clearClass(j, 'compare'); clearClass(j + 1, 'compare');
+        clearClass(j, 'swap'); clearClass(j + 1, 'swap');
+      }
+      setClass(n - 1 - i, 'sorted');
+      if (!swapped) {
+        for (let k = 0; k <= n - 2 - i; k++) setClass(k, 'sorted');
+        break;
+      }
+    }
+    setClass(0, 'sorted');
+  }
+
+  // ---- Selection ----
+  async function selectionSort() {
+    const n = arr.length;
+    for (let i = 0; i < n - 1; i++) {
+      let minIdx = i;
+      setClass(minIdx, 'pivot');
+      for (let j = i + 1; j < n; j++) {
+        if (stop) return;
+        setClass(j, 'compare');
+        comparisons++; updStats();
+        statusEl.textContent = `min ตอนนี้ = a[${minIdx}]=${arr[minIdx]}, เทียบกับ a[${j}]=${arr[j]}`;
+        await sleep(delay());
+        if (arr[j] < arr[minIdx]) {
+          clearClass(minIdx, 'pivot');
+          minIdx = j;
+          setClass(minIdx, 'pivot');
+        } else {
+          clearClass(j, 'compare');
+        }
+      }
+      if (minIdx !== i) {
+        [arr[i], arr[minIdx]] = [arr[minIdx], arr[i]];
+        setHeight(i, arr[i]); setHeight(minIdx, arr[minIdx]);
+        swaps++; updStats();
+      }
+      clearAll();
+      for (let k = 0; k <= i; k++) setClass(k, 'sorted');
+    }
+    for (let k = 0; k < n; k++) setClass(k, 'sorted');
+  }
+
+  // ---- Insertion ----
+  async function insertionSort() {
+    const n = arr.length;
+    setClass(0, 'sorted');
+    for (let i = 1; i < n; i++) {
+      if (stop) return;
+      const key = arr[i];
+      setClass(i, 'pivot');
+      statusEl.textContent = `หยิบ key = ${key}`;
+      await sleep(delay());
+      let j = i - 1;
+      while (j >= 0 && arr[j] > key) {
+        setClass(j, 'compare');
+        comparisons++; updStats();
+        await sleep(delay());
+        arr[j + 1] = arr[j];
+        setHeight(j + 1, arr[j + 1]);
+        swaps++; updStats();
+        clearClass(j, 'compare');
+        clearClass(j + 1, 'sorted');
+        setClass(j + 1, 'sorted');
+        j--;
+      }
+      arr[j + 1] = key;
+      setHeight(j + 1, key);
+      clearClass(i, 'pivot');
+      for (let k = 0; k <= i; k++) setClass(k, 'sorted');
+    }
+  }
+
+  // ---- Merge ----
+  async function mergeSort(l = 0, r = arr.length - 1) {
+    if (l >= r) return;
+    if (stop) return;
+    const m = Math.floor((l + r) / 2);
+    await mergeSort(l, m);
+    await mergeSort(m + 1, r);
+    await merge(l, m, r);
+  }
+  async function merge(l, m, r) {
+    statusEl.textContent = `merge [${l}..${m}] กับ [${m+1}..${r}]`;
+    for (let k = l; k <= r; k++) setClass(k, 'compare');
+    await sleep(delay());
+    const left = arr.slice(l, m + 1);
+    const right = arr.slice(m + 1, r + 1);
+    let i = 0, j = 0, k = l;
+    while (i < left.length && j < right.length) {
+      if (stop) return;
+      comparisons++; updStats();
+      if (left[i] <= right[j]) {
+        arr[k] = left[i]; i++;
+      } else {
+        arr[k] = right[j]; j++;
+      }
+      setHeight(k, arr[k]); swaps++; updStats();
+      await sleep(delay());
+      k++;
+    }
+    while (i < left.length) { arr[k] = left[i]; setHeight(k, arr[k]); i++; k++; await sleep(delay()/2); }
+    while (j < right.length) { arr[k] = right[j]; setHeight(k, arr[k]); j++; k++; await sleep(delay()/2); }
+    for (let k2 = l; k2 <= r; k2++) {
+      clearClass(k2, 'compare');
+      if (l === 0 && r === arr.length - 1) setClass(k2, 'sorted');
+    }
+  }
+
+  // ---- Quick ----
+  async function quickSort(low = 0, high = arr.length - 1) {
+    if (low >= high) {
+      if (low === high) setClass(low, 'sorted');
+      return;
+    }
+    if (stop) return;
+    const pi = await partition(low, high);
+    setClass(pi, 'sorted');
+    await quickSort(low, pi - 1);
+    await quickSort(pi + 1, high);
+  }
+  async function partition(low, high) {
+    const pivot = arr[high];
+    setClass(high, 'pivot');
+    statusEl.textContent = `pivot = a[${high}] = ${pivot}, partition [${low}..${high}]`;
+    await sleep(delay());
+    let i = low - 1;
+    for (let j = low; j < high; j++) {
+      if (stop) return j;
+      setClass(j, 'compare');
+      comparisons++; updStats();
+      await sleep(delay());
+      if (arr[j] < pivot) {
+        i++;
+        if (i !== j) {
+          [arr[i], arr[j]] = [arr[j], arr[i]];
+          setHeight(i, arr[i]); setHeight(j, arr[j]);
+          swaps++; updStats();
+        }
+      }
+      clearClass(j, 'compare');
+    }
+    [arr[i + 1], arr[high]] = [arr[high], arr[i + 1]];
+    setHeight(i + 1, arr[i + 1]); setHeight(high, arr[high]);
+    swaps++; updStats();
+    clearClass(high, 'pivot');
+    return i + 1;
+  }
+
+  async function play() {
+    if (running) return;
+    running = true; stop = false;
+    comparisons = 0; swaps = 0; updStats();
+    clearAll();
+    const fns = { bubble: bubbleSort, selection: selectionSort, insertion: insertionSort, merge: mergeSort, quick: quickSort };
+    await fns[algoSel.value]();
+    if (!stop) {
+      // mark all sorted
+      barsEl.querySelectorAll('.bar').forEach(b => b.classList.add('sorted'));
+      statusEl.innerHTML = `<strong>เสร็จ!</strong> comparisons: ${comparisons}, swaps: ${swaps}`;
+    } else {
+      statusEl.textContent = 'หยุดแล้ว';
+    }
+    running = false;
+  }
+
+  shuffleBtn.onclick = () => { if (!running) shuffle(); };
+  playBtn.onclick = play;
+  stopBtn.onclick = () => { stop = true; };
+
+  shuffle();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>06 · Greedy Algorithms</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="site">
+  <div class="container">
+    <h1><a href="index.html" style="color: var(--fg)">← Hub</a> · 06 Greedy</h1>
+    <nav class="top">
+      <a href="05-dp.html">← DP</a>
+      <a href="07-backtracking.html">Backtracking →</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+  <h1>Greedy — เลือกตัวที่ดีที่สุดในตอนนั้นเลย</h1>
+  <p class="lead">
+    Greedy = ในแต่ละ step เลือก option ที่ดูดีที่สุด <strong>โดยไม่ย้อนแก้</strong>
+    เร็วกว่า DP มาก แต่ <strong>ไม่ได้ใช้ได้กับทุกปัญหา</strong> — ต้องพิสูจน์ก่อนว่าใช้ได้
+  </p>
+
+  <h2>Greedy ใช้ได้เมื่อไหร่?</h2>
+  <div class="card">
+    <p>ปัญหาต้องมี <strong>2 คุณสมบัติ</strong>:</p>
+    <ol>
+      <li>
+        <strong>Greedy choice property</strong> — เลือก local optimum แล้วยังไปสู่ global optimum ได้
+      </li>
+      <li>
+        <strong>Optimal substructure</strong> — เมื่อตัดสินใจ greedy choice แล้ว
+        ปัญหาที่เหลือยังเป็นปัญหา type เดียวกันในขนาดเล็กลง (เหมือน DP)
+      </li>
+    </ol>
+    <p>กล่าวคือ — <em>เลือกถูกครั้งแรกทุกครั้ง คุณก็จะไม่ผิด</em></p>
+  </div>
+
+  <h2>ตัวอย่างที่ Greedy <strong>ทำได้</strong>: Fractional Knapsack</h2>
+  <p>ของแต่ละชิ้น <strong>หั่นเศษได้</strong> — เลือกใส่กระเป๋า W kg ให้ value สูงสุด</p>
+
+  <p><strong>Greedy strategy:</strong> เรียงตาม value/weight (ความคุ้มค่าต่อกิโล) จากมากไปน้อย แล้วใส่ตามลำดับ</p>
+
+<pre><code class="cpp">struct Item { double w, v; };
+
+double fractionalKnapsack(vector&lt;Item&gt;&amp; items, double W) {
+    sort(items.begin(), items.end(), [](Item a, Item b) {
+        return a.v / a.w &gt; b.v / b.w;          // เรียง ratio มาก→น้อย
+    });
+    double total = 0;
+    for (auto&amp; it : items) {
+        if (W &gt;= it.w) {                       // ใส่ทั้งชิ้น
+            total += it.v; W -= it.w;
+        } else {                                // ใส่แค่บางส่วน
+            total += it.v * (W / it.w); break;
+        }
+    }
+    return total;
+}
+// O(n log n) จาก sort</code></pre>
+
+  <div class="viz">
+    <button id="frac-play">▶ Play fractional knapsack</button>
+    <div id="frac-stage" style="margin-top: 12px"></div>
+    <div class="status" id="frac-status">รอเริ่ม</div>
+  </div>
+
+  <h2>ตัวอย่างที่ Greedy <strong>ทำไม่ได้</strong>: 0/1 Knapsack</h2>
+  <p>ถ้าหั่นเศษไม่ได้ — greedy ratio พลาดได้!</p>
+  <table>
+    <tr><th>item</th><th>w</th><th>v</th><th>v/w</th></tr>
+    <tr><td>A</td><td>10</td><td>60</td><td>6.0</td></tr>
+    <tr><td>B</td><td>20</td><td>100</td><td>5.0</td></tr>
+    <tr><td>C</td><td>30</td><td>120</td><td>4.0</td></tr>
+  </table>
+  <p>W = 50:</p>
+  <ul>
+    <li><strong>Greedy:</strong> เอา A + B = w=30, v=160 (เหลือพื้นที่ 20 ใช้ไม่ได้)</li>
+    <li><strong>Optimum:</strong> เอา B + C = w=50, v=220 ✓</li>
+  </ul>
+  <div class="note bad">
+    <strong>0/1 Knapsack ต้องใช้ DP</strong> ดูได้ในหน้า <a href="05-dp.html">DP</a>
+  </div>
+
+  <h2>ตัวอย่างที่ 2 — Activity Selection</h2>
+  <p>มี activity n อย่าง แต่ละอย่างมี start, finish — เลือกให้ <strong>ไม่ทับกัน</strong> ได้มากสุดกี่อย่าง?</p>
+
+  <p><strong>Greedy:</strong> เรียงตาม <em>finish time</em> น้อย→มาก แล้วเลือกอันที่ start ≥ finish ของอันก่อนหน้า</p>
+
+<pre><code class="cpp">struct Act { int s, f; };
+
+int activitySelection(vector&lt;Act&gt;&amp; A) {
+    sort(A.begin(), A.end(), [](Act a, Act b) { return a.f &lt; b.f; });
+    int count = 1, lastFinish = A[0].f;
+    for (int i = 1; i &lt; A.size(); i++) {
+        if (A[i].s &gt;= lastFinish) {
+            count++;
+            lastFinish = A[i].f;
+        }
+    }
+    return count;
+}
+// O(n log n)</code></pre>
+
+  <div class="viz">
+    <button id="act-play">▶ Play activity selection</button>
+    <div id="act-stage"></div>
+    <div class="status" id="act-status">รอเริ่ม</div>
+  </div>
+
+  <p><strong>ทำไม "เรียงตาม finish" ใช้ได้?</strong>
+  เพราะ activity ที่จบเร็วที่สุดจะ <em>เปิดที่ว่าง</em> ให้ activity อื่นมากที่สุด
+  — proof แบบ exchange argument</p>
+
+  <h2>ตัวอย่างที่ 3 — Coin Change (greedy ใช้ได้บางกรณี)</h2>
+  <p>เหรียญไทย {1, 5, 10, 25} ทอน 30: เริ่ม 25 → เหลือ 5 → 5 = สอง 1 เหรียญ → 25+5</p>
+
+<pre><code class="cpp">int greedyCoin(vector&lt;int&gt;&amp; coins, int amount) {
+    sort(coins.rbegin(), coins.rend());        // มาก→น้อย
+    int count = 0;
+    for (int c : coins) {
+        count += amount / c;
+        amount %= c;
+    }
+    return (amount == 0) ? count : -1;
+}</code></pre>
+
+  <div class="note warn">
+    <strong>กับดัก!</strong> Greedy ใช้กับ coin set <em>มาตรฐาน</em> เท่านั้น (1, 5, 10, 25, ...)
+    <br>ลอง coins = {1, 3, 4}, amount = 6:
+    <ul>
+      <li>Greedy: 4 + 1 + 1 = 3 เหรียญ</li>
+      <li>Optimal: 3 + 3 = 2 เหรียญ ✓</li>
+    </ul>
+    coin set แบบ "non-canonical" ต้องใช้ DP
+  </div>
+
+  <h2>ตัวอย่างที่ 4 — Huffman Coding</h2>
+  <p>Compress ข้อความ — ให้ตัวอักษรที่ปรากฏบ่อยมีรหัสสั้น ตัวอักษรที่หายากมีรหัสยาว</p>
+  <p><strong>Greedy:</strong> ทุก step เอา 2 node ที่ frequency น้อยสุดมารวมเป็น tree node ใหม่</p>
+
+<pre><code class="cpp">struct HNode { int freq; char ch; HNode *l, *r; };
+
+struct Cmp { bool operator()(HNode* a, HNode* b) { return a-&gt;freq &gt; b-&gt;freq; } };
+
+HNode* buildHuffman(vector&lt;pair&lt;char,int&gt;&gt;&amp; freqs) {
+    priority_queue&lt;HNode*, vector&lt;HNode*&gt;, Cmp&gt; pq;
+    for (auto&amp; [c, f] : freqs)
+        pq.push(new HNode{f, c, nullptr, nullptr});
+
+    while (pq.size() &gt; 1) {
+        HNode* x = pq.top(); pq.pop();
+        HNode* y = pq.top(); pq.pop();
+        HNode* parent = new HNode{x-&gt;freq + y-&gt;freq, '\0', x, y};
+        pq.push(parent);
+    }
+    return pq.top();
+}
+// O(n log n)</code></pre>
+
+  <h2>ตัวอย่างที่ 5 — Minimum Spanning Tree (Kruskal)</h2>
+  <p>ใน graph มีน้ำหนัก — หา tree ที่เชื่อมทุก node โดยรวมน้ำหนักน้อยสุด</p>
+
+  <p><strong>Kruskal's algorithm:</strong> เรียง edge น้อย→มาก แล้วเลือก edge ที่ <em>ไม่สร้าง cycle</em> ใช้ <code>union-find</code> เช็ค</p>
+
+<pre><code class="cpp">struct Edge { int u, v, w; };
+
+int find(vector&lt;int&gt;&amp; p, int x) {
+    while (p[x] != x) { p[x] = p[p[x]]; x = p[x]; }
+    return x;
+}
+
+int kruskal(int n, vector&lt;Edge&gt;&amp; edges) {
+    sort(edges.begin(), edges.end(), [](Edge a, Edge b) { return a.w &lt; b.w; });
+    vector&lt;int&gt; parent(n);
+    iota(parent.begin(), parent.end(), 0);   // [0,1,2,...,n-1]
+    int total = 0, used = 0;
+    for (auto&amp; e : edges) {
+        int ru = find(parent, e.u), rv = find(parent, e.v);
+        if (ru != rv) {                       // ไม่สร้าง cycle
+            parent[ru] = rv;
+            total += e.w; used++;
+            if (used == n - 1) break;
+        }
+    }
+    return total;
+}
+// O(E log E)</code></pre>
+
+  <h2>วิธีพิสูจน์ Greedy ถูก (formal)</h2>
+  <ol>
+    <li><strong>Exchange argument:</strong> สมมติมี optimal solution ที่ไม่ใช้ greedy choice
+        แล้วแสดงว่าเปลี่ยน choice ใน optimal เป็น greedy choice ก็ยัง optimal</li>
+    <li><strong>Greedy stays ahead:</strong> หลัง k step แรก greedy choice ดีกว่าหรือเทียบเท่า
+        choice ใด ๆ ก็ตาม</li>
+  </ol>
+
+  <h2>ลำดับการเลือก algorithm ในชีวิตจริง</h2>
+  <ol>
+    <li><strong>ลอง greedy ก่อนเสมอ</strong> — คิดง่าย, code สั้น, เร็ว</li>
+    <li>หา <strong>counter-example</strong> ขนาดเล็ก — ถ้ามี greedy ใช้ไม่ได้</li>
+    <li>ถ้า greedy ไม่ work → ลอง <strong>DP</strong></li>
+    <li>ถ้า DP state ใหญ่เกิน → <strong>backtracking + pruning</strong></li>
+  </ol>
+
+  <h2>แบบฝึก</h2>
+
+  <div class="exercise">
+    <span class="qnum">Q1</span>
+    <strong>Job Scheduling:</strong> มี job n อย่าง แต่ละอันมี deadline และ profit
+    ทำได้ทีละ 1 job ใน 1 หน่วยเวลา หา total profit สูงสุดโดยทำทันก่อน deadline ของทุก job ที่เลือก
+    <details>
+      <summary>เฉลย — Greedy: เรียงตาม profit มาก→น้อย</summary>
+<pre><code class="cpp">struct Job { int id, deadline, profit; };
+
+int jobScheduling(vector&lt;Job&gt;&amp; jobs) {
+    sort(jobs.begin(), jobs.end(), [](Job a, Job b) {
+        return a.profit &gt; b.profit;
+    });
+    int maxD = 0;
+    for (auto&amp; j : jobs) maxD = max(maxD, j.deadline);
+    vector&lt;int&gt; slot(maxD + 1, -1);
+    int total = 0;
+    for (auto&amp; j : jobs) {
+        // หา slot ว่างที่ใกล้ deadline ที่สุด
+        for (int t = j.deadline; t &gt;= 1; t--) {
+            if (slot[t] == -1) {
+                slot[t] = j.id;
+                total += j.profit;
+                break;
+            }
+        }
+    }
+    return total;
+}</code></pre>
+    </details>
+  </div>
+
+  <div class="exercise">
+    <span class="qnum">Q2</span>
+    <strong>Gas Station:</strong> รอบวงกลมมี gas station ที่จุดที่ <code>i</code> มีน้ำมัน <code>gas[i]</code>
+    เดินทางจาก <code>i</code> ไป <code>i+1</code> ใช้ <code>cost[i]</code> หา start point
+    ที่ทำได้ครบรอบ (ถ้ามี)
+    <details>
+      <summary>เฉลย</summary>
+<pre><code class="cpp">int canCompleteCircuit(vector&lt;int&gt;&amp; gas, vector&lt;int&gt;&amp; cost) {
+    int total = 0, tank = 0, start = 0;
+    for (int i = 0; i &lt; gas.size(); i++) {
+        int diff = gas[i] - cost[i];
+        total += diff;
+        tank += diff;
+        if (tank &lt; 0) {                   // ผ่าน i ไม่ได้
+            start = i + 1;                 // ลอง start ใหม่
+            tank = 0;
+        }
+    }
+    return (total &gt;= 0) ? start : -1;
+}
+// O(n)</code></pre>
+      <p><strong>เหตุผล:</strong> ถ้ารวมทั้งวง total &lt; 0 → เป็นไปไม่ได้
+      ถ้ารวม ≥ 0 → start ที่จุดที่ tank กลับเป็นบวกได้เสมอ</p>
+    </details>
+  </div>
+
+  <div class="exercise">
+    <span class="qnum">Q3</span> <strong>เหตุใด greedy <em>ไม่ work</em> กับ 0/1 Knapsack แต่ work กับ Fractional?</strong>
+    <details>
+      <summary>เฉลย</summary>
+      <p>Fractional: หั่นเศษได้ — ถ้าเหลือพื้นที่ 5 kg เราใส่ 5 kg ของ ratio สูงสุดได้ → ใช้ทุกหยดของ capacity</p>
+      <p>0/1: เอาทั้งชิ้นหรือไม่เอาเลย — บางทีของ ratio สูงทำให้พื้นที่เหลือ "ใช้ไม่ได้"
+      เลยพลาดโอกาสรวมของ ratio ต่ำกว่า 2 ชิ้นที่จุได้พอดีกับขีดจำกัด</p>
+      <p>กล่าวคือ Fractional ไม่มี "พื้นที่เหลือเสีย"</p>
+    </details>
+  </div>
+
+</main>
+
+<footer>
+  <div class="container"><a href="index.html">← Hub</a> · <a href="07-backtracking.html">ถัดไป: Backtracking →</a></div>
+</footer>
+
+<script src="script.js"></script>
+<script>
+// ==== Fractional knapsack viz ====
+(function() {
+  const playBtn = document.getElementById('frac-play');
+  const stage = document.getElementById('frac-stage');
+  const statusEl = document.getElementById('frac-status');
+  let running = false;
+
+  const items = [
+    { name: 'A', w: 10, v: 60, color: '#79c0ff' },
+    { name: 'B', w: 20, v: 100, color: '#7ee787' },
+    { name: 'C', w: 30, v: 120, color: '#f0883e' },
+    { name: 'D', w: 15, v: 90, color: '#d2a8ff' }
+  ];
+  const W = 50;
+
+  function render(state) {
+    let html = '<div style="display:flex;gap:14px;align-items:flex-end;height:200px;background:#0a0e14;padding:12px;border-radius:6px">';
+    // bag
+    html += '<div style="display:flex;flex-direction:column;align-items:center;gap:4px"><div style="width:90px;height:170px;border:2px solid var(--accent);border-radius:8px;position:relative;overflow:hidden;display:flex;flex-direction:column-reverse">';
+    let usedW = 0;
+    for (const f of state.fills) {
+      html += '<div style="background:'+f.color+';height:'+(f.frac * 90 / W * 170 * (f.frac < 1 ? f.weightUsed/f.w : 1))+'px;width:100%;display:flex;align-items:center;justify-content:center;font-size:11px;color:#0d1117;font-weight:600" title="'+f.name+'">'+f.name+(f.frac<1?' ('+(f.frac*100).toFixed(0)+'%)':'')+'</div>';
+      usedW += f.weightUsed;
+    }
+    html += '</div><div style="font-size:11px;color:var(--muted);font-family:monospace">bag: '+usedW.toFixed(1)+'/'+W+' kg</div></div>';
+    // remaining items
+    html += '<div style="display:flex;flex-direction:column;gap:6px;margin-left:20px">';
+    for (const it of items) {
+      const consumed = state.consumed[it.name] || 0;
+      const left = it.w - consumed;
+      const cls = state.current === it.name ? 'border:2px solid var(--warn)' : 'border:1px solid var(--border)';
+      html += '<div style="'+cls+';padding:6px 12px;border-radius:6px;font-family:monospace;font-size:13px;background:'+it.color+'33"><strong style="color:'+it.color+'">'+it.name+'</strong> w='+it.w+' v='+it.v+' (v/w='+(it.v/it.w).toFixed(2)+') '+(left===0?'<span style="color:var(--good)">✓ ใช้หมด</span>':left===it.w?'':' เหลือ '+left.toFixed(1)+' kg')+'</div>';
+    }
+    html += '</div></div>';
+    html += '<p style="margin-top:10px;color:var(--accent-2);font-family:monospace">Total value: '+state.total.toFixed(1)+'</p>';
+    stage.innerHTML = html;
+  }
+
+  async function play() {
+    if (running) return;
+    running = true;
+    const sorted = [...items].sort((a, b) => b.v/b.w - a.v/a.w);
+    let bag = W, total = 0;
+    const state = { fills: [], consumed: {}, total: 0, current: null };
+    statusEl.textContent = 'เรียง items ตาม v/w จากมาก→น้อย: ' + sorted.map(x => x.name).join(' > ');
+    render(state);
+    await sleep(900);
+    for (const it of sorted) {
+      state.current = it.name;
+      render(state);
+      await sleep(500);
+      if (bag >= it.w) {
+        state.fills.push({...it, frac: 1, weightUsed: it.w});
+        state.consumed[it.name] = it.w;
+        total += it.v;
+        bag -= it.w;
+        statusEl.textContent = 'เอา ' + it.name + ' ทั้งชิ้น (+' + it.v + '), เหลือพื้นที่ ' + bag + ' kg';
+      } else {
+        const frac = bag / it.w;
+        state.fills.push({...it, frac, weightUsed: bag});
+        state.consumed[it.name] = bag;
+        total += it.v * frac;
+        statusEl.textContent = 'ใส่ ' + it.name + ' บางส่วน (' + (frac*100).toFixed(0) + '%) → +' + (it.v*frac).toFixed(1) + ' value';
+        state.total = total; render(state);
+        await sleep(700);
+        break;
+      }
+      state.total = total; render(state);
+      await sleep(700);
+    }
+    state.current = null;
+    render(state);
+    statusEl.innerHTML = '<strong>เสร็จ!</strong> Total value = ' + total.toFixed(1);
+    running = false;
+  }
+  playBtn.onclick = play;
+})();
+
+// ==== Activity selection viz ====
+(function() {
+  const playBtn = document.getElementById('act-play');
+  const stage = document.getElementById('act-stage');
+  const statusEl = document.getElementById('act-status');
+  let running = false;
+
+  const acts = [
+    { name: 'A1', s: 1, f: 4 },
+    { name: 'A2', s: 3, f: 5 },
+    { name: 'A3', s: 0, f: 6 },
+    { name: 'A4', s: 5, f: 7 },
+    { name: 'A5', s: 3, f: 9 },
+    { name: 'A6', s: 5, f: 9 },
+    { name: 'A7', s: 6, f: 10 },
+    { name: 'A8', s: 8, f: 11 },
+    { name: 'A9', s: 8, f: 12 },
+    { name: 'A10', s: 2, f: 14 },
+    { name: 'A11', s: 12, f: 16 },
+  ];
+  const TMAX = 16;
+
+  function render(states) {
+    const W = 800;
+    let html = '<svg width="'+W+'" height="'+(acts.length*28+40)+'" style="background:#0a0e14;border-radius:6px">';
+    // axis
+    for (let t = 0; t <= TMAX; t++) {
+      const x = 60 + t * (W - 80) / TMAX;
+      html += '<line x1="'+x+'" y1="20" x2="'+x+'" y2="'+(acts.length*28+25)+'" stroke="#21262d" />';
+      html += '<text x="'+x+'" y="14" fill="#8b949e" font-size="10" font-family="monospace" text-anchor="middle">'+t+'</text>';
+    }
+    states.forEach((st, i) => {
+      const a = acts[st.idx];
+      const x1 = 60 + a.s * (W - 80) / TMAX;
+      const x2 = 60 + a.f * (W - 80) / TMAX;
+      const y = 30 + i * 28;
+      const color = st.state === 'sel' ? '#3fb950' : st.state === 'rej' ? '#f85149' : st.state === 'cur' ? '#f0883e' : '#30363d';
+      html += '<rect x="'+x1+'" y="'+y+'" width="'+(x2-x1)+'" height="22" fill="'+color+'" rx="4" />';
+      html += '<text x="'+(x1+5)+'" y="'+(y+15)+'" fill="#fff" font-size="11" font-family="monospace">'+a.name+' ['+a.s+'-'+a.f+']</text>';
+    });
+    html += '</svg>';
+    stage.innerHTML = html;
+  }
+
+  async function play() {
+    if (running) return;
+    running = true;
+    const sorted = acts.map((a, i) => i).sort((i, j) => acts[i].f - acts[j].f);
+    const states = sorted.map(idx => ({idx, state: 'pending'}));
+    statusEl.textContent = 'เรียงตาม finish time...';
+    render(states);
+    await sleep(900);
+    let lastFinish = -1;
+    let count = 0;
+    for (let i = 0; i < states.length; i++) {
+      states[i].state = 'cur';
+      render(states);
+      const a = acts[states[i].idx];
+      statusEl.textContent = 'พิจารณา ' + a.name + ' [s='+a.s+', f='+a.f+'], lastFinish=' + lastFinish;
+      await sleep(700);
+      if (a.s >= lastFinish) {
+        states[i].state = 'sel';
+        lastFinish = a.f;
+        count++;
+      } else {
+        states[i].state = 'rej';
+      }
+      render(states);
+      await sleep(500);
+    }
+    statusEl.innerHTML = '<strong>เลือกได้ ' + count + ' activities</strong> (สีเขียว)';
+    running = false;
+  }
+  playBtn.onclick = play;
+})();
+</script>
+</body>
+</html>

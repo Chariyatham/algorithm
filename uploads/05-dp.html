@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>05 · Dynamic Programming</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="site">
+  <div class="container">
+    <h1><a href="index.html" style="color: var(--fg)">← Hub</a> · 05 DP</h1>
+    <nav class="top">
+      <a href="04-divide-conquer.html">← D&amp;C</a>
+      <a href="06-greedy.html">Greedy →</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+  <h1>Dynamic Programming — จำคำตอบเก่าไว้ใช้</h1>
+  <p class="lead">
+    DP คือ "recursion ที่ฉลาด" — แทนที่จะคำนวณซ้ำเดิม ๆ เราจำผลลัพธ์ไว้ในตาราง
+    <strong>เปลี่ยน 2ⁿ ให้กลายเป็น n²</strong> ได้ในหลาย ๆ ปัญหา
+  </p>
+
+  <h2>เริ่มจาก Fibonacci ที่เราเห็นในบทก่อน</h2>
+  <p>จำได้ว่า fib แบบ recursive ดิบ ๆ คำนวณซ้ำเยอะมาก:</p>
+
+<pre><code class="cpp">int fib(int n) {
+    if (n &lt;= 1) return n;
+    return fib(n-1) + fib(n-2);  // O(2ⁿ)
+}</code></pre>
+
+  <p>fib(5) คำนวณ fib(2) ถึง 3 ครั้ง! fib(50) จะใช้เวลานาน — ทำยังไง?</p>
+
+  <h3>วิธีที่ 1 — Memoization (top-down)</h3>
+<pre><code class="cpp">vector&lt;int&gt; memo(100, -1);
+
+int fibMemo(int n) {
+    if (n &lt;= 1) return n;
+    if (memo[n] != -1) return memo[n];          // จำได้ → ใช้เลย
+    return memo[n] = fibMemo(n-1) + fibMemo(n-2);
+}
+// ตอนนี้ O(n) — แต่ละ n คำนวณแค่ 1 ครั้ง</code></pre>
+
+  <h3>วิธีที่ 2 — Tabulation (bottom-up)</h3>
+<pre><code class="cpp">int fibDP(int n) {
+    if (n &lt;= 1) return n;
+    vector&lt;int&gt; dp(n + 1);
+    dp[0] = 0; dp[1] = 1;
+    for (int i = 2; i &lt;= n; i++)
+        dp[i] = dp[i-1] + dp[i-2];
+    return dp[n];
+}
+// O(n) เวลา, O(n) memory (ลดเป็น O(1) ได้ถ้าเก็บแค่ 2 ค่าก่อนหน้า)</code></pre>
+
+  <div class="viz">
+    <div class="controls">
+      <label class="label">n =</label>
+      <input type="number" id="fib-dp-n" value="8" min="1" max="12" style="width: 70px">
+      <button id="fib-dp-play">▶ Play DP fill</button>
+    </div>
+    <div id="fib-dp-table"></div>
+    <div class="status" id="fib-dp-status">รอเริ่ม</div>
+  </div>
+
+  <h2>หลักคิด — เมื่อไหร่ใช้ DP?</h2>
+  <div class="card">
+    <p>DP ใช้ได้เมื่อปัญหามี <strong>2 คุณสมบัตินี้</strong>:</p>
+    <ol>
+      <li>
+        <strong>Optimal substructure</strong> — คำตอบของปัญหาประกอบจากคำตอบของ sub-problem
+        <br><em>เช่น</em> fib(n) = fib(n-1) + fib(n-2)
+      </li>
+      <li>
+        <strong>Overlapping sub-problems</strong> — sub-problem เดียวกันถูกถามซ้ำหลายครั้ง
+        <br><em>เช่น</em> fib(n-2) ถูกเรียกจากทั้ง fib(n) และ fib(n-1)
+      </li>
+    </ol>
+    <p>ถ้าไม่ overlap → ใช้ <a href="04-divide-conquer.html">D&amp;C</a> พอ</p>
+  </div>
+
+  <h2>วิธีคิด DP step-by-step</h2>
+  <ol>
+    <li><strong>นิยาม state</strong> — <code>dp[i]</code> หรือ <code>dp[i][j]</code> เก็บอะไร?</li>
+    <li><strong>หา recurrence</strong> — <code>dp[i]</code> = ฟังก์ชันของ state ที่เล็กกว่า</li>
+    <li><strong>กำหนด base case</strong> — state เล็กสุดมีค่าเท่าไหร่?</li>
+    <li><strong>เลือกลำดับการ fill</strong> — ตัวเล็กก่อน หรือ recurse + memo</li>
+    <li><strong>คืนคำตอบ</strong> — อยู่ที่ <code>dp[n]</code>? หรือต้อง <code>max(dp[...])</code>?</li>
+  </ol>
+
+  <h2>ตัวอย่าง 1 — Coin Change (จำนวนเหรียญน้อยสุด)</h2>
+  <p>มีเหรียญ <code>{1, 5, 10, 25}</code> — จำนวนเงิน <code>amount</code> ใช้เหรียญน้อยสุดเท่าไหร่?</p>
+
+  <p><strong>state:</strong> <code>dp[x]</code> = จำนวนเหรียญน้อยสุดที่ทอนเงิน <code>x</code> ได้</p>
+  <p><strong>recurrence:</strong> <code>dp[x] = 1 + min(dp[x - c])</code> สำหรับทุกเหรียญ <code>c ≤ x</code></p>
+  <p><strong>base:</strong> <code>dp[0] = 0</code></p>
+
+<pre><code class="cpp">int coinChange(vector&lt;int&gt;&amp; coins, int amount) {
+    vector&lt;int&gt; dp(amount + 1, INT_MAX);
+    dp[0] = 0;
+    for (int x = 1; x &lt;= amount; x++) {
+        for (int c : coins) {
+            if (c &lt;= x &amp;&amp; dp[x - c] != INT_MAX)
+                dp[x] = min(dp[x], dp[x - c] + 1);
+        }
+    }
+    return (dp[amount] == INT_MAX) ? -1 : dp[amount];
+}
+// O(amount × |coins|)</code></pre>
+
+  <div class="viz">
+    <div class="controls">
+      <label class="label">amount =</label>
+      <input type="number" id="coin-amount" value="11" min="1" max="20" style="width: 70px">
+      <label class="label">coins:</label>
+      <input type="text" id="coin-coins" value="1,3,4" style="width: 110px">
+      <button id="coin-play">▶ Play</button>
+    </div>
+    <div id="coin-table"></div>
+    <div class="status" id="coin-status">ใส่ค่าแล้วกด Play</div>
+  </div>
+
+  <h2>ตัวอย่าง 2 — 0/1 Knapsack</h2>
+  <p>กระเป๋าจุน้ำหนัก W มีของ n ชิ้น แต่ละชิ้นมี weight, value — เลือกใส่ของ
+  (แต่ละชิ้น <strong>เอาทั้งชิ้นหรือไม่เอาเลย</strong>) ให้ value รวมสูงสุด</p>
+
+  <p><strong>state:</strong> <code>dp[i][w]</code> = value สูงสุดเมื่อพิจารณาของ i ชิ้นแรก ใช้น้ำหนักไม่เกิน w</p>
+  <p><strong>recurrence:</strong> 2 ทางเลือกสำหรับของชิ้น i:</p>
+  <ul>
+    <li>ไม่เอา: <code>dp[i][w] = dp[i-1][w]</code></li>
+    <li>เอา (ถ้า <code>weight[i] ≤ w</code>): <code>dp[i-1][w - weight[i]] + value[i]</code></li>
+  </ul>
+  <p>เลือก <code>max</code> ของสองทาง</p>
+
+<pre><code class="cpp">int knapsack(vector&lt;int&gt;&amp; weight, vector&lt;int&gt;&amp; value, int W) {
+    int n = weight.size();
+    vector&lt;vector&lt;int&gt;&gt; dp(n + 1, vector&lt;int&gt;(W + 1, 0));
+    for (int i = 1; i &lt;= n; i++) {
+        for (int w = 0; w &lt;= W; w++) {
+            dp[i][w] = dp[i-1][w];                                  // ไม่เอา i
+            if (weight[i-1] &lt;= w)
+                dp[i][w] = max(dp[i][w],
+                              dp[i-1][w - weight[i-1]] + value[i-1]); // เอา i
+        }
+    }
+    return dp[n][W];
+}
+// O(n × W)</code></pre>
+
+  <div class="note tip">
+    <strong>เปรียบเทียบ:</strong> ในไฟล์ <code>lab/w4.cpp</code> ใช้ <em>backtracking</em> ลองทุก subset
+    เป็น O(2ⁿ) — DP เร็วกว่ามาก (เมื่อ W ไม่ใหญ่เกิน)
+  </div>
+
+  <h2>ตัวอย่าง 3 — Longest Common Subsequence (LCS)</h2>
+  <p>"ABCBDAB" และ "BDCABA" → LCS = "BCBA" (ยาว 4)</p>
+
+  <p><strong>state:</strong> <code>dp[i][j]</code> = LCS ของ <code>s1[0..i-1]</code> กับ <code>s2[0..j-1]</code></p>
+  <p><strong>recurrence:</strong></p>
+  <ul>
+    <li>ถ้า <code>s1[i-1] == s2[j-1]</code>: <code>dp[i][j] = dp[i-1][j-1] + 1</code></li>
+    <li>ถ้าไม่: <code>dp[i][j] = max(dp[i-1][j], dp[i][j-1])</code></li>
+  </ul>
+
+<pre><code class="cpp">int lcs(string&amp; a, string&amp; b) {
+    int m = a.size(), n = b.size();
+    vector&lt;vector&lt;int&gt;&gt; dp(m + 1, vector&lt;int&gt;(n + 1, 0));
+    for (int i = 1; i &lt;= m; i++) {
+        for (int j = 1; j &lt;= n; j++) {
+            if (a[i-1] == b[j-1]) dp[i][j] = dp[i-1][j-1] + 1;
+            else dp[i][j] = max(dp[i-1][j], dp[i][j-1]);
+        }
+    }
+    return dp[m][n];
+}
+// O(m × n)</code></pre>
+
+  <h2>เห็นภาพ: DP table animation (LCS)</h2>
+  <div class="viz">
+    <div class="controls">
+      <label class="label">A =</label>
+      <input type="text" id="lcs-a" value="ABCBDAB" style="width: 110px">
+      <label class="label">B =</label>
+      <input type="text" id="lcs-b" value="BDCABA" style="width: 110px">
+      <button id="lcs-play">▶ Play LCS</button>
+    </div>
+    <div id="lcs-table"></div>
+    <div class="status" id="lcs-status">ใส่ string แล้วกด Play</div>
+  </div>
+
+  <h2>เทคนิคพิเศษ: ลด memory จาก O(n) → O(1)</h2>
+  <p>หลายปัญหาใช้แค่ 1-2 row ก่อนหน้า ไม่ต้องเก็บทั้ง table</p>
+
+<pre><code class="cpp">int fibO1(int n) {
+    if (n &lt;= 1) return n;
+    int prev = 0, cur = 1;
+    for (int i = 2; i &lt;= n; i++) {
+        int next = prev + cur;
+        prev = cur;
+        cur = next;
+    }
+    return cur;
+}
+// O(n) เวลา, O(1) memory</code></pre>
+
+  <h2>เทียบ Top-down vs Bottom-up</h2>
+  <table>
+    <tr><th>Top-down (Memo)</th><th>Bottom-up (Tabulation)</th></tr>
+    <tr>
+      <td>เริ่มจาก n → ลงไปหา 0</td>
+      <td>เริ่มจาก 0 → ขึ้นไปหา n</td>
+    </tr>
+    <tr>
+      <td>recursive + cache</td>
+      <td>iterative + array</td>
+    </tr>
+    <tr>
+      <td>คิดง่ายกว่า (เหมือน recursion ปกติ + memo)</td>
+      <td>เร็วกว่านิดหน่อย (ไม่มี call overhead)</td>
+    </tr>
+    <tr>
+      <td>ระวัง stack overflow ถ้า n ใหญ่</td>
+      <td>ไม่มีปัญหา stack</td>
+    </tr>
+    <tr>
+      <td>คำนวณเฉพาะ state ที่ต้องการ</td>
+      <td>คำนวณทุก state (อาจเกินจำเป็น)</td>
+    </tr>
+  </table>
+
+  <h2>แบบฝึก</h2>
+
+  <div class="exercise">
+    <span class="qnum">Q1</span>
+    <strong>Climbing Stairs:</strong> ขึ้นบันได n ขั้น แต่ละครั้งก้าวได้ 1 หรือ 2 ขั้น มีกี่วิธี?
+    <details>
+      <summary>เฉลย</summary>
+      <p>เหมือน fibonacci! <code>dp[n] = dp[n-1] + dp[n-2]</code></p>
+<pre><code class="cpp">int climb(int n) {
+    if (n &lt;= 2) return n;
+    int a = 1, b = 2;
+    for (int i = 3; i &lt;= n; i++) { int c = a + b; a = b; b = c; }
+    return b;
+}</code></pre>
+    </details>
+  </div>
+
+  <div class="exercise">
+    <span class="qnum">Q2</span>
+    <strong>House Robber:</strong> มีบ้านเรียงเป็นแถว <code>[2, 7, 9, 3, 1]</code> ห้ามขโมย 2 บ้านติดกัน
+    หาเงินสูงสุด (เฉลย: 12 = 2+9+1)
+    <details>
+      <summary>เฉลย</summary>
+      <p><strong>state:</strong> <code>dp[i]</code> = เงินสูงสุดเมื่อพิจารณาบ้าน 0..i</p>
+      <p><strong>recurrence:</strong> ขโมยบ้าน i หรือไม่</p>
+      <ul>
+        <li>ขโมย: <code>dp[i-2] + nums[i]</code></li>
+        <li>ไม่ขโมย: <code>dp[i-1]</code></li>
+      </ul>
+<pre><code class="cpp">int rob(vector&lt;int&gt;&amp; nums) {
+    int n = nums.size();
+    if (n == 0) return 0;
+    if (n == 1) return nums[0];
+    vector&lt;int&gt; dp(n);
+    dp[0] = nums[0];
+    dp[1] = max(nums[0], nums[1]);
+    for (int i = 2; i &lt; n; i++)
+        dp[i] = max(dp[i-1], dp[i-2] + nums[i]);
+    return dp[n-1];
+}</code></pre>
+    </details>
+  </div>
+
+  <div class="exercise">
+    <span class="qnum">Q3</span>
+    <strong>Edit Distance:</strong> ให้ string a, b — แปลง a → b ด้วย insert/delete/replace
+    ใช้กี่ operation น้อยสุด?
+    <details>
+      <summary>เฉลย</summary>
+      <p><code>dp[i][j]</code> = ระยะแปลง <code>a[0..i-1]</code> → <code>b[0..j-1]</code></p>
+<pre><code class="cpp">int editDist(string a, string b) {
+    int m = a.size(), n = b.size();
+    vector&lt;vector&lt;int&gt;&gt; dp(m+1, vector&lt;int&gt;(n+1));
+    for (int i = 0; i &lt;= m; i++) dp[i][0] = i;   // ลบ i ตัว
+    for (int j = 0; j &lt;= n; j++) dp[0][j] = j;   // เติม j ตัว
+    for (int i = 1; i &lt;= m; i++) {
+        for (int j = 1; j &lt;= n; j++) {
+            if (a[i-1] == b[j-1]) dp[i][j] = dp[i-1][j-1];
+            else dp[i][j] = 1 + min({dp[i-1][j],     // delete
+                                     dp[i][j-1],     // insert
+                                     dp[i-1][j-1]}); // replace
+        }
+    }
+    return dp[m][n];
+}</code></pre>
+    </details>
+  </div>
+
+  <div class="exercise">
+    <span class="qnum">Q4</span>
+    <strong>เปรียบเทียบ DP กับโค้ดใน <code>lab/w2.cpp</code> (subset sum) ใครเร็วกว่า?</strong>
+    <details>
+      <summary>เฉลย</summary>
+      <p><code>w2.cpp</code> ใช้ backtracking ลองทุก subset → O(2ⁿ)</p>
+      <p>DP version: <code>dp[i][s]</code> = "ใช้ของ i ตัวแรก ทำ sum = s ได้ไหม?"</p>
+<pre><code class="cpp">bool subsetSum(vector&lt;int&gt;&amp; A, int target) {
+    int n = A.size();
+    vector&lt;vector&lt;bool&gt;&gt; dp(n+1, vector&lt;bool&gt;(target+1, false));
+    for (int i = 0; i &lt;= n; i++) dp[i][0] = true;  // sum=0 เป็นไปได้เสมอ
+    for (int i = 1; i &lt;= n; i++) {
+        for (int s = 1; s &lt;= target; s++) {
+            dp[i][s] = dp[i-1][s];                      // ไม่เอา A[i-1]
+            if (A[i-1] &lt;= s)
+                dp[i][s] = dp[i][s] || dp[i-1][s - A[i-1]]; // เอา
+        }
+    }
+    return dp[n][target];
+}
+// O(n × target) — เร็วกว่า 2ⁿ มากเมื่อ target ไม่โต</code></pre>
+      <p>แต่ถ้าโจทย์ต้อง <em>print ทุก subset</em> backtracking สะดวกกว่า — DP บอกแค่ "ทำได้ไหม"</p>
+    </details>
+  </div>
+
+</main>
+
+<footer>
+  <div class="container"><a href="index.html">← Hub</a> · <a href="06-greedy.html">ถัดไป: Greedy →</a></div>
+</footer>
+
+<script src="script.js"></script>
+<script>
+// ==== Fibonacci DP table fill ====
+(function() {
+  const playBtn = document.getElementById('fib-dp-play');
+  const nIn = document.getElementById('fib-dp-n');
+  const tableEl = document.getElementById('fib-dp-table');
+  const statusEl = document.getElementById('fib-dp-status');
+  let running = false;
+
+  function render(n, dp, active = -1) {
+    let html = '<div class="grid-table" style="grid-template-columns: repeat(' + (n+2) + ', auto)">';
+    html += '<div class="cell head">i</div>';
+    for (let i = 0; i <= n; i++) html += '<div class="cell head">' + i + '</div>';
+    html += '<div class="cell head">dp</div>';
+    for (let i = 0; i <= n; i++) {
+      const cls = (i === active) ? 'active' : (dp[i] !== undefined ? 'done' : '');
+      html += '<div class="cell ' + cls + '">' + (dp[i] !== undefined ? dp[i] : '?') + '</div>';
+    }
+    html += '</div>';
+    tableEl.innerHTML = html;
+  }
+
+  async function play() {
+    if (running) return;
+    running = true;
+    const n = Math.max(1, Math.min(12, parseInt(nIn.value) || 8));
+    const dp = [];
+    dp[0] = 0; render(n, dp, 0); statusEl.textContent = 'base: dp[0] = 0'; await sleep(500);
+    if (n >= 1) { dp[1] = 1; render(n, dp, 1); statusEl.textContent = 'base: dp[1] = 1'; await sleep(500); }
+    for (let i = 2; i <= n; i++) {
+      render(n, dp, i);
+      statusEl.textContent = `dp[${i}] = dp[${i-1}] + dp[${i-2}] = ${dp[i-1]} + ${dp[i-2]}`;
+      await sleep(700);
+      dp[i] = dp[i-1] + dp[i-2];
+      render(n, dp, i);
+      await sleep(450);
+    }
+    statusEl.innerHTML = `<strong>เสร็จ!</strong> fib(${n}) = ${dp[n]}`;
+    running = false;
+  }
+  playBtn.onclick = play;
+  render(8, [0, 1]);
+})();
+
+// ==== Coin Change DP ====
+(function() {
+  const playBtn = document.getElementById('coin-play');
+  const tableEl = document.getElementById('coin-table');
+  const statusEl = document.getElementById('coin-status');
+  const amountIn = document.getElementById('coin-amount');
+  const coinsIn = document.getElementById('coin-coins');
+  let running = false;
+
+  function render(amount, dp, active = -1, coins = []) {
+    let html = '<div class="grid-table" style="grid-template-columns: repeat(' + (amount+2) + ', auto)">';
+    html += '<div class="cell head">x</div>';
+    for (let i = 0; i <= amount; i++) html += '<div class="cell head">' + i + '</div>';
+    html += '<div class="cell head">dp[x]</div>';
+    for (let i = 0; i <= amount; i++) {
+      const cls = (i === active) ? 'active' : (dp[i] !== undefined && dp[i] !== Infinity ? 'done' : '');
+      const v = dp[i] === Infinity ? '∞' : (dp[i] === undefined ? '?' : dp[i]);
+      html += '<div class="cell ' + cls + '">' + v + '</div>';
+    }
+    html += '</div>';
+    if (coins.length) html += '<p style="color: var(--muted); margin-top: 8px">เหรียญ: ' + coins.join(', ') + '</p>';
+    tableEl.innerHTML = html;
+  }
+
+  async function play() {
+    if (running) return;
+    running = true;
+    const amount = Math.max(1, Math.min(20, parseInt(amountIn.value) || 11));
+    const coins = coinsIn.value.split(',').map(s => parseInt(s.trim())).filter(x => x > 0);
+    const dp = [];
+    dp[0] = 0;
+    render(amount, dp, 0, coins);
+    await sleep(500);
+    for (let x = 1; x <= amount; x++) {
+      dp[x] = Infinity;
+      render(amount, dp, x, coins);
+      await sleep(350);
+      for (const c of coins) {
+        if (c <= x && dp[x - c] !== Infinity) {
+          if (dp[x - c] + 1 < dp[x]) {
+            dp[x] = dp[x - c] + 1;
+            statusEl.textContent = `dp[${x}] ลองเหรียญ ${c}: dp[${x-c}] + 1 = ${dp[x]}`;
+            render(amount, dp, x, coins);
+            await sleep(350);
+          }
+        }
+      }
+    }
+    statusEl.innerHTML = '<strong>เสร็จ!</strong> ทอน ' + amount + ' ใช้เหรียญน้อยสุด = ' +
+      (dp[amount] === Infinity ? 'ทอนไม่ได้' : dp[amount] + ' เหรียญ');
+    running = false;
+  }
+  playBtn.onclick = play;
+})();
+
+// ==== LCS DP table ====
+(function() {
+  const playBtn = document.getElementById('lcs-play');
+  const tableEl = document.getElementById('lcs-table');
+  const statusEl = document.getElementById('lcs-status');
+  const aIn = document.getElementById('lcs-a');
+  const bIn = document.getElementById('lcs-b');
+  let running = false;
+
+  function render(a, b, dp, ai = -1, bj = -1) {
+    const m = a.length, n = b.length;
+    let html = '<div class="grid-table" style="grid-template-columns: repeat(' + (n+2) + ', auto)">';
+    html += '<div class="cell head"></div><div class="cell head">∅</div>';
+    for (let j = 0; j < n; j++) html += '<div class="cell head">' + b[j] + '</div>';
+    for (let i = 0; i <= m; i++) {
+      html += '<div class="cell head">' + (i === 0 ? '∅' : a[i-1]) + '</div>';
+      for (let j = 0; j <= n; j++) {
+        let cls = '';
+        if (i === ai && j === bj) cls = 'active';
+        else if (dp[i] && dp[i][j] !== undefined) cls = 'done';
+        const v = (dp[i] && dp[i][j] !== undefined) ? dp[i][j] : '·';
+        html += '<div class="cell ' + cls + '">' + v + '</div>';
+      }
+    }
+    html += '</div>';
+    tableEl.innerHTML = html;
+  }
+
+  async function play() {
+    if (running) return;
+    running = true;
+    const a = aIn.value, b = bIn.value;
+    if (a.length > 8 || b.length > 8) { statusEl.textContent = 'string ยาวเกิน 8 ตัวอักษร'; running = false; return; }
+    const m = a.length, n = b.length;
+    const dp = Array.from({length: m+1}, () => Array(n+1).fill(undefined));
+    for (let i = 0; i <= m; i++) dp[i][0] = 0;
+    for (let j = 0; j <= n; j++) dp[0][j] = 0;
+    render(a, b, dp);
+    await sleep(400);
+    for (let i = 1; i <= m; i++) {
+      for (let j = 1; j <= n; j++) {
+        if (a[i-1] === b[j-1]) {
+          dp[i][j] = dp[i-1][j-1] + 1;
+          statusEl.textContent = `'${a[i-1]}'='${b[j-1]}' → dp[${i}][${j}] = dp[${i-1}][${j-1}]+1 = ${dp[i][j]}`;
+        } else {
+          dp[i][j] = Math.max(dp[i-1][j], dp[i][j-1]);
+          statusEl.textContent = `'${a[i-1]}'≠'${b[j-1]}' → max(dp[${i-1}][${j}], dp[${i}][${j-1}]) = ${dp[i][j]}`;
+        }
+        render(a, b, dp, i, j);
+        await sleep(380);
+      }
+    }
+    statusEl.innerHTML = `<strong>LCS length = ${dp[m][n]}</strong>`;
+    running = false;
+  }
+  playBtn.onclick = play;
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>01 · Big O &amp; Time Complexity</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="site">
+  <div class="container">
+    <h1><a href="index.html" style="color: var(--fg)">← Hub</a> · 01 Big O</h1>
+    <nav class="top">
+      <a href="02-recursion.html">ถัดไป: Recursion →</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+  <h1>Big O &amp; Time Complexity</h1>
+  <p class="lead">
+    "อัลกอริทึมนี้เร็วแค่ไหน?" คำตอบไม่ใช่วินาที — เพราะคอมแต่ละเครื่องเร็วต่างกัน
+    เราวัดเป็น <strong>จำนวน operation ที่ใช้ตามขนาด input n</strong> ต่างหาก
+  </p>
+
+  <h2>หลักคิดใน 30 วินาที</h2>
+  <div class="card">
+    <p>สมมติเรามี input ขนาด <code>n</code> เราถามว่า "ถ้า n โตขึ้น เวลาทำงานโตเร็วแค่ไหน?"</p>
+    <ul>
+      <li>ถ้าทำงานเสร็จใน <em>เวลาคงที่</em> เสมอ → <span class="complexity c-1">O(1)</span></li>
+      <li>ถ้าวิ่ง loop n รอบ → <span class="complexity c-n">O(n)</span></li>
+      <li>ถ้า loop ซ้อน loop → <span class="complexity c-n2">O(n²)</span></li>
+      <li>ถ้าแบ่งครึ่งทุกครั้ง (เช่น binary search) → <span class="complexity c-log">O(log n)</span></li>
+      <li>ถ้าลองทุก subset → <span class="complexity c-2n">O(2ⁿ)</span></li>
+    </ul>
+    <p>Big O คือ <strong>upper bound แบบหยาบ</strong> — เราตัดค่าคงที่ทิ้ง เช่น 3n+5 → O(n), 2n²+100n → O(n²)</p>
+  </div>
+
+  <h2>เห็นภาพ: กราฟเปรียบเทียบ</h2>
+  <p>เลื่อน slider เพื่อเปลี่ยน <code>n</code> สังเกตว่า O(n²), O(2ⁿ) พุ่งเร็วแค่ไหนเทียบกับ O(log n)</p>
+
+  <div class="viz">
+    <div class="controls">
+      <label class="label">n =</label>
+      <input type="range" id="bigo-n" min="1" max="40" value="20" style="width: 220px">
+      <span id="bigo-n-val" style="font-family: monospace; color: var(--accent)">20</span>
+    </div>
+    <canvas id="bigo-canvas" width="980" height="360"></canvas>
+    <div id="bigo-table"></div>
+  </div>
+
+  <h2>หาความซับซ้อนจากโค้ดยังไง?</h2>
+  <p>กฎที่ใช้ได้ 95% ของกรณี:</p>
+  <ol>
+    <li><strong>Loop เดี่ยวที่วน n ครั้ง</strong> = O(n)</li>
+    <li><strong>Loop ซ้อน 2 ชั้น แต่ละชั้นวน n</strong> = O(n²)</li>
+    <li><strong>หารครึ่งทุกรอบ</strong> (เช่น <code>n /= 2</code>) = O(log n)</li>
+    <li><strong>ลำดับการทำงาน A แล้ว B</strong> = O(A + B) → เอา dominate ที่ใหญ่กว่า</li>
+    <li><strong>เรียก function recursive 2 ครั้ง</strong> ที่ลด n ลง 1 = O(2ⁿ) (เช่น Fibonacci ดิบ ๆ)</li>
+  </ol>
+
+  <h3>ตัวอย่างวิเคราะห์</h3>
+
+  <h4>ตัวอย่าง 1 — O(n)</h4>
+<pre><code class="cpp">int sumArray(vector&lt;int&gt;&amp; a) {
+    int sum = 0;                  // O(1)
+    for (int i = 0; i &lt; a.size(); i++)  // วน n ครั้ง
+        sum += a[i];              // O(1) ต่อรอบ
+    return sum;
+}
+// รวม: O(1) + O(n)·O(1) = O(n)</code></pre>
+
+  <h4>ตัวอย่าง 2 — O(n²)</h4>
+<pre><code class="cpp">// หาคู่ที่ผลรวม = target (วิธีดิบ)
+for (int i = 0; i &lt; n; i++)        // n รอบ
+    for (int j = i+1; j &lt; n; j++)  // ภายในรอบ i: n-i-1 รอบ
+        if (a[i] + a[j] == target) ...
+// รวม operations: n + (n-1) + ... + 1 = n(n-1)/2 → O(n²)</code></pre>
+
+  <div class="note tip">
+    <strong>เคล็ด:</strong> loop ซ้อนไม่ได้แปลว่า O(n²) เสมอ! ดูว่า <em>loop ในวิ่งกี่รอบจริง ๆ</em>
+    ถ้า inner loop วิ่ง log n → ทั้งหมดเป็น O(n log n)
+  </div>
+
+  <h4>ตัวอย่าง 3 — O(log n)</h4>
+<pre><code class="cpp">int binarySearch(vector&lt;int&gt;&amp; a, int target) {
+    int lo = 0, hi = a.size() - 1;
+    while (lo &lt;= hi) {
+        int mid = (lo + hi) / 2;
+        if (a[mid] == target) return mid;
+        if (a[mid] &lt; target) lo = mid + 1;
+        else hi = mid - 1;
+    }
+    return -1;
+}
+// แต่ละรอบช่วงค้นหาลด ½ → จำนวนรอบ = log₂ n</code></pre>
+
+  <h4>ตัวอย่าง 4 — O(2ⁿ) (Fibonacci ดิบ)</h4>
+<pre><code class="cpp">int fib(int n) {
+    if (n &lt;= 1) return n;
+    return fib(n-1) + fib(n-2);  // เรียกตัวเอง 2 ครั้ง
+}
+// ขนาด tree ของ recursion ≈ 2ⁿ → ช้ามาก!
+// fib(40) ใช้เวลาเป็นวินาที, fib(50) เป็นนาที</code></pre>
+
+  <h2>ตารางสรุปไว้ดูเร็ว</h2>
+  <table>
+    <tr><th>ความซับซ้อน</th><th>ชื่อ</th><th>ตัวอย่างอัลกอริทึม</th><th>n=10</th><th>n=100</th><th>n=1000</th></tr>
+    <tr><td><span class="complexity c-1">O(1)</span></td><td>คงที่</td><td>เข้าถึง <code>a[i]</code>, push_back</td><td>1</td><td>1</td><td>1</td></tr>
+    <tr><td><span class="complexity c-log">O(log n)</span></td><td>ลอการิทึม</td><td>Binary search, BST find</td><td>3</td><td>7</td><td>10</td></tr>
+    <tr><td><span class="complexity c-n">O(n)</span></td><td>เชิงเส้น</td><td>วน array, linear search</td><td>10</td><td>100</td><td>1,000</td></tr>
+    <tr><td><span class="complexity c-nlog">O(n log n)</span></td><td>เชิงเส้น–ลอการิทึม</td><td>Merge sort, Quick sort</td><td>33</td><td>664</td><td>9,966</td></tr>
+    <tr><td><span class="complexity c-n2">O(n²)</span></td><td>กำลังสอง</td><td>Bubble/Selection sort</td><td>100</td><td>10,000</td><td>1,000,000</td></tr>
+    <tr><td><span class="complexity c-2n">O(2ⁿ)</span></td><td>ขยายตัวคู่</td><td>Subset enumeration</td><td>1,024</td><td>10³⁰</td><td>ใหญ่มาก</td></tr>
+    <tr><td><span class="complexity c-fact">O(n!)</span></td><td>แฟกทอเรียล</td><td>Permutation, TSP brute</td><td>3.6M</td><td>—</td><td>—</td></tr>
+  </table>
+
+  <div class="note warn">
+    <strong>เกณฑ์เลือกอัลกอริทึม:</strong> สำหรับ n ≈ 10⁶ ถึงรันใน 1 วิได้ต้องใช้ O(n) หรือ O(n log n)
+    ถ้า n ≈ 10⁵ → O(n²) ยังพอไหว ถ้า n ≤ 20 → O(2ⁿ) ก็ใช้ได้
+  </div>
+
+  <h2>แบบฝึก</h2>
+
+  <div class="exercise">
+    <span class="qnum">Q1</span> <strong>ความซับซ้อนของโค้ดนี้คืออะไร?</strong>
+<pre><code class="cpp">for (int i = 1; i &lt; n; i *= 2)
+    cout &lt;&lt; i;</code></pre>
+    <details>
+      <summary>เฉลย</summary>
+      <p><span class="complexity c-log">O(log n)</span> — เพราะ <code>i</code> เพิ่มเป็น 1, 2, 4, 8, ...
+      ค่าจะไปถึง n หลังจาก log₂(n) รอบ</p>
+    </details>
+  </div>
+
+  <div class="exercise">
+    <span class="qnum">Q2</span> <strong>โค้ดนี้?</strong>
+<pre><code class="cpp">for (int i = 0; i &lt; n; i++)
+    for (int j = 0; j &lt; n; j *= 2)  // ระวัง! j เริ่มที่ 0
+        cout &lt;&lt; i;</code></pre>
+    <details>
+      <summary>เฉลย</summary>
+      <p>กับดัก! <code>j *= 2</code> เมื่อ <code>j = 0</code> จะได้ 0 ตลอด → loop in <strong>infinite</strong>
+      ถ้าแก้เป็น <code>j = 1</code> เริ่มต้น คำตอบคือ <span class="complexity c-nlog">O(n log n)</span></p>
+    </details>
+  </div>
+
+  <div class="exercise">
+    <span class="qnum">Q3</span> <strong>ฟังก์ชัน recursive นี้?</strong>
+<pre><code class="cpp">int f(int n) {
+    if (n &lt;= 1) return 1;
+    return f(n/2) + f(n/2);
+}</code></pre>
+    <details>
+      <summary>เฉลย</summary>
+      <p>T(n) = 2·T(n/2) + O(1) ใช้ Master Theorem → <span class="complexity c-n">O(n)</span></p>
+      <p>เพราะถึงจะแบ่งครึ่ง แต่เรียก 2 ครั้ง — รวมงานทั้งต้นไม้ = n</p>
+    </details>
+  </div>
+
+  <div class="exercise">
+    <span class="qnum">Q4</span> <strong>ใน <code>labWeak2/findMax.cpp</code>:</strong>
+<pre><code class="cpp">int findMax(int arr[], int n) {
+    if (n == 1) return arr[0];
+    int maxRest = findMax(arr, n - 1);
+    return (arr[n-1] &gt; maxRest) ? arr[n-1] : maxRest;
+}</code></pre>
+    <details>
+      <summary>เฉลย</summary>
+      <p>เรียกตัวเอง 1 ครั้งโดยลด n ลง 1 + งานคงที่ → T(n) = T(n-1) + O(1)
+      → <span class="complexity c-n">O(n)</span></p>
+    </details>
+  </div>
+
+  <div class="note tip">
+    <strong>ก้าวต่อไป:</strong> ตอนนี้รู้แล้วว่า "เร็วแค่ไหน" วัดอย่างไร
+    หน้าถัดไปจะเข้าเรื่อง <a href="02-recursion.html">recursion</a>
+    ซึ่งเป็นรากฐานของอัลกอริทึมขั้นสูงทั้งหมด (D&amp;C, DP, backtracking)
+  </div>
+
+</main>
+
+<footer>
+  <div class="container"><a href="index.html">← กลับ Hub</a> · <a href="02-recursion.html">ถัดไป: Recursion →</a></div>
+</footer>
+
+<script src="script.js"></script>
+<script>
+// Big O comparison chart
+(function() {
+  const canvas = document.getElementById('bigo-canvas');
+  const ctx = canvas.getContext('2d');
+  const slider = document.getElementById('bigo-n');
+  const nVal = document.getElementById('bigo-n-val');
+  const tableEl = document.getElementById('bigo-table');
+
+  const fns = [
+    { name: 'O(1)',       color: '#79c0ff', f: () => 1 },
+    { name: 'O(log n)',   color: '#7ee787', f: n => Math.log2(Math.max(n,1)) },
+    { name: 'O(n)',       color: '#d2a8ff', f: n => n },
+    { name: 'O(n log n)', color: '#f0883e', f: n => n * Math.log2(Math.max(n,1)) },
+    { name: 'O(n²)',      color: '#ff7b72', f: n => n*n },
+    { name: 'O(2ⁿ)',      color: '#f0a8d2', f: n => Math.min(Math.pow(2,n), 1e15) }
+  ];
+
+  function draw(N) {
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+    // background grid
+    ctx.strokeStyle = '#21262d';
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= 10; i++) {
+      const y = 30 + i * (H - 60) / 10;
+      ctx.beginPath(); ctx.moveTo(60, y); ctx.lineTo(W - 20, y); ctx.stroke();
+    }
+    // compute max y
+    let maxY = 1;
+    for (const fn of fns) {
+      for (let x = 1; x <= N; x++) maxY = Math.max(maxY, fn.f(x));
+    }
+    // axes labels
+    ctx.fillStyle = '#8b949e';
+    ctx.font = '12px monospace';
+    ctx.fillText('operations', 8, 20);
+    ctx.fillText('n', W - 14, H - 8);
+
+    // x ticks
+    for (let i = 0; i <= 5; i++) {
+      const x = 60 + i * (W - 80) / 5;
+      const v = Math.round(i * N / 5);
+      ctx.fillText(v.toString(), x - 6, H - 12);
+    }
+    // y ticks (log scale labels)
+    for (let i = 0; i <= 5; i++) {
+      const y = H - 30 - i * (H - 60) / 5;
+      const v = Math.round(maxY * i / 5);
+      ctx.fillText(formatBig(v), 6, y + 4);
+    }
+
+    // plot each function (log-y for readability)
+    for (const fn of fns) {
+      ctx.strokeStyle = fn.color;
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      let first = true;
+      for (let x = 1; x <= N; x += 0.5) {
+        const v = fn.f(x);
+        const px = 60 + (x / N) * (W - 80);
+        const py = H - 30 - Math.min(v / maxY, 1) * (H - 60);
+        if (first) { ctx.moveTo(px, py); first = false; }
+        else ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+      // label at right
+      const last = fn.f(N);
+      const ly = H - 30 - Math.min(last / maxY, 1) * (H - 60);
+      ctx.fillStyle = fn.color;
+      ctx.fillText(fn.name, W - 80, Math.max(15, Math.min(H - 20, ly - 6)));
+    }
+
+    // table
+    const rows = ['<table><tr><th>n</th>'];
+    for (const fn of fns) rows[0] += '<th style="color:'+fn.color+'">'+fn.name+'</th>';
+    rows[0] += '</tr>';
+    [1, 5, 10, N].forEach(x => {
+      let r = '<tr><td>' + x + '</td>';
+      for (const fn of fns) r += '<td>' + formatBig(fn.f(x)) + '</td>';
+      r += '</tr>';
+      rows.push(r);
+    });
+    rows.push('</table>');
+    tableEl.innerHTML = rows.join('');
+  }
+
+  function formatBig(v) {
+    if (v >= 1e12) return v.toExponential(1);
+    if (v >= 1e6) return (v/1e6).toFixed(1) + 'M';
+    if (v >= 1e3) return (v/1e3).toFixed(1) + 'K';
+    return Math.round(v * 100) / 100;
+  }
+
+  slider.oninput = () => {
+    const n = parseInt(slider.value);
+    nVal.textContent = n;
+    draw(n);
+  };
+  draw(20);
+})();
+</script>
+</body>
+</html>

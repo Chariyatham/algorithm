@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>21 · Step-by-step Visualizers</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .viz-section {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    margin: 30px 0;
+  }
+  .viz-section h2 {
+    color: var(--accent);
+    border: none;
+    padding: 0;
+    margin-top: 0;
+  }
+  .step-display {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    font-family: monospace;
+    font-size: 14px;
+    margin: 12px 0;
+    line-height: 1.8;
+    min-height: 80px;
+  }
+  .step-display .label {
+    color: var(--accent);
+    font-weight: 700;
+  }
+  .step-display .hi-blue { background: rgba(88, 166, 255, 0.25); padding: 1px 4px; border-radius: 3px; }
+  .step-display .hi-green { background: rgba(63, 185, 80, 0.3); padding: 1px 4px; border-radius: 3px; color: #b3ffce; }
+  .step-display .hi-orange { background: rgba(240, 136, 62, 0.3); padding: 1px 4px; border-radius: 3px; color: #ffd1a8; }
+  .step-display .hi-red { background: rgba(248, 81, 73, 0.3); padding: 1px 4px; border-radius: 3px; color: #ffb8b3; }
+  .step-display .hi-purple { background: rgba(210, 168, 255, 0.25); padding: 1px 4px; border-radius: 3px; color: #e1c8ff; }
+  .matrix-grid {
+    display: inline-grid;
+    gap: 4px;
+    margin: 8px;
+    font-family: monospace;
+  }
+  .matrix-grid .cell {
+    background: var(--bg-3);
+    padding: 6px 10px;
+    border-radius: 4px;
+    text-align: center;
+    min-width: 36px;
+    transition: all 0.3s;
+  }
+  .matrix-grid .cell.hi { background: var(--warn); color: #0d1117; transform: scale(1.1); }
+  .matrix-grid .cell.done { background: var(--good); color: #0d1117; }
+  .partition-display {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    margin: 14px 0;
+  }
+  .pgroup {
+    background: var(--bg-3);
+    padding: 12px 16px;
+    border-radius: 6px;
+    border: 2px solid var(--border);
+  }
+  .pgroup.L { border-color: #79c0ff; }
+  .pgroup.E { border-color: #d2a8ff; }
+  .pgroup.G { border-color: #ff7b72; }
+  .pgroup .ptitle { font-size: 12px; color: var(--muted); margin-bottom: 6px; font-weight: 700; }
+  .pgroup .pitems { font-family: monospace; font-size: 14px; }
+</style>
+</head>
+<body>
+<header class="site">
+  <div class="container">
+    <h1><a href="index.html" style="color: var(--fg)">← Hub</a> · 21 Visualizers</h1>
+    <nav class="top">
+      <a href="20-mock-exam.html">← Mock Exam</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+  <h1>Step-by-step Visualizers — เห็นภาพชัดทีละขั้น</h1>
+  <p class="lead">
+    4 algorithms ที่ดูยากที่สุด: Karatsuba, Strassen M1-M7, Floyd-Warshall, Quick Select 3-way
+    — แต่ละตัวเล่นทีละ step ได้ พร้อมเลข — ดูจบเข้าใจแน่นอน
+  </p>
+
+  <!-- ============ KARATSUBA ============ -->
+  <section class="viz-section">
+    <h2>1. Karatsuba — คูณเลขใหญ่ทีละ recursion</h2>
+
+    <div class="controls">
+      <label class="label">X =</label>
+      <input type="number" id="kar-x" value="3572" style="width: 120px">
+      <label class="label">Y =</label>
+      <input type="number" id="kar-y" value="1245" style="width: 120px">
+      <button id="kar-play">▶ Play step-by-step</button>
+      <button id="kar-skip" class="ghost">⏭ ข้ามทีละ recursion</button>
+    </div>
+
+    <div id="kar-display" class="step-display">กด Play เพื่อเริ่ม</div>
+    <div id="kar-tree" style="margin-top: 12px"></div>
+
+    <div class="note tip">
+      <strong>Insight:</strong> สังเกตว่าทุก call มี 3 sub-multiply (ไม่ใช่ 4) — z2, z0, z1
+      ตรงนี้คือเหตุผลที่ Karatsuba เร็วกว่า naive
+    </div>
+  </section>
+
+  <!-- ============ STRASSEN ============ -->
+  <section class="viz-section">
+    <h2>2. Strassen — M1 ถึง M7 ทีละสูตร</h2>
+
+    <div class="controls">
+      <button id="str-reset" class="ghost">🎲 Matrix ใหม่</button>
+      <button id="str-play">▶ Play M1-M7</button>
+      <button id="str-step" class="ghost">⏯ ทีละ step</button>
+    </div>
+
+    <div id="str-matrices" style="margin: 14px 0"></div>
+    <div id="str-display" class="step-display">กด Play เพื่อคำนวณ M1-M7</div>
+    <div id="str-result"></div>
+  </section>
+
+  <!-- ============ FLOYD-WARSHALL ============ -->
+  <section class="viz-section">
+    <h2>3. Floyd-Warshall — ทุก k iteration</h2>
+
+    <div class="controls">
+      <button id="fw-reset" class="ghost">🔄 Reset</button>
+      <button id="fw-step">⏭ Step k</button>
+      <button id="fw-all">▶ Play ทั้งหมด</button>
+    </div>
+
+    <div id="fw-matrix" style="margin: 14px 0"></div>
+    <div id="fw-display" class="step-display">เริ่มที่ initial matrix — กด Step เพื่อทำ k=0, 1, 2, 3 ทีละรอบ</div>
+  </section>
+
+  <!-- ============ QUICK SELECT 3-WAY ============ -->
+  <section class="viz-section">
+    <h2>4. Quick Select 3-way — แบ่ง L, E, G</h2>
+
+    <div class="controls">
+      <label class="label">k =</label>
+      <input type="number" id="qs-k" value="3" min="1" max="7" style="width: 60px">
+      <button id="qs-play">▶ Play Quick Select</button>
+      <button id="qs-shuffle" class="ghost">🎲 Array ใหม่</button>
+    </div>
+
+    <div id="qs-display" class="step-display">arr = [1, 5, 10, 4, 8, 2, 6], k = 3</div>
+    <div id="qs-trace" style="margin-top: 12px"></div>
+  </section>
+
+  <div class="card" style="margin-top: 40px; text-align: center; padding: 30px;">
+    <h3 style="margin-top: 0; color: var(--accent-2)">🎉 ครบแล้วทุกอย่าง</h3>
+    <p>เว็บการเรียนนี้มี <strong>22 หน้า</strong> ครอบคลุม PDF ทุกไฟล์ + visualizer + walkthrough + mock exam</p>
+    <p>ขอให้ <strong>สอบผ่าน</strong> นะครับ! 💪</p>
+  </div>
+
+</main>
+
+<footer>
+  <div class="container"><a href="index.html">← กลับ Hub</a></div>
+</footer>
+
+<script src="script.js"></script>
+<script>
+// ============ KARATSUBA VISUALIZER ============
+(function() {
+  const playBtn = document.getElementById('kar-play');
+  const skipBtn = document.getElementById('kar-skip');
+  const xIn = document.getElementById('kar-x');
+  const yIn = document.getElementById('kar-y');
+  const display = document.getElementById('kar-display');
+  const treeEl = document.getElementById('kar-tree');
+  let running = false;
+  let stepMode = false;
+  let stepResolver = null;
+
+  function nextStep() { if (stepResolver) { stepResolver(); stepResolver = null; } }
+
+  async function waitNext(ms = 800) {
+    if (stepMode) await new Promise(r => stepResolver = r);
+    else await sleep(ms);
+  }
+
+  let html = '';
+  function log(line, indent = 0) {
+    html += '<div style="margin-left: ' + (indent * 20) + 'px">' + line + '</div>';
+    treeEl.innerHTML = html;
+  }
+
+  async function karatsuba(x, y, depth = 0) {
+    const ind = '  '.repeat(depth);
+    log('<span class="hi-blue">karatsuba(' + x + ', ' + y + ')</span>', depth);
+    display.innerHTML = '<span class="label">Computing:</span> ' + x + ' × ' + y;
+    await waitNext();
+
+    if (x < 10 || y < 10) {
+      const r = x * y;
+      log('<span class="hi-green">base case → ' + x + ' × ' + y + ' = ' + r + '</span>', depth);
+      display.innerHTML = '<span class="label">Base case:</span> ' + x + ' × ' + y + ' = <span class="hi-green">' + r + '</span>';
+      await waitNext();
+      return r;
+    }
+
+    const n = Math.max(x.toString().length, y.toString().length);
+    const m = Math.ceil(n / 2);
+    const pow10m = Math.pow(10, m);
+
+    const a = Math.floor(x / pow10m), b = x % pow10m;
+    const c = Math.floor(y / pow10m), d = y % pow10m;
+
+    log('split: <span class="hi-orange">a=' + a + ', b=' + b + '</span> | <span class="hi-purple">c=' + c + ', d=' + d + '</span>', depth);
+    await waitNext();
+
+    log('compute z2 = a × c = ' + a + ' × ' + c, depth);
+    const z2 = await karatsuba(a, c, depth + 1);
+
+    log('compute z0 = b × d = ' + b + ' × ' + d, depth);
+    const z0 = await karatsuba(b, d, depth + 1);
+
+    log('compute z1 = (a+b)(c+d) = ' + (a+b) + ' × ' + (c+d), depth);
+    const z1 = await karatsuba(a + b, c + d, depth + 1);
+
+    const middle = z1 - z2 - z0;
+    log('middle = z1 − z2 − z0 = ' + z1 + ' − ' + z2 + ' − ' + z0 + ' = <span class="hi-orange">' + middle + '</span>', depth);
+    await waitNext();
+
+    const result = z2 * pow10m * pow10m + middle * pow10m + z0;
+    log('<span class="hi-green">result = ' + z2 + '·10^' + (2*m) + ' + ' + middle + '·10^' + m + ' + ' + z0 + ' = ' + result + '</span>', depth);
+    display.innerHTML = '<span class="label">Returning:</span> ' + x + ' × ' + y + ' = <span class="hi-green">' + result + '</span>';
+    await waitNext();
+    return result;
+  }
+
+  async function play(stepM) {
+    if (running) return;
+    running = true;
+    stepMode = stepM;
+    treeEl.innerHTML = ''; html = '';
+    const x = parseInt(xIn.value), y = parseInt(yIn.value);
+    const result = await karatsuba(x, y);
+    display.innerHTML = '<span class="label">FINAL:</span> ' + x + ' × ' + y + ' = <span class="hi-green" style="font-size: 18px">' + result + '</span>';
+    running = false;
+  }
+
+  playBtn.onclick = () => play(false);
+  skipBtn.onclick = () => {
+    if (stepMode && running) nextStep();
+    else play(true);
+  };
+})();
+
+// ============ STRASSEN VISUALIZER ============
+(function() {
+  const resetBtn = document.getElementById('str-reset');
+  const playBtn = document.getElementById('str-play');
+  const stepBtn = document.getElementById('str-step');
+  const matricesEl = document.getElementById('str-matrices');
+  const display = document.getElementById('str-display');
+  const resultEl = document.getElementById('str-result');
+  let A = [[1, 3], [7, 5]];
+  let B = [[6, 8], [4, 2]];
+  let running = false;
+
+  function renderMats() {
+    matricesEl.innerHTML =
+      '<div style="display: flex; gap: 24px; align-items: center; flex-wrap: wrap">' +
+      '<div><div style="color: var(--muted); font-size: 12px; margin-bottom: 4px">Matrix A</div>' + matToHtml(A) + '</div>' +
+      '<div style="font-size: 24px">×</div>' +
+      '<div><div style="color: var(--muted); font-size: 12px; margin-bottom: 4px">Matrix B</div>' + matToHtml(B) + '</div>' +
+      '</div>';
+  }
+  function matToHtml(m) {
+    let h = '<div class="matrix-grid" style="grid-template-columns: repeat(' + m[0].length + ', auto)">';
+    for (const row of m) for (const v of row) h += '<div class="cell">' + v + '</div>';
+    h += '</div>';
+    return h;
+  }
+
+  async function compute() {
+    if (running) return;
+    running = true;
+    resultEl.innerHTML = '';
+    const A11 = A[0][0], A12 = A[0][1], A21 = A[1][0], A22 = A[1][1];
+    const B11 = B[0][0], B12 = B[0][1], B21 = B[1][0], B22 = B[1][1];
+
+    const formulas = [
+      { name: 'M1', expr: '(A11+A22)(B11+B22)', val: (A11+A22)*(B11+B22), exp: '(' + A11 + '+' + A22 + ')(' + B11 + '+' + B22 + ') = ' + (A11+A22) + '·' + (B11+B22) },
+      { name: 'M2', expr: '(A21+A22)·B11', val: (A21+A22)*B11, exp: '(' + A21 + '+' + A22 + ')·' + B11 + ' = ' + (A21+A22) + '·' + B11 },
+      { name: 'M3', expr: 'A11·(B12−B22)', val: A11*(B12-B22), exp: A11 + '·(' + B12 + '−' + B22 + ') = ' + A11 + '·' + (B12-B22) },
+      { name: 'M4', expr: 'A22·(B21−B11)', val: A22*(B21-B11), exp: A22 + '·(' + B21 + '−' + B11 + ') = ' + A22 + '·' + (B21-B11) },
+      { name: 'M5', expr: '(A11+A12)·B22', val: (A11+A12)*B22, exp: '(' + A11 + '+' + A12 + ')·' + B22 + ' = ' + (A11+A12) + '·' + B22 },
+      { name: 'M6', expr: '(A21−A11)(B11+B12)', val: (A21-A11)*(B11+B12), exp: '(' + A21 + '−' + A11 + ')(' + B11 + '+' + B12 + ') = ' + (A21-A11) + '·' + (B11+B12) },
+      { name: 'M7', expr: '(A12−A22)(B21+B22)', val: (A12-A22)*(B21+B22), exp: '(' + A12 + '−' + A22 + ')(' + B21 + '+' + B22 + ') = ' + (A12-A22) + '·' + (B21+B22) }
+    ];
+
+    let log = '';
+    for (const f of formulas) {
+      display.innerHTML = '<span class="label">' + f.name + ' = ' + f.expr + '</span><br>= ' + f.exp + ' = <span class="hi-green">' + f.val + '</span>';
+      log += '<div><strong style="color: var(--accent-2)">' + f.name + '</strong> = ' + f.expr + ' = <span class="hi-green">' + f.val + '</span></div>';
+      resultEl.innerHTML = log;
+      await sleep(1100);
+    }
+
+    const M1 = formulas[0].val, M2 = formulas[1].val, M3 = formulas[2].val,
+          M4 = formulas[3].val, M5 = formulas[4].val, M6 = formulas[5].val, M7 = formulas[6].val;
+    const C11 = M1 + M4 - M5 + M7;
+    const C12 = M3 + M5;
+    const C21 = M2 + M4;
+    const C22 = M1 - M2 + M3 + M6;
+
+    log += '<div style="margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border)">';
+    log += '<strong>C11</strong> = M1+M4−M5+M7 = ' + M1 + '+' + M4 + '−' + M5 + '+' + M7 + ' = <span class="hi-green">' + C11 + '</span><br>';
+    log += '<strong>C12</strong> = M3+M5 = ' + M3 + '+' + M5 + ' = <span class="hi-green">' + C12 + '</span><br>';
+    log += '<strong>C21</strong> = M2+M4 = ' + M2 + '+' + M4 + ' = <span class="hi-green">' + C21 + '</span><br>';
+    log += '<strong>C22</strong> = M1−M2+M3+M6 = ' + M1 + '−' + M2 + '+' + M3 + '+' + M6 + ' = <span class="hi-green">' + C22 + '</span>';
+    log += '</div>';
+    log += '<div style="margin-top: 14px"><strong style="color: var(--accent)">Result C:</strong>' + matToHtml([[C11, C12], [C21, C22]]) + '</div>';
+    resultEl.innerHTML = log;
+    display.innerHTML = '<span class="hi-green">เสร็จ! Strassen ใช้ 7 multiply (vs 8 ของ naive)</span>';
+    running = false;
+  }
+
+  function reset() {
+    const r = () => Math.floor(Math.random() * 9) + 1;
+    A = [[r(), r()], [r(), r()]];
+    B = [[r(), r()], [r(), r()]];
+    renderMats();
+    display.innerHTML = 'พร้อม — กด Play';
+    resultEl.innerHTML = '';
+  }
+
+  resetBtn.onclick = reset;
+  playBtn.onclick = compute;
+  stepBtn.onclick = compute;
+  renderMats();
+})();
+
+// ============ FLOYD-WARSHALL VISUALIZER ============
+(function() {
+  const resetBtn = document.getElementById('fw-reset');
+  const stepBtn = document.getElementById('fw-step');
+  const allBtn = document.getElementById('fw-all');
+  const matrixEl = document.getElementById('fw-matrix');
+  const display = document.getElementById('fw-display');
+  const INF = 99;
+  let initial, D, k;
+
+  function reset() {
+    initial = [
+      [0, 4, INF, 5],
+      [INF, 0, 1, INF],
+      [3, INF, 0, INF],
+      [INF, INF, 2, 0]
+    ];
+    D = initial.map(r => [...r]);
+    k = -1;
+    render();
+    display.innerHTML = 'Initial matrix (k = none) — กด Step k เพื่อเริ่ม k=0';
+  }
+
+  function render(highlightK = -1, hi_i = -1, hi_j = -1) {
+    const n = D.length;
+    let h = '<div class="matrix-grid" style="grid-template-columns: repeat(' + (n+1) + ', auto)">';
+    h += '<div class="cell" style="background: var(--bg-2)">i\\j</div>';
+    for (let j = 0; j < n; j++) h += '<div class="cell" style="background: var(--bg-2)' + (j === highlightK ? '; color: #f0883e; font-weight: 700' : '') + '">' + j + '</div>';
+    for (let i = 0; i < n; i++) {
+      h += '<div class="cell" style="background: var(--bg-2)' + (i === highlightK ? '; color: #f0883e; font-weight: 700' : '') + '">' + i + '</div>';
+      for (let j = 0; j < n; j++) {
+        const cls = (i === hi_i && j === hi_j) ? 'hi' : '';
+        h += '<div class="cell ' + cls + '">' + (D[i][j] >= INF ? '∞' : D[i][j]) + '</div>';
+      }
+    }
+    h += '</div>';
+    matrixEl.innerHTML = h;
+  }
+
+  async function stepOnce() {
+    k++;
+    if (k >= D.length) {
+      display.innerHTML = '<span class="hi-green">เสร็จแล้ว! ทุก k ทำครบ — matrix ตอนนี้คือ shortest path ทุกคู่</span>';
+      return false;
+    }
+    display.innerHTML = '<span class="label">k = ' + k + '</span> — ลองใช้ node ' + k + ' เป็นจุดผ่าน';
+    render(k);
+    await sleep(700);
+    let updates = [];
+    for (let i = 0; i < D.length; i++) {
+      for (let j = 0; j < D.length; j++) {
+        if (i === k || j === k) continue;
+        if (D[i][k] + D[k][j] < D[i][j]) {
+          const old = D[i][j];
+          D[i][j] = D[i][k] + D[k][j];
+          updates.push({i, j, old, neu: D[i][j]});
+          render(k, i, j);
+          await sleep(450);
+        }
+      }
+    }
+    let log = '<span class="label">k = ' + k + ' เสร็จ.</span> ';
+    if (updates.length === 0) log += 'ไม่มีอัปเดต';
+    else log += 'อัปเดต ' + updates.length + ' ช่อง: ' + updates.map(u => 'D[' + u.i + '][' + u.j + ']: ' + (u.old >= INF ? '∞' : u.old) + '→' + u.neu).join(', ');
+    display.innerHTML = log;
+    render(k);
+    return true;
+  }
+
+  async function playAll() {
+    while (await stepOnce()) {
+      await sleep(800);
+    }
+  }
+
+  resetBtn.onclick = reset;
+  stepBtn.onclick = stepOnce;
+  allBtn.onclick = playAll;
+  reset();
+})();
+
+// ============ QUICK SELECT 3-WAY VISUALIZER ============
+(function() {
+  const playBtn = document.getElementById('qs-play');
+  const shuffleBtn = document.getElementById('qs-shuffle');
+  const kIn = document.getElementById('qs-k');
+  const display = document.getElementById('qs-display');
+  const traceEl = document.getElementById('qs-trace');
+  let arr = [1, 5, 10, 4, 8, 2, 6];
+  let running = false;
+
+  function shuffle() {
+    arr = randArray(7, 1, 20);
+    display.innerHTML = 'arr = [' + arr.join(', ') + ']';
+    traceEl.innerHTML = '';
+  }
+
+  async function quickSelect(a, k, depth = 0) {
+    const indent = '  '.repeat(depth);
+    let h = '<div style="margin-left: ' + (depth * 24) + 'px; padding: 8px 12px; background: var(--bg-3); border-radius: 6px; margin: 4px 0">';
+    h += '<div style="color: var(--accent)">[' + a.join(', ') + '], k = ' + k + '</div>';
+
+    if (a.length === 1) {
+      h += '<div class="hi-green" style="margin-top: 4px">→ คำตอบ = ' + a[0] + '</div>';
+      h += '</div>';
+      traceEl.innerHTML += h;
+      return a[0];
+    }
+
+    // pick pivot (last element)
+    const pivot = a[a.length - 1];
+    const L = [], E = [], G = [];
+    for (const v of a) {
+      if (v < pivot) L.push(v);
+      else if (v === pivot) E.push(v);
+      else G.push(v);
+    }
+    h += '<div>pivot = ' + pivot + ' →';
+    h += ' <span class="hi-blue">L=[' + L.join(',') + ']</span>';
+    h += ' <span class="hi-purple">E=[' + E.join(',') + ']</span>';
+    h += ' <span class="hi-red">G=[' + G.join(',') + ']</span></div>';
+    h += '<div>|L|=' + L.length + ', |L|+|E|=' + (L.length + E.length) + ', k=' + k + '</div>';
+
+    let next = '';
+    if (k <= L.length) {
+      next = '<div class="hi-orange">k ≤ |L| → recurse L</div>';
+    } else if (k <= L.length + E.length) {
+      next = '<div class="hi-green">|L| &lt; k ≤ |L|+|E| → คำตอบ = ' + pivot + '</div>';
+    } else {
+      next = '<div class="hi-orange">k &gt; |L|+|E| → recurse G, k′ = ' + k + ' − ' + L.length + ' − ' + E.length + ' = ' + (k - L.length - E.length) + '</div>';
+    }
+    h += next + '</div>';
+    traceEl.innerHTML += h;
+    await sleep(1200);
+
+    if (k <= L.length) return await quickSelect(L, k, depth + 1);
+    else if (k <= L.length + E.length) return pivot;
+    else return await quickSelect(G, k - L.length - E.length, depth + 1);
+  }
+
+  async function play() {
+    if (running) return;
+    running = true;
+    traceEl.innerHTML = '';
+    const k = Math.max(1, Math.min(arr.length, parseInt(kIn.value) || 3));
+    display.innerHTML = 'arr = [' + arr.join(', ') + '], k = ' + k;
+    const ans = await quickSelect([...arr], k);
+    display.innerHTML = '<span class="hi-green">เสร็จ! ตัวที่น้อยสุดลำดับที่ ' + k + ' = ' + ans + '</span>';
+    running = false;
+  }
+
+  shuffleBtn.onclick = shuffle;
+  playBtn.onclick = play;
+})();
+</script>
+</body>
+</html>

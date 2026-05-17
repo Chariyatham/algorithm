@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>07 · Backtracking</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .board { display: inline-grid; gap: 0; background: var(--bg-3); padding: 4px; border-radius: 6px; }
+  .sq { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; font-size: 24px; transition: background 0.15s; position: relative; }
+  .sq.light { background: #b58863; }
+  .sq.dark  { background: #f0d9b5; }
+  .sq.attack { background: rgba(248, 81, 73, 0.45) !important; }
+  .sq.try { background: rgba(240, 136, 62, 0.6) !important; }
+  .sq .q { color: #1a1a1a; font-weight: 800; }
+  .perm-row {
+    display: inline-flex; gap: 4px; padding: 6px 12px; background: var(--bg-3);
+    border-radius: 6px; font-family: monospace; margin: 4px 0;
+  }
+  .perm-row .v { padding: 4px 8px; background: var(--bg-2); border-radius: 4px; }
+  .perm-row .v.fix { background: var(--good); color: #0d1117; }
+  .perm-row .v.swap { background: var(--bad); color: #fff; }
+</style>
+</head>
+<body>
+<header class="site">
+  <div class="container">
+    <h1><a href="index.html" style="color: var(--fg)">← Hub</a> · 07 Backtracking</h1>
+    <nav class="top">
+      <a href="06-greedy.html">← Greedy</a>
+      <a href="08-graph.html">Graph →</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+  <h1>Backtracking — เดินไป ถ้าตันก็ถอย</h1>
+  <p class="lead">
+    Backtracking = ลองทุกความเป็นไปได้แบบ DFS แต่ <strong>ตัดต้นไม้ทิ้ง</strong>
+    เมื่อรู้ว่าเส้นทางนี้ไม่มีทางได้คำตอบ ลด search space ได้มหาศาล
+    เป็นเทคนิคที่ใช้แก้ N-Queens, Sudoku, permutation, subset
+  </p>
+
+  <h2>หลักคิด: state-space tree</h2>
+  <div class="card">
+    <p>นึกภาพการเดินใน <strong>ต้นไม้ของ choice</strong></p>
+    <ul>
+      <li>แต่ละ node = state ปัจจุบัน (เลือกอะไรไปแล้วบ้าง)</li>
+      <li>แต่ละ branch = choice ที่ทำต่อไป</li>
+      <li>เดิน DFS ลงไป — ถึง <strong>leaf</strong> = solution</li>
+      <li>เจอ <strong>เส้นที่ valid ไม่ได้</strong> → backtrack (ถอยขึ้น แล้วลอง branch อื่น)</li>
+    </ul>
+  </div>
+
+<pre><code class="cpp">void backtrack(state) {
+    if (is_solution(state)) {
+        record(state);
+        return;
+    }
+    for (each choice in candidates(state)) {
+        if (is_valid(state, choice)) {       // ← pruning!
+            apply(state, choice);
+            backtrack(state);
+            undo(state, choice);             // ← ถอย
+        }
+    }
+}</code></pre>
+
+  <h2>ตัวอย่างที่ 1 — Permutation (จาก lab/p_fo_n.cpp)</h2>
+  <p>สร้าง permutation ของ <code>{1, 2, ..., n}</code> ทั้งหมด</p>
+
+<pre><code class="cpp">void findPermutations(vector&lt;int&gt;&amp; nums, int left, int right) {
+    if (left == right) {                       // base: leaf
+        for (int i = 0; i &lt;= right; i++) cout &lt;&lt; nums[i] &lt;&lt; " ";
+        cout &lt;&lt; endl;
+        return;
+    }
+    for (int i = left; i &lt;= right; i++) {
+        swap(nums[left], nums[i]);             // เลือก nums[i] เป็นตำแหน่ง left
+        findPermutations(nums, left + 1, right);
+        swap(nums[left], nums[i]);             // backtrack — สลับกลับ
+    }
+}</code></pre>
+
+  <p><strong>เห็น tree:</strong> n=3 มี 3! = 6 permutation</p>
+  <div class="viz">
+    <div class="controls">
+      <label class="label">n =</label>
+      <input type="number" id="perm-n" value="3" min="2" max="4" style="width: 60px">
+      <button id="perm-play">▶ Play permutation</button>
+    </div>
+    <div id="perm-stage" style="margin-top: 10px; min-height: 280px"></div>
+    <div class="status" id="perm-status">รอเริ่ม</div>
+  </div>
+
+  <h2>ตัวอย่างที่ 2 — N-Queens</h2>
+  <p>วาง <code>n</code> ราชินีบนกระดาน <code>n×n</code> โดย <strong>ห้ามอยู่ในแถว/คอลัมน์/แนวทแยงเดียวกัน</strong></p>
+
+<pre><code class="cpp">// pattern จาก lab/w3.cpp: ใช้ permutation แล้วเช็ค diagonal
+// X[i] = column ของ queen ที่อยู่ row i (1-indexed)
+
+bool isValid(vector&lt;int&gt;&amp; X, int end) {
+    for (int i = 1; i &lt; end; i++)
+        for (int j = i + 1; j &lt;= end; j++)
+            if (abs(i - j) == abs(X[i] - X[j]))    // diagonal!
+                return false;
+    return true;
+}
+
+void permute(vector&lt;int&gt;&amp; X, int start, int end) {
+    if (start == end) {
+        if (isValid(X, end)) {
+            for (int i = 1; i &lt;= end; i++) cout &lt;&lt; X[i] &lt;&lt; " ";
+            cout &lt;&lt; endl;
+        }
+        return;
+    }
+    for (int i = start; i &lt;= end; i++) {
+        swap(X[start], X[i]);
+        permute(X, start + 1, end);
+        swap(X[start], X[i]);
+    }
+}</code></pre>
+
+  <div class="note tip">
+    <strong>เทคนิคปรับ:</strong> วิธีของ <code>w3.cpp</code> สร้าง permutation ทุกตัวก่อนค่อยเช็ค → O(n!)
+    <br><strong>ดีกว่า:</strong> เช็คตอน <em>กำลังวาง</em> queen แต่ละตัว ถ้าทำ row นี้ valid ไม่ได้ ก็ตัดทิ้งไม่ต้อง recurse
+  </div>
+
+<pre><code class="cpp">// version ที่ prune เร็ว
+bool safe(vector&lt;int&gt;&amp; pos, int row, int col) {
+    for (int i = 0; i &lt; row; i++) {
+        if (pos[i] == col) return false;                // column ซ้ำ
+        if (abs(pos[i] - col) == abs(i - row)) return false;  // diagonal
+    }
+    return true;
+}
+
+void solve(vector&lt;int&gt;&amp; pos, int row, int n, int&amp; count) {
+    if (row == n) { count++; return; }
+    for (int col = 0; col &lt; n; col++) {
+        if (safe(pos, row, col)) {
+            pos[row] = col;
+            solve(pos, row + 1, n, count);
+            // pos[row] = -1; // ไม่จำเป็น เพราะรอบหน้าจะ overwrite
+        }
+    }
+}</code></pre>
+
+  <h3>เห็นภาพ: N-Queens บนกระดานจริง</h3>
+  <div class="viz">
+    <div class="controls">
+      <label class="label">n =</label>
+      <input type="number" id="nq-n" value="6" min="4" max="8" style="width: 60px">
+      <label class="label">ความเร็ว:</label>
+      <input type="range" id="nq-speed" min="1" max="100" value="60" style="width: 120px">
+      <button id="nq-play">▶ Play N-Queens</button>
+      <button id="nq-stop" class="ghost">■ Stop</button>
+    </div>
+    <div id="nq-board"></div>
+    <div class="status" id="nq-status">รอเริ่ม — สังเกต queen ที่ถอยกลับเมื่อตัน!</div>
+    <div class="status" id="nq-stats" style="margin-top: 4px">solutions: 0 · placements tried: 0 · backtracks: 0</div>
+    <div class="legend">
+      <span><i style="background: rgba(240, 136, 62, 0.6)"></i>กำลังลอง</span>
+      <span><i style="background: rgba(248, 81, 73, 0.45)"></i>ตำแหน่ง attack</span>
+    </div>
+  </div>
+
+  <h2>ตัวอย่างที่ 3 — Subset Sum (จาก lab/w2.cpp)</h2>
+  <p>มี array A — หา subset ที่ผลรวมเท่า target</p>
+
+<pre><code class="cpp">// pattern แบบ "เลือก / ไม่เลือก" element ทีละตัว
+void subset(vector&lt;int&gt;&amp; A, vector&lt;int&gt;&amp; chosen, int idx, int sum, int target) {
+    if (idx == A.size()) {
+        if (sum == target) {
+            for (int i = 0; i &lt; chosen.size(); i++)
+                if (chosen[i]) cout &lt;&lt; A[i] &lt;&lt; " ";
+            cout &lt;&lt; endl;
+        }
+        return;
+    }
+    // ทาง 1: เอา A[idx]
+    chosen[idx] = 1;
+    subset(A, chosen, idx + 1, sum + A[idx], target);
+    // ทาง 2: ไม่เอา
+    chosen[idx] = 0;
+    subset(A, chosen, idx + 1, sum, target);
+}</code></pre>
+
+  <div class="note tip">
+    <strong>Pruning:</strong> ถ้า <code>sum &gt; target</code> ตัดสาขานี้ทิ้งเลย
+    (ถ้า A มีแต่จำนวนบวก) — ทำให้เร็วขึ้นได้มากใน input ใหญ่
+  </div>
+
+<pre><code class="cpp">// pruned version
+void subsetPruned(vector&lt;int&gt;&amp; A, vector&lt;int&gt;&amp; chosen, int idx, int sum, int target) {
+    if (sum &gt; target) return;          // ← prune!
+    if (idx == A.size()) {
+        if (sum == target) print(...);
+        return;
+    }
+    chosen[idx] = 1;
+    subsetPruned(A, chosen, idx + 1, sum + A[idx], target);
+    chosen[idx] = 0;
+    subsetPruned(A, chosen, idx + 1, sum, target);
+}</code></pre>
+
+  <h2>ตัวอย่างที่ 4 — 0/1 Knapsack แบบ backtracking (lab/w4.cpp)</h2>
+  <p>เหมือน subset sum แต่ track <code>max value</code> ที่ weight ไม่เกิน <code>capacity</code></p>
+
+<pre><code class="cpp">int n, capacity, maxV = -1;
+vector&lt;int&gt; w, v, x, best_x;
+
+void solve(int idx) {
+    if (idx == n) {
+        int curW = 0, curV = 0;
+        for (int i = 0; i &lt; n; i++)
+            if (x[i]) { curW += w[i]; curV += v[i]; }
+        if (curW &lt;= capacity &amp;&amp; curV &gt; maxV) {
+            maxV = curV; best_x = x;
+        }
+        return;
+    }
+    x[idx] = 1; solve(idx + 1);          // เอา
+    x[idx] = 0; solve(idx + 1);          // ไม่เอา
+}</code></pre>
+
+  <p><strong>ปรับให้เร็วขึ้น:</strong> bound + branch — คำนวณ max value ที่เป็นไปได้ของกิ่งนี้ ถ้า ≤ maxV ปัจจุบัน ตัดทิ้ง</p>
+
+  <h2>ตัวอย่างที่ 5 — Seating (lab/seating.cpp)</h2>
+  <p>มีเด็กผู้ชาย m คน เด็กผู้หญิง n คน — เรียงนั่งติดกันให้ <code>g1</code> ห้ามติด <code>g2</code></p>
+
+<pre><code class="cpp">bool isValid(vector&lt;string&gt;&amp; arr) {
+    for (int i = 0; i &lt; arr.size() - 1; i++) {
+        if ((arr[i] == "g1" &amp;&amp; arr[i+1] == "g2") ||
+            (arr[i] == "g2" &amp;&amp; arr[i+1] == "g1"))
+            return false;
+    }
+    return true;
+}
+
+void solve(vector&lt;string&gt;&amp; seats, int left, int right) {
+    if (left == right) {
+        if (isValid(seats)) print(seats);
+        return;
+    }
+    for (int i = left; i &lt;= right; i++) {
+        swap(seats[left], seats[i]);
+        solve(seats, left + 1, right);
+        swap(seats[left], seats[i]);
+    }
+}</code></pre>
+
+  <h2>Pattern สำคัญที่ต้องจำ</h2>
+  <table>
+    <tr><th>ปัญหาประเภท</th><th>วิธี enumerate</th></tr>
+    <tr><td>Permutation</td><td><code>swap(a[start], a[i])</code> recursion</td></tr>
+    <tr><td>Subset / 0-1 knapsack</td><td>"เอา / ไม่เอา" ทีละตัว (2 recursive calls)</td></tr>
+    <tr><td>Combination C(n,k)</td><td>เริ่ม index ที่ <code>i+1</code> เพื่อกัน duplicate</td></tr>
+    <tr><td>N-Queens / Constraint</td><td>วางทีละ row, ใช้ <code>safe()</code> prune</td></tr>
+    <tr><td>Sudoku</td><td>หาช่องว่าง, ลอง 1-9, prune ตาม row/col/box</td></tr>
+  </table>
+
+  <h2>Backtracking vs Brute force vs DP</h2>
+  <table>
+    <tr><th></th><th>Brute force</th><th>Backtracking</th><th>DP</th></tr>
+    <tr><td>ลองทุก case?</td><td>ใช่ ทั้งหมด</td><td>ลอง แต่ตัดเร็ว</td><td>เก็บคำตอบ ใช้ซ้ำ</td></tr>
+    <tr><td>Time</td><td>worst case</td><td>worst case (แต่จริงเร็วกว่า)</td><td>polynomial</td></tr>
+    <tr><td>print ทุก solution?</td><td>ได้</td><td>ได้</td><td>ทำได้แต่ยาก</td></tr>
+    <tr><td>เหมาะกับ</td><td>n เล็กมาก</td><td>n กลาง + มี constraint ตัด</td><td>มี overlapping subproblem</td></tr>
+  </table>
+
+  <h2>แบบฝึก</h2>
+
+  <div class="exercise">
+    <span class="qnum">Q1</span>
+    <strong>Combination:</strong> เขียน function print ทุก combination C(n, k)
+    เช่น n=4, k=2 → {1,2}, {1,3}, {1,4}, {2,3}, {2,4}, {3,4}
+    <details>
+      <summary>เฉลย</summary>
+<pre><code class="cpp">void comb(int n, int k, int start, vector&lt;int&gt;&amp; cur) {
+    if (cur.size() == k) {
+        for (int x : cur) cout &lt;&lt; x &lt;&lt; " ";
+        cout &lt;&lt; endl;
+        return;
+    }
+    for (int i = start; i &lt;= n; i++) {
+        cur.push_back(i);
+        comb(n, k, i + 1, cur);    // i+1 — กัน duplicate
+        cur.pop_back();             // backtrack
+    }
+}</code></pre>
+    </details>
+  </div>
+
+  <div class="exercise">
+    <span class="qnum">Q2</span>
+    <strong>Word Break:</strong> ให้ string s กับ dict — เช็คว่าตัด s เป็นคำใน dict ได้หรือไม่
+    เช่น s="catsanddog", dict={cat, cats, and, sand, dog} → ใช่
+    <details>
+      <summary>เฉลย</summary>
+<pre><code class="cpp">bool wordBreak(string s, set&lt;string&gt;&amp; dict, int start) {
+    if (start == s.size()) return true;
+    for (int len = 1; len &lt;= s.size() - start; len++) {
+        string sub = s.substr(start, len);
+        if (dict.count(sub) &amp;&amp; wordBreak(s, dict, start + len))
+            return true;
+    }
+    return false;
+}
+// O(2ⁿ) worst case — ปรับให้เร็วได้ด้วย memo → DP</code></pre>
+    </details>
+  </div>
+
+  <div class="exercise">
+    <span class="qnum">Q3</span>
+    <strong>Sudoku Solver:</strong> เติม 9×9 sudoku ให้ครบ
+    <details>
+      <summary>เฉลย — เน้น pruning</summary>
+<pre><code class="cpp">bool isValid(vector&lt;vector&lt;char&gt;&gt;&amp; b, int r, int c, char ch) {
+    for (int i = 0; i &lt; 9; i++) {
+        if (b[r][i] == ch) return false;
+        if (b[i][c] == ch) return false;
+        int br = 3*(r/3) + i/3, bc = 3*(c/3) + i%3;
+        if (b[br][bc] == ch) return false;
+    }
+    return true;
+}
+
+bool solve(vector&lt;vector&lt;char&gt;&gt;&amp; b) {
+    for (int r = 0; r &lt; 9; r++) {
+        for (int c = 0; c &lt; 9; c++) {
+            if (b[r][c] != '.') continue;
+            for (char ch = '1'; ch &lt;= '9'; ch++) {
+                if (isValid(b, r, c, ch)) {
+                    b[r][c] = ch;
+                    if (solve(b)) return true;
+                    b[r][c] = '.';        // backtrack
+                }
+            }
+            return false;                  // ลองครบ 1-9 ไม่ได้ → ตัน
+        }
+    }
+    return true;                            // เต็มกระดานทั้งหมด
+}</code></pre>
+      <p><strong>เคล็ด:</strong> เลือกเติมช่องว่างที่มี <em>candidate น้อยสุด</em> ก่อน
+      (เรียก MRV — Most Restricted Variable) จะเร็วขึ้นมาก</p>
+    </details>
+  </div>
+
+  <div class="exercise">
+    <span class="qnum">Q4</span>
+    <strong>เปิดไฟล์ <code>lab/w4.cpp</code> (knapsack backtracking)</strong>
+    <p>เพิ่ม pruning: ถ้า <code>current_w &gt; capacity</code> ระหว่างทาง ให้ return ทันที
+    (ไม่ต้องวน iterate ใน base case)</p>
+    <details>
+      <summary>เฉลย</summary>
+<pre><code class="cpp">void subset1(int idx, int curW, int curV) {
+    if (curW &gt; capacity) return;            // ← prune!
+    if (idx == n) {
+        if (curV &gt; maxV) { maxV = curV; best_x = x; }
+        return;
+    }
+    // เอา idx
+    x[idx] = 1;
+    subset1(idx + 1, curW + w[idx], curV + v[idx]);
+    // ไม่เอา
+    x[idx] = 0;
+    subset1(idx + 1, curW, curV);
+}</code></pre>
+      <p>ส่ง <code>curW, curV</code> ผ่าน parameter — เลิกวน loop ใน base case → เร็วขึ้นมาก</p>
+    </details>
+  </div>
+
+</main>
+
+<footer>
+  <div class="container"><a href="index.html">← Hub</a> · <a href="08-graph.html">ถัดไป: Graph →</a></div>
+</footer>
+
+<script src="script.js"></script>
+<script>
+// ==== Permutation tree visualization ====
+(function() {
+  const playBtn = document.getElementById('perm-play');
+  const nIn = document.getElementById('perm-n');
+  const stage = document.getElementById('perm-stage');
+  const statusEl = document.getElementById('perm-status');
+  let running = false;
+  let stop = false;
+
+  function rowHtml(arr, fixUpTo, swapPair = []) {
+    let h = '<div class="perm-row">';
+    arr.forEach((v, i) => {
+      const cls = swapPair.includes(i) ? 'swap' : (i < fixUpTo ? 'fix' : '');
+      h += '<span class="v ' + cls + '">' + v + '</span>';
+    });
+    h += '</div>';
+    return h;
+  }
+
+  async function permute(arr, left, right, log) {
+    if (stop) return;
+    if (left === right) {
+      log.push('<div class="perm-row" style="background:#3fb95033;border-left:3px solid var(--good)">' +
+        arr.map(v => '<span class="v fix">'+v+'</span>').join('') + ' ✓</div>');
+      stage.innerHTML = log.join('') + rowHtml(arr, left+1);
+      statusEl.textContent = 'ได้ permutation: ' + arr.join(' ');
+      await sleep(380);
+      return;
+    }
+    for (let i = left; i <= right; i++) {
+      if (stop) return;
+      [arr[left], arr[i]] = [arr[i], arr[left]];
+      stage.innerHTML = log.join('') + rowHtml(arr, left, [left, i]);
+      statusEl.textContent = 'swap pos ' + left + ' กับ pos ' + i + ' → ' + arr.join(' ');
+      await sleep(420);
+      await permute(arr, left + 1, right, log);
+      // backtrack swap
+      [arr[left], arr[i]] = [arr[i], arr[left]];
+      stage.innerHTML = log.join('') + rowHtml(arr, left, [left, i]);
+      statusEl.textContent = 'backtrack: swap กลับ → ' + arr.join(' ');
+      await sleep(280);
+    }
+  }
+
+  async function play() {
+    if (running) return;
+    running = true; stop = false;
+    const n = Math.max(2, Math.min(4, parseInt(nIn.value) || 3));
+    const arr = [];
+    for (let i = 1; i <= n; i++) arr.push(i);
+    await permute(arr, 0, n - 1, []);
+    statusEl.innerHTML = '<strong>เสร็จ!</strong> n=' + n + ' มี ' + factorial(n) + ' permutations';
+    running = false;
+  }
+  function factorial(n) { return n <= 1 ? 1 : n * factorial(n-1); }
+  playBtn.onclick = play;
+})();
+
+// ==== N-Queens animation ====
+(function() {
+  const playBtn = document.getElementById('nq-play');
+  const stopBtn = document.getElementById('nq-stop');
+  const nIn = document.getElementById('nq-n');
+  const speedIn = document.getElementById('nq-speed');
+  const boardEl = document.getElementById('nq-board');
+  const statusEl = document.getElementById('nq-status');
+  const statsEl = document.getElementById('nq-stats');
+  let stop = false, running = false;
+  let placements = 0, backtracks = 0, solutions = 0;
+
+  function delay() { return Math.max(30, 700 - parseInt(speedIn.value) * 6); }
+
+  function renderBoard(n, queens, attack = []) {
+    let html = '<div class="board" style="grid-template-columns: repeat('+n+', 44px)">';
+    for (let r = 0; r < n; r++) {
+      for (let c = 0; c < n; c++) {
+        const dark = (r + c) % 2 === 0;
+        let cls = 'sq ' + (dark ? 'light' : 'dark');
+        if (attack.some(a => a[0] === r && a[1] === c)) cls += ' attack';
+        html += '<div class="' + cls + '">' + (queens[r] === c ? '<span class="q">♛</span>' : '') + '</div>';
+      }
+    }
+    html += '</div>';
+    boardEl.innerHTML = html;
+  }
+
+  function highlightTry(n, queens, r, c) {
+    renderBoard(n, queens);
+    const sqs = boardEl.querySelectorAll('.sq');
+    sqs[r * n + c].classList.add('try');
+  }
+
+  function safe(queens, row, col) {
+    for (let i = 0; i < row; i++) {
+      if (queens[i] === col) return false;
+      if (Math.abs(queens[i] - col) === Math.abs(i - row)) return false;
+    }
+    return true;
+  }
+
+  async function solve(n, queens, row) {
+    if (stop) return false;
+    if (row === n) {
+      solutions++;
+      updStats();
+      statusEl.innerHTML = '<strong>เจอ solution!</strong> queens at columns: ' + queens.join(', ');
+      renderBoard(n, queens);
+      await sleep(800);
+      return false; // continue searching
+    }
+    for (let c = 0; c < n; c++) {
+      if (stop) return false;
+      placements++;
+      if (safe(queens, row, c)) {
+        queens[row] = c;
+        highlightTry(n, queens, row, c);
+        statusEl.textContent = 'วางที่ row ' + row + ', col ' + c;
+        updStats();
+        await sleep(delay());
+        const found = await solve(n, queens, row + 1);
+        if (found) return true;
+        queens[row] = -1;
+        backtracks++;
+        statusEl.textContent = 'backtrack จาก row ' + row + ' col ' + c;
+        renderBoard(n, queens);
+        updStats();
+        await sleep(delay() / 2);
+      } else {
+        // show why it fails (briefly)
+        statusEl.textContent = 'row ' + row + ' col ' + c + ' โดน attack';
+        // mark attack squares
+        const attack = [];
+        for (let i = 0; i < row; i++) {
+          if (queens[i] !== -1) attack.push([row, c]);
+        }
+        renderBoard(n, queens, [[row, c]]);
+        await sleep(delay() / 3);
+      }
+    }
+    return false;
+  }
+
+  function updStats() {
+    statsEl.textContent = `solutions: ${solutions} · placements tried: ${placements} · backtracks: ${backtracks}`;
+  }
+
+  async function play() {
+    if (running) return;
+    running = true; stop = false;
+    placements = 0; backtracks = 0; solutions = 0;
+    updStats();
+    const n = Math.max(4, Math.min(8, parseInt(nIn.value) || 6));
+    const queens = new Array(n).fill(-1);
+    renderBoard(n, queens);
+    await solve(n, queens, 0);
+    if (!stop) statusEl.innerHTML = '<strong>หาครบแล้ว!</strong> รวม ' + solutions + ' solutions, ' + backtracks + ' backtracks';
+    running = false;
+  }
+
+  playBtn.onclick = play;
+  stopBtn.onclick = () => { stop = true; };
+  // initial render
+  renderBoard(6, new Array(6).fill(-1));
+})();
+</script>
+</body>
+</html>
