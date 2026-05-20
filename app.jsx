@@ -312,11 +312,25 @@ function LessonPage({ lessonId, nav, onComplete, progress }) {
     || (window.LessonsPart4 && window.LessonsPart4[lessonId])
     || (window.LessonsPart5 && window.LessonsPart5[lessonId])
     || (window.LessonsPart6 && window.LessonsPart6[lessonId])
+    || (window.LessonsPart7 && window.LessonsPart7[lessonId])
     || (window.LessonsPart8 && window.LessonsPart8[lessonId])
     || (window.LessonsPart9 && window.LessonsPart9[lessonId])
     || (window.LessonsPart10 && window.LessonsPart10[lessonId])
     || (window.LessonsPart11 && window.LessonsPart11[lessonId])
-    || (window.LessonsPart13 && window.LessonsPart13[lessonId]);
+    || (window.LessonsPart12 && window.LessonsPart12[lessonId])
+    || (window.LessonsPart13 && window.LessonsPart13[lessonId])
+    || (window.LessonsPart14 && window.LessonsPart14[lessonId])
+    || (window.LessonsPart15 && window.LessonsPart15[lessonId])
+    || (window.LessonsPart16 && window.LessonsPart16[lessonId])
+    || (window.LessonsPart17 && window.LessonsPart17[lessonId])
+    || (window.LessonsPart18 && window.LessonsPart18[lessonId])
+    || (window.LessonsPart19 && window.LessonsPart19[lessonId])
+    || (window.LessonsPart20 && window.LessonsPart20[lessonId])
+    || (window.LessonsPart21 && window.LessonsPart21[lessonId])
+    || (window.LessonsPart22 && window.LessonsPart22[lessonId])
+    || (window.LessonsPart23 && window.LessonsPart23[lessonId])
+    || (window.LessonsPart24 && window.LessonsPart24[lessonId])
+    || (window.LessonsPart25 && window.LessonsPart25[lessonId]);
 
   if (!lesson || !Comp) {
     return (

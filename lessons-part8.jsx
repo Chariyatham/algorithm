@@ -435,6 +435,66 @@ for i = 0..n-m:
 /* ============================================================
    HASH COLLISION — Linear Probing
 ============================================================ */
+function ChainingViz() {
+  const SIZE = 7;
+  const [buckets, setBuckets] = useS8(Array.from({ length: SIZE }, () => []));
+  const [input, setInput] = useS8('');
+  const [flash, setFlash] = useS8({ bucket: -1, val: null });
+
+  const insert = (val) => {
+    const h = val % SIZE;
+    const newB = buckets.map(b => [...b]);
+    if (!newB[h].includes(val)) newB[h].push(val);
+    setBuckets(newB);
+    setFlash({ bucket: h, val });
+    setTimeout(() => setFlash({ bucket: -1, val: null }), 800);
+  };
+
+  return (
+    <div className="dsv">
+      <div className="ctrls">
+        <input type="number" value={input} onChange={e => setInput(e.target.value)} placeholder="value" style={{ width: 80 }} />
+        <button onClick={() => { const v = +input; if (!isNaN(v)) { insert(v); setInput(''); } }} style={{ background: 'var(--accent)', color: '#000', fontWeight: 600 }}>+ Insert</button>
+        <button onClick={() => { setBuckets(Array.from({ length: SIZE }, () => [])); setFlash({ bucket: -1, val: null }); }}>🗑️ Clear</button>
+        <span style={{ color: 'var(--text-2)', fontSize: 12 }}>hash(k) = k mod {SIZE}</span>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 10 }}>
+        {buckets.map((bucket, i) => {
+          const isFlash = flash.bucket === i;
+          return (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ minWidth: 30, padding: '4px 8px', background: isFlash ? 'var(--accent)' : 'var(--bg-3)', color: isFlash ? '#000' : 'var(--text-2)', borderRadius: 4, fontFamily: 'monospace', fontSize: 12, fontWeight: 600, textAlign: 'center' }}>
+                [{i}]
+              </div>
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 2 }}>
+                {bucket.length === 0 ? (
+                  <span style={{ color: 'var(--text-3)', fontSize: 12, fontStyle: 'italic' }}>(empty)</span>
+                ) : bucket.map((v, j) => (
+                  <React.Fragment key={j}>
+                    {j > 0 && <span style={{ color: 'var(--accent-2)', fontSize: 16 }}>→</span>}
+                    <div style={{
+                      padding: '4px 10px',
+                      background: flash.val === v && isFlash ? '#10b981' : 'rgba(94,234,212,0.2)',
+                      border: '1px solid var(--accent-2)',
+                      borderRadius: 4, fontFamily: 'monospace', fontSize: 13, fontWeight: 600,
+                      color: flash.val === v && isFlash ? '#000' : 'var(--text-0)',
+                      transition: 'all 0.25s'
+                    }}>{v}</div>
+                  </React.Fragment>
+                ))}
+              </div>
+              {bucket.length > 1 && <span style={{ fontSize: 11, color: '#fbbf24' }}>⚡ collision (len {bucket.length})</span>}
+            </div>
+          );
+        })}
+      </div>
+      <div style={{ marginTop: 8, fontSize: 12, color: 'var(--text-2)' }}>
+        💡 Chaining: ทุก bucket เก็บเป็น <b>linked list</b> — collision ก็แค่ append ตอนท้าย, search ต้องเดิน chain
+      </div>
+    </div>
+  );
+}
+
 function ProbingViz() {
   const SIZE = 11;
   const [table, setTable] = useS8(Array(SIZE).fill(null));
@@ -509,6 +569,9 @@ V get(K k) {
   for (auto& p : table[hash(k)])
     if (p.k == k) return p.v;
 }`}</pre>
+
+      <h4 style={{ color: 'var(--accent-2)' }}>🎬 Interactive Chaining — ลอง insert ดู bucket ยาวขึ้น</h4>
+      <ChainingViz />
 
       <h3>วิธี 2: Open Addressing (Probing)</h3>
       <p>ใส่ในช่องอื่นถ้าช่องเดิมเต็ม — มี 3 แบบ</p>
