@@ -286,6 +286,22 @@ const CURRICULUM = [
       { id: "mock-exam-5", num: "104", title: "📝 Mock Exam 5 — Thai University Style", level: "adv", time: "120 นาที", desc: "ข้อสอบ style จุฬาฯ/มก./มจธ./ลาดกระบัง — เน้นพิสูจน์ + trace + analysis" },
     ]
   },
+  {
+    id: "complete-resource",
+    title: "🎯 Complete Learning Resource",
+    lessons: [
+      { id: "diagnostic-test", num: "105", title: "🧭 Diagnostic Test — รู้ตัวเองอยู่ตรงไหน", level: "basic", time: "10 นาที", desc: "Placement test 20 ข้อ → suggest learning path เหมาะกับ level คุณ" },
+      { id: "mastery-tracker", num: "106", title: "📈 Mastery Tracker — radar chart per topic", level: "basic", time: "—", desc: "ภาพรวม strength/weakness ของคุณ + suggested topics ที่ควรทบทวน" },
+      { id: "interview-prep", num: "107", title: "💼 Interview Prep — FAANG / Thai company", level: "adv", time: "—", desc: "Framework + pattern recognition + 30 โจทย์ที่ออกบ่อยใน SCB/Agoda/LINE/Google" },
+      { id: "bug-hunt", num: "108", title: "🐛 Bug Hunt — หา bug ในโค้ดที่เขียนผิด", level: "inter", time: "—", desc: "15+ bugs ที่นักศึกษามือใหม่ทำบ่อย — debug แบบ active + progressive hints" },
+      { id: "case-studies", num: "109", title: "🌍 Real-World Case Studies", level: "basic", time: "—", desc: "Google PageRank, Netflix recommendation, GPS routing, Bitcoin, JPEG, etc. — ใช้จริงที่ไหน" },
+      { id: "common-mistakes", num: "110", title: "⚠️ Common Mistakes — Anti-Pattern Catalog", level: "inter", time: "—", desc: "50+ ข้อผิดพลาดที่พบบ่อย แยกหมวด: C++, Memory, Algo, Perf, STL, Graph, DP" },
+      { id: "quick-ref", num: "111", title: "📖 Quick Reference — Algorithm Lookup", level: "basic", time: "—", desc: "ค้นหาเร็ว: time/space complexity + code snippet — 20+ algorithms" },
+      { id: "notes", num: "112", title: "📓 Notes / Journal — บันทึกส่วนตัว", level: "basic", time: "—", desc: "เขียน note ต่อบท + export เป็น Markdown" },
+      { id: "video-hub", num: "113", title: "📺 Video & Resource Hub", level: "basic", time: "—", desc: "รวม videos, courses, websites, books — Thai + English" },
+      { id: "capstone", num: "114", title: "🎓 Capstone Projects — สร้างของจริง", level: "adv", time: "—", desc: "8 project ideas พร้อม full spec — เอาไปทำ portfolio ได้" },
+    ]
+  },
 ];
 
 // Flatten lesson list with prev/next links

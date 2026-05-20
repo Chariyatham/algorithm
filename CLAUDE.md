@@ -30,7 +30,9 @@ Parts 22–24 are the C++/STL deep-dive (added for beginner→mastery progressio
 
 Part 25 adds the **C++ Online Compiler sandbox** (cpp-sandbox — copy code → open in Wandbox/Godbolt/OnlineGDB/Coliru, 8 templates), **Learning Paths** (1-month / 3-month / midterm / final / contest tracks with progress tracking), and **Mock Exam 5** (Thai University style — Chulalongkorn / KU / KMUTT / KMITL — proof-heavy + trace-heavy questions).
 
-Several interactive **viz components** were added inline to specific lessons: `MemoryDiagramViz` (part 22, cpp-pointers + cpp-memory), `VectorResizeViz` and `HeapTreeViz` (part 23), `BSTInsertViz` (part 24, stl-set-map), step-trace DP table for Edit Distance (part 17), `ChainingViz` (part 8, hash-collision). All viz are SVG-based with step/play controls.
+Several interactive **viz components** were added inline to specific lessons: `MemoryDiagramViz` (part 22, cpp-pointers + cpp-memory), `VectorResizeViz` and `HeapTreeViz` (part 23), `BSTInsertViz` (part 24, stl-set-map), step-trace DP table for Edit Distance (part 17), `ChainingViz` (part 8, hash-collision). Plus 10 more viz: `StackQueueDeque`, `IteratorMovement` (part 23), `BitmaskTSP`, `MatrixChain` (part 17), `SCC` (part 18), `BipartiteMatch` (part 16), `Manacher`, `AhoCorasick` (part 19), `Bitset` (part 24), `LoopInvariant` (part 14). All viz are SVG-based with step/play controls.
+
+Part 26 — **Complete Learning Resource** — adds 10 meta-features that turn the site from a textbook into a full learning platform: `diagnostic-test` (20-question placement → suggest path), `mastery-tracker` (radar chart per topic, reads localStorage progress), `interview-prep` (FAANG + Thai company framework + 30 problems), `bug-hunt` (15 broken-code exercises with progressive hints), `case-studies` (10 real-world apps: PageRank, Netflix, GPS, etc.), `common-mistakes` (50+ anti-patterns by category), `quick-ref` (searchable algorithm complexity + snippets), `notes` (per-lesson journal with Markdown export), `video-hub` (curated external resources with search links), `capstone` (8 project ideas with full specs).
 
 ### The `window.*` contract
 
