@@ -331,7 +331,12 @@ function LessonPage({ lessonId, nav, onComplete, progress }) {
     || (window.LessonsPart23 && window.LessonsPart23[lessonId])
     || (window.LessonsPart24 && window.LessonsPart24[lessonId])
     || (window.LessonsPart25 && window.LessonsPart25[lessonId])
-    || (window.LessonsPart26 && window.LessonsPart26[lessonId]);
+    || (window.LessonsPart26 && window.LessonsPart26[lessonId])
+    || (window.LessonsPart27 && window.LessonsPart27[lessonId])
+    || (window.LessonsPart28 && window.LessonsPart28[lessonId])
+    || (window.LessonsPart29 && window.LessonsPart29[lessonId])
+    || (window.LessonsPart30 && window.LessonsPart30[lessonId])
+    || (window.LessonsPart31 && window.LessonsPart31[lessonId]);
 
   if (!lesson || !Comp) {
     return (

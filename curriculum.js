@@ -302,6 +302,75 @@ const CURRICULUM = [
       { id: "capstone", num: "114", title: "🎓 Capstone Projects — สร้างของจริง", level: "adv", time: "—", desc: "8 project ideas พร้อม full spec — เอาไปทำ portfolio ได้" },
     ]
   },
+  {
+    id: "math-onramp",
+    title: "🧮 Math & C++ Onramp (ก่อนเรียน Algorithm)",
+    lessons: [
+      { id: "math-induction", num: "115", title: "Mathematical Induction", level: "basic", time: "14 นาที", desc: "Base + Hypothesis + Step — รากของทุก proof" },
+      { id: "math-summation", num: "116", title: "Summation Formulas (Σ)", level: "basic", time: "12 นาที", desc: "Σi, Σi², geometric, harmonic, telescoping — วิเคราะห์ nested loop" },
+      { id: "math-log", num: "117", title: "Logarithm Rules", level: "basic", time: "10 นาที", desc: "log/exp, change of base, ทำไม log_b ไม่สำคัญใน Big-O" },
+      { id: "math-combinatorics", num: "118", title: "Combinatorics — nCr, nPr, Pascal", level: "basic", time: "14 นาที", desc: "Permutation/Combination, Pascal triangle, pigeonhole, stars and bars" },
+      { id: "math-probability", num: "119", title: "Probability + Expected Value", level: "inter", time: "14 นาที", desc: "P(E), E[X], Linearity, Indicator variables — ใช้ใน Randomized" },
+      { id: "math-set-relations", num: "120", title: "Set, Relation, Function", level: "basic", time: "12 นาที", desc: "∪ ∩ ×, equivalence, partial order — ภาษาบรรยาย graph/hash" },
+      { id: "cpp-variables", num: "121", title: "C++ Variables & Types", level: "basic", time: "12 นาที", desc: "int/long long/double/char/bool, const, overflow, floating point" },
+      { id: "cpp-control-flow", num: "122", title: "C++ Control Flow (if/while/for)", level: "basic", time: "12 นาที", desc: "if/else, while, for, switch, break/continue, off-by-one" },
+      { id: "cpp-functions", num: "123", title: "C++ Functions Deep", level: "basic", time: "14 นาที", desc: "value vs reference, const&, default args, overload, recursion intro" },
+      { id: "bit-manip-101", num: "124", title: "Bit Manipulation 101", level: "basic", time: "16 นาที", desc: "&, |, ^, ~, <<, >> + 9 bit tricks + subset enumeration" },
+    ]
+  },
+  {
+    id: "missing-algos",
+    title: "🚀 Missing Algorithms (ม.ระดับ Advanced)",
+    lessons: [
+      { id: "sparse-table", num: "125", title: "Sparse Table / RMQ O(1)", level: "adv", time: "16 นาที", desc: "Range min/max query O(1) หลัง preprocess O(n log n)" },
+      { id: "two-sat", num: "126", title: "2-SAT (SCC-based)", level: "adv", time: "18 นาที", desc: "Boolean SAT clause 2 ตัว — implication graph + SCC O(N+M)" },
+      { id: "lca", num: "127", title: "LCA — Binary Lifting", level: "adv", time: "18 นาที", desc: "Lowest Common Ancestor O(log N) query — dist(u,v) บน tree" },
+      { id: "string-hashing", num: "128", title: "String Hashing (Rolling Hash)", level: "adv", time: "16 นาที", desc: "Polynomial hash + Double hash — substring เปรียบเทียบ O(1)" },
+      { id: "game-theory", num: "129", title: "Game Theory (Nim, Grundy)", level: "adv", time: "18 นาที", desc: "Nim XOR theorem + Sprague-Grundy mex — เกม 2 ผู้เล่น perfect play" },
+      { id: "convex-hull", num: "130", title: "Convex Hull (Andrew's monotone)", level: "adv", time: "16 นาที", desc: "Cross product + sort — O(n log n) เปลือกนูน" },
+      { id: "a-star", num: "131", title: "A* Search (Heuristic Pathfinding)", level: "adv", time: "16 นาที", desc: "Dijkstra + h(n) — admissible/consistent heuristic" },
+      { id: "fft", num: "132", title: "FFT — Fast Fourier Transform", level: "adv", time: "20 นาที", desc: "คูณ polynomial O(n log n), convolution, NTT" },
+      { id: "mos-algorithm", num: "133", title: "Mo's Algorithm (offline range)", level: "adv", time: "16 นาที", desc: "(N+Q)·√N offline queries — distinct in range, etc." },
+      { id: "tree-decomp", num: "134", title: "HLD + Centroid Decomposition", level: "adv", time: "18 นาที", desc: "แตก tree เป็น path/centroid — path query + distance counting" },
+      { id: "treap", num: "135", title: "Treap (Randomized BST)", level: "adv", time: "16 นาที", desc: "Tree + Heap, split/merge — implicit treap = array แบบยืดหยุ่น" },
+    ]
+  },
+  {
+    id: "anim-viz",
+    title: "🎬 Animation Visualizers (Graph + DP)",
+    lessons: [
+      { id: "bfs-anim", num: "136", title: "BFS Animation 🎞️", level: "inter", time: "—", desc: "Step-by-step queue + visited — เห็น BFS expand ทีละชั้น" },
+      { id: "dfs-anim", num: "137", title: "DFS Animation 🎞️", level: "inter", time: "—", desc: "Recursion stack ลึกขึ้น/กลับขึ้นมา ทีละ frame" },
+      { id: "dijkstra-anim", num: "138", title: "Dijkstra Animation 🎞️", level: "adv", time: "—", desc: "distance table relax — ดู priority queue เลือก node ที่ dist ต่ำสุด" },
+      { id: "prim-anim", num: "139", title: "Prim's MST Animation 🎞️", level: "adv", time: "—", desc: "ขยาย MST จาก start เลือก edge น้อยสุดที่ออกจาก visited set" },
+      { id: "dp-lis-anim", num: "140", title: "DP Fill: LIS 🎞️", level: "adv", time: "—", desc: "dp[i] = LIS ลงท้าย a[i] — เติมทีละช่อง" },
+      { id: "dp-lcs-anim", num: "141", title: "DP Fill: LCS 🎞️", level: "adv", time: "—", desc: "2D DP table fill — ตรงกัน +1 หรือ max ของ 2 ฝั่ง" },
+      { id: "dp-knapsack-anim", num: "142", title: "DP Fill: 0/1 Knapsack 🎞️", level: "adv", time: "—", desc: "เลือก max(เอา, ไม่เอา) ทีละ item × capacity" },
+      { id: "dp-edit-anim", num: "143", title: "DP Fill: Edit Distance 🎞️", level: "adv", time: "—", desc: "Insert/Delete/Replace — Levenshtein fill" },
+    ]
+  },
+  {
+    id: "interactive-tools",
+    title: "🛠️ Interactive Tools (Active Learning)",
+    lessons: [
+      { id: "graph-editor", num: "144", title: "🖍 Custom Graph Editor + Run", level: "adv", time: "—", desc: "วาด graph เอง คลิกเพิ่ม node/edge → รัน BFS/DFS/Dijkstra บนกราฟของคุณ" },
+      { id: "manual-trace", num: "145", title: "🎯 Manual Trace Mode", level: "inter", time: "—", desc: "เลือก step ถัดไปเอง — ระบบเช็คให้ (Active Recall)" },
+      { id: "fill-dp", num: "146", title: "📝 Fill-in DP Table", level: "adv", time: "—", desc: "เติม cell DP ของ LCS/Edit Distance เอง — เช็คทันที" },
+    ]
+  },
+  {
+    id: "platform-features",
+    title: "🌐 Platform Features",
+    lessons: [
+      { id: "error-decoder", num: "147", title: "🔍 C++ Error Decoder (ภาษาไทย)", level: "basic", time: "—", desc: "วาง error → อธิบายไทย + วิธีแก้ — 12 error patterns ที่เจอบ่อย" },
+      { id: "cpp-oop", num: "148", title: "C++ OOP — Class & Inheritance", level: "inter", time: "18 นาที", desc: "class/dtor/inheritance/virtual + RAII + Rule of 0/3/5" },
+      { id: "cpp-templates", num: "149", title: "C++ Templates", level: "inter", time: "16 นาที", desc: "function/class template, specialization, variadic, concepts (C++20)" },
+      { id: "cpp-modern-deep", num: "150", title: "Modern C++ (Move, smart ptr, ranges)", level: "inter", time: "20 นาที", desc: "move semantics, unique_ptr, constexpr, structured bindings, ranges, optional" },
+      { id: "past-exams", num: "151", title: "📚 Past Exam Archive (CHU/KU/KMUTT/KMITL)", level: "adv", time: "—", desc: "ข้อสอบ style ม.ไทย — proof/trace/design + เฉลย" },
+      { id: "practice-hub", num: "152", title: "🧪 Practice Hub (CF/AtCoder/LC/CSES)", level: "adv", time: "—", desc: "โจทย์ online แยก topic × difficulty + ลิงก์ตรง" },
+      { id: "pwa-install", num: "153", title: "📱 PWA — Install + Offline", level: "basic", time: "—", desc: "ติดตั้งเป็นแอป + ใช้ห้องสอบ offline ได้" },
+    ]
+  },
 ];
 
 // Flatten lesson list with prev/next links
