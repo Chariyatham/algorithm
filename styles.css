@@ -237,9 +237,9 @@ body {
 }
 
 .content {
-  padding: 36px 64px 120px;
-  max-width: 1140px;
-  margin: 0 auto;
+  padding: 36px 72px 120px;
+  max-width: none;
+  margin: 0;
 }
 
 /* Tables — Notion style */
