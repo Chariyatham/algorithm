@@ -15,37 +15,38 @@ function genBubbleSort(input) {
       [...sorted].forEach(k => marks[k] = 'sorted');
       marks[j] = 'compare'; marks[j + 1] = 'compare';
       comparisons++;
-      frames.push({ line: 2, arr: [...a], marks, vars: { i, j, swaps, comparisons } });
+      frames.push({ line: 4, arr: [...a], marks, vars: { i, j, swaps, comparisons } });
       if (a[j] > a[j + 1]) {
         const ms = {};
         [...sorted].forEach(k => ms[k] = 'sorted');
         ms[j] = 'swap'; ms[j + 1] = 'swap';
-        frames.push({ line: 3, arr: [...a], marks: ms, vars: { i, j, swaps, comparisons } });
+        frames.push({ line: 5, arr: [...a], marks: ms, vars: { i, j, swaps, comparisons } });
         [a[j], a[j + 1]] = [a[j + 1], a[j]];
         swaps++;
         const ms2 = {};
         [...sorted].forEach(k => ms2[k] = 'sorted');
         ms2[j] = 'swap'; ms2[j + 1] = 'swap';
-        frames.push({ line: 4, arr: [...a], marks: ms2, vars: { i, j, swaps, comparisons } });
+        frames.push({ line: 5, arr: [...a], marks: ms2, vars: { i, j, swaps, comparisons } });
       }
     }
     sorted.add(n - 1 - i);
   }
   sorted.add(0);
   const fm = {}; [...sorted].forEach(k => fm[k] = 'sorted');
-  frames.push({ line: 7, arr: [...a], marks: fm, vars: { i: '-', j: '-', swaps, comparisons } });
+  frames.push({ line: 9, arr: [...a], marks: fm, vars: { i: '-', j: '-', swaps, comparisons } });
   return frames;
 }
 const bubbleCode = [
-  "void bubbleSort(int a[], int n) {",
-  "  for (int i = 0; i < n - 1; i++) {",
-  "    for (int j = 0; j < n - i - 1; j++) {",
-  "      if (a[j] > a[j + 1]) {",
-  "        swap(&a[j], &a[j + 1]);",
-  "      }",
-  "    }",
-  "  }",
-  "}",
+  "void bubbleSort(vector<int>& a) {",                              // 0
+  "  int n = a.size();",                                            // 1
+  "  for (int i = 0; i < n - 1; i++) {",                            // 2
+  "    for (int j = 0; j < n - i - 1; j++) {",                      // 3
+  "      if (a[j] > a[j + 1]) {",                                   // 4
+  "        swap(a[j], a[j + 1]);",                                  // 5
+  "      }",                                                        // 6
+  "    }",                                                          // 7
+  "  }",                                                            // 8
+  "}",                                                              // 9
 ];
 
 // ============ Selection Sort ============
@@ -59,45 +60,46 @@ function genSelectionSort(input) {
     const baseMarks = {};
     for (let k = 0; k < i; k++) baseMarks[k] = 'sorted';
     baseMarks[minIdx] = 'cursor';
-    frames.push({ line: 2, arr: [...a], marks: { ...baseMarks }, vars: { i, j: '-', minIdx, comparisons, swaps } });
+    frames.push({ line: 3, arr: [...a], marks: { ...baseMarks }, vars: { i, j: '-', minIdx, comparisons, swaps } });
     for (let j = i + 1; j < n; j++) {
       comparisons++;
       const m = { ...baseMarks };
       m[minIdx] = 'cursor'; m[j] = 'compare';
-      frames.push({ line: 4, arr: [...a], marks: m, vars: { i, j, minIdx, comparisons, swaps } });
+      frames.push({ line: 5, arr: [...a], marks: m, vars: { i, j, minIdx, comparisons, swaps } });
       if (a[j] < a[minIdx]) {
         minIdx = j;
         baseMarks[i] = 'cursor';
         const m2 = { ...baseMarks }; m2[minIdx] = 'cursor';
-        frames.push({ line: 5, arr: [...a], marks: m2, vars: { i, j, minIdx, comparisons, swaps } });
+        frames.push({ line: 6, arr: [...a], marks: m2, vars: { i, j, minIdx, comparisons, swaps } });
       }
     }
     if (minIdx !== i) {
       const ms = {};
       for (let k = 0; k < i; k++) ms[k] = 'sorted';
       ms[i] = 'swap'; ms[minIdx] = 'swap';
-      frames.push({ line: 7, arr: [...a], marks: ms, vars: { i, minIdx, comparisons, swaps } });
+      frames.push({ line: 8, arr: [...a], marks: ms, vars: { i, minIdx, comparisons, swaps } });
       [a[i], a[minIdx]] = [a[minIdx], a[i]];
       swaps++;
       const ms2 = { ...ms };
-      frames.push({ line: 7, arr: [...a], marks: ms2, vars: { i, minIdx, comparisons, swaps } });
+      frames.push({ line: 8, arr: [...a], marks: ms2, vars: { i, minIdx, comparisons, swaps } });
     }
   }
   const fm = {}; for (let k = 0; k < n; k++) fm[k] = 'sorted';
-  frames.push({ line: 9, arr: [...a], marks: fm, vars: { comparisons, swaps } });
+  frames.push({ line: 10, arr: [...a], marks: fm, vars: { comparisons, swaps } });
   return frames;
 }
 const selectionCode = [
-  "void selectionSort(int a[], int n) {",
-  "  for (int i = 0; i < n - 1; i++) {",
-  "    int minIdx = i;",
-  "    for (int j = i + 1; j < n; j++) {",
-  "      if (a[j] < a[minIdx])",
-  "        minIdx = j;",
-  "    }",
-  "    swap(&a[i], &a[minIdx]);",
-  "  }",
-  "}",
+  "void selectionSort(vector<int>& a) {",                           // 0
+  "  int n = a.size();",                                            // 1
+  "  for (int i = 0; i < n - 1; i++) {",                            // 2
+  "    int minIdx = i;",                                            // 3
+  "    for (int j = i + 1; j < n; j++) {",                          // 4
+  "      if (a[j] < a[minIdx])",                                    // 5
+  "        minIdx = j;",                                            // 6
+  "    }",                                                          // 7
+  "    swap(a[i], a[minIdx]);",                                     // 8
+  "  }",                                                            // 9
+  "}",                                                              // 10
 ];
 
 // ============ Insertion Sort ============
@@ -112,12 +114,12 @@ function genInsertionSort(input) {
     const sortedRange = {};
     for (let k = 0; k < i; k++) sortedRange[k] = 'sorted';
     sortedRange[i] = 'cursor';
-    frames.push({ line: 2, arr: [...a], marks: { ...sortedRange }, vars: { i, j: '-', key, comparisons, shifts } });
+    frames.push({ line: 3, arr: [...a], marks: { ...sortedRange }, vars: { i, j: '-', key, comparisons, shifts } });
     let j = i - 1;
     while (j >= 0 && a[j] > key) {
       comparisons++;
       const m = { ...sortedRange }; m[j] = 'compare'; m[j + 1] = 'swap';
-      frames.push({ line: 5, arr: [...a], marks: m, vars: { i, j, key, comparisons, shifts } });
+      frames.push({ line: 6, arr: [...a], marks: m, vars: { i, j, key, comparisons, shifts } });
       a[j + 1] = a[j];
       shifts++;
       j--;
@@ -125,22 +127,23 @@ function genInsertionSort(input) {
     a[j + 1] = key;
     const fm = {};
     for (let k = 0; k <= i; k++) fm[k] = 'sorted';
-    frames.push({ line: 7, arr: [...a], marks: fm, vars: { i, j: j + 1, key, comparisons, shifts } });
+    frames.push({ line: 9, arr: [...a], marks: fm, vars: { i, j: j + 1, key, comparisons, shifts } });
   }
   return frames;
 }
 const insertionCode = [
-  "void insertionSort(int a[], int n) {",
-  "  for (int i = 1; i < n; i++) {",
-  "    int key = a[i];",
-  "    int j = i - 1;",
-  "    while (j >= 0 && a[j] > key) {",
-  "      a[j + 1] = a[j];",
-  "      j--;",
-  "    }",
-  "    a[j + 1] = key;",
-  "  }",
-  "}",
+  "void insertionSort(vector<int>& a) {",                           // 0
+  "  int n = a.size();",                                            // 1
+  "  for (int i = 1; i < n; i++) {",                                // 2
+  "    int key = a[i];",                                            // 3
+  "    int j = i - 1;",                                             // 4
+  "    while (j >= 0 && a[j] > key) {",                             // 5
+  "      a[j + 1] = a[j];",                                         // 6
+  "      j--;                                                              ", // 7
+  "    }",                                                          // 8
+  "    a[j + 1] = key;",                                            // 9
+  "  }",                                                            // 10
+  "}",                                                              // 11
 ];
 
 // ============ Shell Sort ============
@@ -158,14 +161,14 @@ function genShellSort(input) {
     // We use 'pivot' to mark the "anchor" of each group at start of pass
     const groupMarks = {};
     for (let s = 0; s < gap; s++) groupMarks[s] = 'pivot';
-    frames.push({ line: 1, arr: [...a], marks: groupMarks, vars: { gap, msg: `เริ่ม gap = ${gap}`, comparisons, shifts } });
+    frames.push({ line: 2, arr: [...a], marks: groupMarks, vars: { gap, msg: `เริ่ม gap = ${gap}`, comparisons, shifts } });
     for (let i = gap; i < n; i++) {
       const temp = a[i];
       let j = i;
       const mStart = {};
       mStart[i] = 'cursor';
       if (i - gap >= 0) mStart[i - gap] = 'compare';
-      frames.push({ line: 2, arr: [...a], marks: mStart, vars: { gap, i, key: temp, comparisons, shifts } });
+      frames.push({ line: 3, arr: [...a], marks: mStart, vars: { gap, i, key: temp, comparisons, shifts } });
       while (j >= gap && a[j - gap] > temp) {
         comparisons++;
         const m = {};
@@ -173,34 +176,35 @@ function genShellSort(input) {
         m[j - gap] = 'swap';
         a[j] = a[j - gap];
         shifts++;
-        frames.push({ line: 5, arr: [...a], marks: m, vars: { gap, i, j, jPrev: j - gap, key: temp, comparisons, shifts } });
+        frames.push({ line: 7, arr: [...a], marks: m, vars: { gap, i, j, jPrev: j - gap, key: temp, comparisons, shifts } });
         j -= gap;
       }
       a[j] = temp;
       const mPlace = {};
       mPlace[j] = 'sorted';
-      frames.push({ line: 8, arr: [...a], marks: mPlace, vars: { gap, i, j, key: temp, comparisons, shifts } });
+      frames.push({ line: 10, arr: [...a], marks: mPlace, vars: { gap, i, j, key: temp, comparisons, shifts } });
     }
-    frames.push({ line: 10, arr: [...a], marks: {}, vars: { gap, msg: `จบรอบ gap = ${gap}`, comparisons, shifts } });
+    frames.push({ line: 11, arr: [...a], marks: {}, vars: { gap, msg: `จบรอบ gap = ${gap}`, comparisons, shifts } });
   }
   const fm = {}; for (let k = 0; k < n; k++) fm[k] = 'sorted';
-  frames.push({ line: 11, arr: [...a], marks: fm, vars: { comparisons, shifts } });
+  frames.push({ line: 12, arr: [...a], marks: fm, vars: { comparisons, shifts } });
   return frames;
 }
 const shellCode = [
-  "void shellSort(int a[], int n) {",
-  "  for (int gap = n/2; gap > 0; gap /= 2) {",
-  "    for (int i = gap; i < n; i++) {",
-  "      int temp = a[i];",
-  "      int j = i;",
-  "      while (j >= gap && a[j-gap] > temp) {",
-  "        a[j] = a[j - gap];",
-  "        j -= gap;",
-  "      }",
-  "      a[j] = temp;",
-  "    }",
-  "  }  // gap loop",
-  "}",
+  "void shellSort(vector<int>& a) {",                               // 0
+  "  int n = a.size();",                                            // 1
+  "  for (int gap = n/2; gap > 0; gap /= 2) {",                     // 2
+  "    for (int i = gap; i < n; i++) {",                            // 3
+  "      int temp = a[i];",                                         // 4
+  "      int j = i;",                                               // 5
+  "      while (j >= gap && a[j-gap] > temp) {",                    // 6
+  "        a[j] = a[j - gap];",                                     // 7
+  "        j -= gap;",                                              // 8
+  "      }",                                                        // 9
+  "      a[j] = temp;",                                             // 10
+  "    }",                                                          // 11
+  "  }  // gap loop",                                               // 12
+  "}",                                                              // 13
 ];
 
 // ============ Merge Sort ============
@@ -213,7 +217,7 @@ function genMergeSort(input) {
     const mid = Math.floor((l + r) / 2);
     const m = {};
     for (let k = l; k <= r; k++) m[k] = 'compare';
-    frames.push({ line: 2, arr: [...a], marks: m, vars: { l, r, mid, depth } });
+    frames.push({ line: 11, arr: [...a], marks: m, vars: { l, r, mid, depth } });
     rec(l, mid, depth + 1);
     rec(mid + 1, r, depth + 1);
     // merge
@@ -224,7 +228,7 @@ function genMergeSort(input) {
       const mm = {};
       for (let x = l; x <= r; x++) mm[x] = 'dim';
       mm[k] = 'cursor';
-      frames.push({ line: 6, arr: [...a], marks: mm, vars: { l, r, k, leftI: i, rightJ: j } });
+      frames.push({ line: 5, arr: [...a], marks: mm, vars: { l, r, k, leftI: i, rightJ: j } });
       if (left[i] <= right[j]) { a[k++] = left[i++]; }
       else { a[k++] = right[j++]; }
     }
@@ -232,26 +236,31 @@ function genMergeSort(input) {
     while (j < right.length) a[k++] = right[j++];
     const done = {};
     for (let x = l; x <= r; x++) done[x] = 'sorted';
-    frames.push({ line: 9, arr: [...a], marks: done, vars: { l, r, depth } });
+    frames.push({ line: 14, arr: [...a], marks: done, vars: { l, r, depth } });
   }
-  frames.push({ line: 0, arr: [...a], marks: {}, vars: { l: 0, r: n - 1 } });
+  frames.push({ line: 9, arr: [...a], marks: {}, vars: { l: 0, r: n - 1 } });
   rec(0, n - 1);
   const fm = {}; for (let i = 0; i < n; i++) fm[i] = 'sorted';
-  frames.push({ line: 11, arr: [...a], marks: fm, vars: {} });
+  frames.push({ line: 15, arr: [...a], marks: fm, vars: {} });
   return frames;
 }
 const mergeCode = [
-  "void mergeSort(int a[], int l, int r) {",
-  "  if (l >= r) return;",
-  "  int mid = (l + r) / 2;",
-  "  mergeSort(a, l, mid);",
-  "  mergeSort(a, mid + 1, r);",
-  "  // merge two halves",
-  "  merge(a, l, mid, r);",
-  "}",
-  "// merge() copies left/right halves and",
-  "// interleaves them back in order",
-  "// → guarantees O(n log n)",
+  "void merge(vector<int>& a, int l, int mid, int r) {",            // 0
+  "  vector<int> left(a.begin()+l, a.begin()+mid+1);",              // 1
+  "  vector<int> right(a.begin()+mid+1, a.begin()+r+1);",           // 2
+  "  int i = 0, j = 0, k = l;",                                     // 3
+  "  while (i < left.size() && j < right.size())",                  // 4
+  "    a[k++] = (left[i] <= right[j]) ? left[i++] : right[j++];",   // 5
+  "  while (i < left.size()) a[k++] = left[i++];",                  // 6
+  "  while (j < right.size()) a[k++] = right[j++];",                // 7
+  "}",                                                              // 8
+  "void mergeSort(vector<int>& a, int l, int r) {",                 // 9
+  "  if (l >= r) return;",                                          // 10
+  "  int mid = (l + r) / 2;",                                       // 11
+  "  mergeSort(a, l, mid);",                                        // 12
+  "  mergeSort(a, mid + 1, r);",                                    // 13
+  "  merge(a, l, mid, r);",                                         // 14
+  "}",                                                              // 15
 ];
 
 // ============ Quick Sort (Lomuto) ============
@@ -300,19 +309,25 @@ function genQuickSort(input) {
   return frames;
 }
 const quickCode = [
-  "int partition(int a[], int lo, int hi) {",
-  "  int pivot = a[hi];",
-  "  int i = lo - 1;",
-  "  for (int j = lo; j < hi; j++) {",
-  "    if (a[j] <= pivot) {",
-  "      i++;",
-  "      swap(&a[i], &a[j]);",
-  "    }",
-  "  }",
-  "  swap(&a[i + 1], &a[hi]);",
-  "  return i + 1;",
-  "}",
-  "void quickSort(int a[], int lo, int hi) { ... }",
+  "int partition(vector<int>& a, int lo, int hi) {",                // 0
+  "  int pivot = a[hi];",                                           // 1
+  "  int i = lo - 1;",                                              // 2
+  "  for (int j = lo; j < hi; j++) {",                              // 3
+  "    if (a[j] <= pivot) {",                                       // 4
+  "      i++;",                                                     // 5
+  "      swap(a[i], a[j]);",                                        // 6
+  "    }",                                                          // 7
+  "  }",                                                            // 8
+  "  swap(a[i + 1], a[hi]);",                                       // 9
+  "  return i + 1;",                                                // 10
+  "}",                                                              // 11
+  "void quickSort(vector<int>& a, int lo, int hi) {",               // 12
+  "  if (lo < hi) {",                                               // 13
+  "    int p = partition(a, lo, hi);",                              // 14
+  "    quickSort(a, lo, p - 1);",                                   // 15
+  "    quickSort(a, p + 1, hi);",                                   // 16
+  "  }",                                                            // 17
+  "}",                                                              // 18
 ];
 
 // ============ Heap Sort ============
@@ -344,29 +359,33 @@ function genHeapSort(input) {
     const m = {};
     [...sorted].forEach(k => m[k] = 'sorted');
     m[0] = 'pivot';
-    frames.push({ line: 9, arr: [...a], marks: m, vars: { i, sortedCount: sorted.size } });
+    frames.push({ line: 14, arr: [...a], marks: m, vars: { i, sortedCount: sorted.size } });
     heapify(i, 0);
   }
   sorted.add(0);
   const fm = {}; [...sorted].forEach(k => fm[k] = 'sorted');
-  frames.push({ line: 12, arr: [...a], marks: fm, vars: {} });
+  frames.push({ line: 17, arr: [...a], marks: fm, vars: {} });
   return frames;
 }
 const heapCode = [
-  "void heapify(int a[], int n, int i) {",
-  "  int largest = i;",
-  "  int l = 2*i + 1, r = 2*i + 2;",
-  "  if (l < n && a[l] > a[largest]) largest = l;",
-  "  if (r < n && a[r] > a[largest]) largest = r;",
-  "  if (largest != i) {",
-  "    swap(&a[i], &a[largest]);",
-  "    heapify(a, n, largest);",
-  "  }",
-  "}",
-  "void heapSort(int a[], int n) {",
-  "  for (int i = n/2 - 1; i >= 0; i--) heapify(a, n, i);",
-  "  for (int i = n - 1; i > 0; i--) { swap(&a[0], &a[i]); heapify(a, i, 0); }",
-  "}",
+  "void heapify(vector<int>& a, int n, int i) {",                   // 0
+  "  int largest = i;",                                             // 1
+  "  int l = 2*i + 1, r = 2*i + 2;",                                // 2
+  "  if (l < n && a[l] > a[largest]) largest = l;",                 // 3
+  "  if (r < n && a[r] > a[largest]) largest = r;",                 // 4
+  "  if (largest != i) {",                                          // 5
+  "    swap(a[i], a[largest]);",                                    // 6
+  "    heapify(a, n, largest);",                                    // 7
+  "  }",                                                            // 8
+  "}",                                                              // 9
+  "void heapSort(vector<int>& a) {",                                // 10
+  "  int n = a.size();",                                            // 11
+  "  for (int i = n/2 - 1; i >= 0; i--) heapify(a, n, i);",         // 12
+  "  for (int i = n - 1; i > 0; i--) {",                            // 13
+  "    swap(a[0], a[i]);",                                          // 14
+  "    heapify(a, i, 0);",                                          // 15
+  "  }",                                                            // 16
+  "}",                                                              // 17
 ];
 
 // ============ Linear Search ============
@@ -377,10 +396,10 @@ function genLinearSearch(arr, target) {
     const m = {};
     for (let k = 0; k < i; k++) m[k] = 'miss';
     m[i] = 'cursor';
-    frames.push({ line: 2, arr: [...arr], marks: m, vars: { target, i, 'a[i]': arr[i] } });
+    frames.push({ line: 3, arr: [...arr], marks: m, vars: { target, i, 'a[i]': arr[i] } });
     if (arr[i] === target) {
       const f = { ...m }; f[i] = 'found';
-      frames.push({ line: 3, arr: [...arr], marks: f, vars: { target, i, found: true } });
+      frames.push({ line: 4, arr: [...arr], marks: f, vars: { target, i, found: true } });
       return frames;
     }
   }
@@ -389,13 +408,14 @@ function genLinearSearch(arr, target) {
   return frames;
 }
 const linearCode = [
-  "int linearSearch(int a[], int n, int x) {",
-  "  for (int i = 0; i < n; i++) {",
-  "    if (a[i] == x)",
-  "      return i;",
-  "  }",
-  "  return -1;",
-  "}",
+  "int linearSearch(const vector<int>& a, int x) {",                // 0
+  "  int n = a.size();",                                            // 1
+  "  for (int i = 0; i < n; i++) {",                                // 2
+  "    if (a[i] == x)",                                             // 3
+  "      return i;",                                                // 4
+  "  }",                                                            // 5
+  "  return -1;",                                                   // 6
+  "}",                                                              // 7
 ];
 
 // ============ Binary Search ============
@@ -429,19 +449,19 @@ function genBinarySearch(arr, target) {
   return frames;
 }
 const binaryCode = [
-  "int binarySearch(int a[], int n, int x) {",
-  "  int lo = 0, hi = n - 1;",
-  "  while (lo <= hi) {",
-  "    int mid = lo + (hi - lo) / 2;",
-  "    if (a[mid] == x)",
-  "      return mid;",
-  "    else if (a[mid] < x)",
-  "      lo = mid + 1;",
-  "    else",
-  "      hi = mid - 1;",
-  "  }",
-  "  return -1;",
-  "}",
+  "int binarySearch(const vector<int>& a, int x) {",                // 0
+  "  int lo = 0, hi = a.size() - 1;",                               // 1
+  "  while (lo <= hi) {",                                           // 2
+  "    int mid = lo + (hi - lo) / 2;",                              // 3
+  "    if (a[mid] == x)",                                           // 4
+  "      return mid;",                                              // 5
+  "    else if (a[mid] < x)",                                       // 6
+  "      lo = mid + 1;",                                            // 7
+  "    else",                                                       // 8
+  "      hi = mid - 1;",                                            // 9
+  "  }",                                                            // 10
+  "  return -1;",                                                   // 11
+  "}",                                                              // 12
 ];
 
 window.AlgorithmGenerators = {

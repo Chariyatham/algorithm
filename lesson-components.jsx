@@ -2,6 +2,12 @@
 
 const { useState: useStateL, useMemo: useMemoL } = React;
 
+// helper: รองรับทั้ง `line` (convention เก่า ใน algorithms.js) และ `codeLine` (convention ใหม่ใน part29)
+function _frameLine(f) {
+  const v = f.line !== undefined ? f.line : f.codeLine;
+  return v !== undefined ? [v] : [];
+}
+
 function SortLessonViz({ algoKey }) {
   const [arr, setArr] = useStateL([42, 7, 19, 88, 3, 56, 31, 64]);
   const A = window.AlgorithmGenerators[algoKey];
@@ -15,7 +21,7 @@ function SortLessonViz({ algoKey }) {
       </div>
       <VarsPanel vars={f.vars || {}} />
       <div style={{ borderTop: '1px solid var(--border-soft)', padding: '14px 18px' }}>
-        <CodeBlock code={A.code} highlight={[f.line]} />
+        <CodeBlock code={A.code} highlight={_frameLine(f)} />
       </div>
     </div>
   );
@@ -43,7 +49,7 @@ function SearchLessonViz({ algoKey, defaultArr, target }) {
       </div>
       <VarsPanel vars={f.vars || {}} />
       <div style={{ borderTop: '1px solid var(--border-soft)', padding: '14px 18px' }}>
-        <CodeBlock code={A.code} highlight={[f.line]} />
+        <CodeBlock code={A.code} highlight={_frameLine(f)} />
       </div>
     </div>
   );

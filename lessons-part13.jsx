@@ -828,7 +828,10 @@ Lessons13["proof-viz"] = function ({ initialTab } = {}) {
 };
 
 
-window.LessonsPart13 = Lessons13;
+// Part 13 — embed-only tools (proof-viz, step-compare, code-bridge)
+// ไม่ expose ผ่าน window.LessonsPart13 เพื่อไม่ให้ app.jsx routing chain เจอ
+// — กัน user เข้า /step-compare ตรงๆ แล้วเจอหน้าเปล่า
+// embed13() ใช้ closure ของ Lessons13 ภายใน ไม่ต้องผ่าน window
 
 
 /* ============================================================
@@ -836,7 +839,8 @@ window.LessonsPart13 = Lessons13;
 ============================================================ */
 function embed13(lessonKey, items) {
   // items: [{ id, label, only? }]  — only filters which tab of proof-viz to show (optional)
-  const PARTS = ['LessonsPart1', 'LessonsPart2', 'LessonsPart3', 'LessonsPart4', 'LessonsPart5', 'LessonsPart6', 'LessonsPart7', 'LessonsPart8', 'LessonsPart9', 'LessonsPart10', 'LessonsPart11'];
+  // ค้นใน part 1-31 ทั้งหมด เพื่อรองรับการย้ายบทเรียน
+  const PARTS = Array.from({ length: 31 }, (_, i) => 'LessonsPart' + (i + 1));
   let lib = null;
   for (const k of PARTS) {
     if (window[k] && window[k][lessonKey]) { lib = k; break; }

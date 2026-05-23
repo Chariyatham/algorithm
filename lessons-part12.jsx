@@ -272,8 +272,10 @@ window.SearchHint = function () {
    EMBED relevant tools into lessons
 ============================================================ */
 function embedToolsInLesson(lessonKey, toolKeys) {
+  // ค้นใน part 1-31 ทั้งหมด — ไม่ยึดติด part เฉพาะ ป้องกัน silently fail ถ้าย้ายบทเรียน
+  const ALL_PARTS = Array.from({ length: 31 }, (_, i) => 'LessonsPart' + (i + 1));
   const findOrig = (id) => {
-    for (const k of ['LessonsPart1', 'LessonsPart2', 'LessonsPart3', 'LessonsPart4', 'LessonsPart5', 'LessonsPart6', 'LessonsPart8']) {
+    for (const k of ALL_PARTS) {
       if (window[k] && window[k][id]) return { lib: k, comp: window[k][id] };
     }
     return null;
@@ -281,7 +283,7 @@ function embedToolsInLesson(lessonKey, toolKeys) {
   const orig = findOrig(lessonKey);
   if (!orig) return;
   const tools = toolKeys.map(t => {
-    for (const k of ['LessonsPart4', 'LessonsPart5', 'LessonsPart6', 'LessonsPart9', 'LessonsPart10', 'LessonsPart11']) {
+    for (const k of ALL_PARTS) {
       if (window[k] && window[k][t]) return { id: t, comp: window[k][t] };
     }
     return null;

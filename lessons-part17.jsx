@@ -114,13 +114,18 @@ function BitmaskTSPViz() {
   const dist = [[0, 10, 15, 20], [10, 0, 35, 25], [15, 35, 0, 30], [20, 25, 30, 0]];
   const [step, setStep] = useS17(0);
 
-  // generate all (mask, last) states in order of popcount
+  // generate all reachable (mask, last) states in order of popcount
+  // ตัด state (mask, last=0) ที่ popcount>1 ออก เพราะไม่มี predecessor ตามนิยาม
+  // (TSP เริ่มที่ 0 → ถ้า last=0 และเยี่ยมหลายเมืองแล้ว = วนกลับ ไม่ใช่ subpath ปกติ)
   const states = useM17(() => {
     const all = [];
     for (let mask = 1; mask < (1 << N); mask++) {
       if (!(mask & 1)) continue; // must include city 0
+      const popcount = mask.toString(2).split('').filter(x => x === '1').length;
       for (let last = 0; last < N; last++) {
         if (!(mask & (1 << last))) continue;
+        // last=0 valid เฉพาะตอน mask = {0} (popcount=1) — เป็น base state
+        if (last === 0 && popcount > 1) continue;
         all.push({ mask, last });
       }
     }
@@ -258,13 +263,14 @@ function LISViz() {
         }
       }
     }
-    // reconstruct
+    // reconstruct (track indices ที่อยู่ใน LIS เพื่อ highlight ตามตำแหน่ง ไม่ใช่ค่า)
     let maxI = 0;
     for (let i = 1; i < n; i++) if (dp[i] > dp[maxI]) maxI = i;
     const lis = [];
+    const lisIdx = new Set();
     let cur = maxI;
-    while (cur !== -1) { lis.unshift(seq[cur]); cur = prev[cur]; }
-    return { dp, lis, len: dp[maxI] };
+    while (cur !== -1) { lis.unshift(seq[cur]); lisIdx.add(cur); cur = prev[cur]; }
+    return { dp, lis, lisIdx, len: dp[maxI] };
   }, [seq]);
 
   const apply = () => {
@@ -281,16 +287,19 @@ function LISViz() {
         <button onClick={apply}>Apply</button>
       </div>
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 10 }}>
-        {seq.map((v, i) => (
-          <div key={i} style={{
-            padding: '8px 12px',
-            background: result.lis.includes(v) && result.lis.indexOf(v) >= 0 ? 'var(--accent-2)' : 'var(--bg-3)',
-            color: result.lis.includes(v) ? '#000' : 'var(--text-0)',
-            borderRadius: 6, fontFamily: 'monospace', fontWeight: 600
-          }}>
-            {v}<sub style={{ fontSize: 10, opacity: 0.6 }}>dp={result.dp[i]}</sub>
-          </div>
-        ))}
+        {seq.map((v, i) => {
+          const inLIS = result.lisIdx.has(i);
+          return (
+            <div key={i} style={{
+              padding: '8px 12px',
+              background: inLIS ? 'var(--accent-2)' : 'var(--bg-3)',
+              color: inLIS ? '#000' : 'var(--text-0)',
+              borderRadius: 6, fontFamily: 'monospace', fontWeight: 600
+            }}>
+              {v}<sub style={{ fontSize: 10, opacity: 0.6 }}>dp={result.dp[i]}</sub>
+            </div>
+          );
+        })}
       </div>
       <div style={{ marginTop: 12, padding: 10, background: 'rgba(94,234,212,0.08)', borderLeft: '3px solid var(--accent-2)', borderRadius: 6 }}>
         <b style={{ color: 'var(--accent-2)' }}>LIS length = {result.len}</b>

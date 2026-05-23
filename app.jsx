@@ -100,21 +100,37 @@ function Sidebar({ route, nav, progress }) {
         )}
       </div>
 
-      {window.CURRICULUM.map(sec => (
+      {window.CURRICULUM.map((sec, secIdx) => (
         <div className="nav-section" key={sec.id}>
           <div className="nav-section-title">
-            <span>{sec.title}</span>
+            <span>
+              <span style={{ color: 'var(--accent)', marginRight: 4, fontFamily: 'var(--mono)', fontSize: 11 }}>{secIdx + 1}.</span>
+              {sec.title}
+              {sec.category && (
+                <span title={
+                  sec.category === 'core' ? 'หลักสอบ — ต้องเรียน' :
+                  sec.category === 'exam' ? 'ออกสอบบ่อย' : 'เสริม/Tools'
+                } style={{
+                  marginLeft: 6, fontSize: 10,
+                  color: sec.category === 'core' ? 'var(--accent-2)' :
+                         sec.category === 'exam' ? '#a78bfa' : 'var(--text-3)'
+                }}>
+                  {sec.category === 'core' ? '●' : sec.category === 'exam' ? '◆' : '○'}
+                </span>
+              )}
+            </span>
             <span className="badge">{sec.lessons.length}</span>
           </div>
-          {sec.lessons.map(l => {
+          {sec.lessons.map((l, idx) => {
             const done = !!progress[l.id];
+            // ใช้ index ภายใน section (1-based) แทน raw num — หลีกเลี่ยงปัญหา num ซ้ำ/กระโดด
             return (
               <div
                 key={l.id}
                 className={"nav-item" + (route === l.id ? " active" : "") + (done ? " done" : "")}
                 onClick={() => nav(l.id)}
               >
-                <span className="nav-num">{done ? "✓" : l.num}</span>
+                <span className="nav-num">{done ? "✓" : (idx + 1)}</span>
                 <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{l.title}</span>
               </div>
             );
@@ -251,18 +267,22 @@ function HomePage({ nav, progress }) {
           <h2>เส้นทางการเรียน · {window.TOTAL_LESSONS} บท</h2>
           <p style={{ color: 'var(--text-2)', marginTop: 4 }}>เรียงจาก basic → intermediate → advanced</p>
         </div>
-        {window.CURRICULUM.map(sec => (
+        {window.CURRICULUM.map((sec, secIdx) => (
           <div key={sec.id} style={{ marginBottom: 28 }}>
-            <h3 style={{ marginTop: 28, color: 'var(--text-1)', fontSize: 16, fontWeight: 500 }}>{sec.title}</h3>
+            <h3 style={{ marginTop: 28, color: 'var(--text-1)', fontSize: 16, fontWeight: 500 }}>
+              <span style={{ color: 'var(--accent)', marginRight: 8, fontFamily: 'var(--mono)' }}>{secIdx + 1}.</span>
+              {sec.title}
+              <CategoryBadge cat={sec.category} />
+            </h3>
             <div className="module-grid">
-              {sec.lessons.map(l => {
+              {sec.lessons.map((l, lIdx) => {
                 const done = !!progress[l.id];
                 const lvl = l.level === "basic" ? "level-basic" : l.level === "inter" ? "level-inter" : "level-adv";
                 const lvlText = l.level === "basic" ? "BASIC" : l.level === "inter" ? "INTERMEDIATE" : "ADVANCED";
                 return (
                   <div key={l.id} className={"module-card " + (done ? "done" : "")} onClick={() => nav(l.id)}>
                     {done && <div className="done-mark">✓</div>}
-                    <div className="num">LESSON · {l.num}<span className={"level-pill " + lvl}>{lvlText}</span></div>
+                    <div className="num">LESSON · {secIdx + 1}.{lIdx + 1}<span className={"level-pill " + lvl}>{lvlText}</span></div>
                     <h4>{l.title}</h4>
                     <div className="desc">{l.desc}</div>
                     <div className="meta">
@@ -279,6 +299,22 @@ function HomePage({ nav, progress }) {
         ))}
       </div>
     </div>
+  );
+}
+
+function CategoryBadge({ cat }) {
+  if (!cat) return null;
+  const styles = {
+    'core':  { bg: 'rgba(94,234,212,0.15)',  fg: 'var(--accent-2)', label: '📘 หลักสอบ' },
+    'exam':  { bg: 'rgba(168,139,250,0.15)', fg: '#a78bfa',         label: '📝 ออกสอบบ่อย' },
+    'extra': { bg: 'rgba(148,163,184,0.15)', fg: 'var(--text-2)',   label: '✨ เสริม / Tools' },
+  };
+  const s = styles[cat] || styles.extra;
+  return (
+    <span style={{
+      marginLeft: 10, fontSize: 11, padding: '2px 10px', borderRadius: 12,
+      background: s.bg, color: s.fg, fontWeight: 600, verticalAlign: 'middle'
+    }}>{s.label}</span>
   );
 }
 
@@ -304,39 +340,22 @@ function FeatureCard({ icon, title, desc }) {
   );
 }
 
+// Scan part 1-31 ตามลำดับ — ถ้า key ซ้ำใน 2 part, part ที่ index มากกว่าชนะ
+// (ใช้ "last-wins" แทน "first-wins" ที่เปราะบาง: ทำให้บทที่เขียนใน part ใหม่ override ของเก่าได้)
+// part 13 ถูกข้าม — เป็น embed-only tools
+function _lookupLesson(lessonId) {
+  let comp = null;
+  for (let i = 1; i <= 31; i++) {
+    if (i === 13) continue;
+    const lib = window['LessonsPart' + i];
+    if (lib && lib[lessonId]) comp = lib[lessonId];
+  }
+  return comp;
+}
+
 function LessonPage({ lessonId, nav, onComplete, progress }) {
   const lesson = window.ALL_LESSONS.find(l => l.id === lessonId);
-  const Comp = (window.LessonsPart1 && window.LessonsPart1[lessonId])
-    || (window.LessonsPart2 && window.LessonsPart2[lessonId])
-    || (window.LessonsPart3 && window.LessonsPart3[lessonId])
-    || (window.LessonsPart4 && window.LessonsPart4[lessonId])
-    || (window.LessonsPart5 && window.LessonsPart5[lessonId])
-    || (window.LessonsPart6 && window.LessonsPart6[lessonId])
-    || (window.LessonsPart7 && window.LessonsPart7[lessonId])
-    || (window.LessonsPart8 && window.LessonsPart8[lessonId])
-    || (window.LessonsPart9 && window.LessonsPart9[lessonId])
-    || (window.LessonsPart10 && window.LessonsPart10[lessonId])
-    || (window.LessonsPart11 && window.LessonsPart11[lessonId])
-    || (window.LessonsPart12 && window.LessonsPart12[lessonId])
-    || (window.LessonsPart13 && window.LessonsPart13[lessonId])
-    || (window.LessonsPart14 && window.LessonsPart14[lessonId])
-    || (window.LessonsPart15 && window.LessonsPart15[lessonId])
-    || (window.LessonsPart16 && window.LessonsPart16[lessonId])
-    || (window.LessonsPart17 && window.LessonsPart17[lessonId])
-    || (window.LessonsPart18 && window.LessonsPart18[lessonId])
-    || (window.LessonsPart19 && window.LessonsPart19[lessonId])
-    || (window.LessonsPart20 && window.LessonsPart20[lessonId])
-    || (window.LessonsPart21 && window.LessonsPart21[lessonId])
-    || (window.LessonsPart22 && window.LessonsPart22[lessonId])
-    || (window.LessonsPart23 && window.LessonsPart23[lessonId])
-    || (window.LessonsPart24 && window.LessonsPart24[lessonId])
-    || (window.LessonsPart25 && window.LessonsPart25[lessonId])
-    || (window.LessonsPart26 && window.LessonsPart26[lessonId])
-    || (window.LessonsPart27 && window.LessonsPart27[lessonId])
-    || (window.LessonsPart28 && window.LessonsPart28[lessonId])
-    || (window.LessonsPart29 && window.LessonsPart29[lessonId])
-    || (window.LessonsPart30 && window.LessonsPart30[lessonId])
-    || (window.LessonsPart31 && window.LessonsPart31[lessonId]);
+  const Comp = _lookupLesson(lessonId);
 
   if (!lesson || !Comp) {
     return (

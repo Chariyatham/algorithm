@@ -229,49 +229,14 @@ Lessons2["dijkstra"] = function () {
   );
 };
 
-// ============ 20: Recursion & Backtracking ============
-Lessons2["recursion"] = function () {
+// ============ 20: Recursion — defined in lessons-part3.jsx (interactive trace) ============
+
+// (Recursion lesson moved to part 3 — has interactive call trace + recurrence table.
+//  Old text-only version removed to avoid lookup collision in app.jsx routing chain.)
+
+const _removedRecursionStub = function () {
   return (
     <React.Fragment>
-      <div className="callout info">
-        <div className="ttl">Recursion</div>
-        ฟังก์ชันที่เรียก "ตัวเอง" — แก้ปัญหาใหญ่โดยแบ่งเป็นปัญหาย่อยที่เหมือนกัน
-      </div>
-      <h3>3 ส่วนสำคัญของฟังก์ชัน Recursive</h3>
-      <ol style={{ color: 'var(--text-1)' }}>
-        <li><b>Base case</b> — เงื่อนไขหยุด (ไม่หยุด = stack overflow!)</li>
-        <li><b>Recursive case</b> — เรียกตัวเองด้วย input ที่เล็กลง</li>
-        <li><b>Combine</b> — ใช้ผลลัพธ์ของ recursive call</li>
-      </ol>
-      <h3>ตัวอย่าง: Factorial</h3>
-      <CodeBlock code={[
-        "int factorial(int n) {",
-        "  if (n <= 1) return 1;          // base case",
-        "  return n * factorial(n - 1);   // recursive case",
-        "}",
-      ]} />
-      <p style={{ color: 'var(--text-2)', fontSize: 13 }}>
-        factorial(4) → 4 × factorial(3) → 4 × (3 × factorial(2)) → 4 × 3 × (2 × factorial(1)) → 4 × 3 × 2 × 1 = 24
-      </p>
-      <h3>Backtracking — ลองทุกความเป็นไปได้แล้วถอย</h3>
-      <p>ใช้ recursion + "ลอง → ตรวจ → ถ้าไม่ดีก็ถอย" เช่น แก้เขาวงกต, N-Queens, Sudoku</p>
-      <CodeBlock code={[
-        "// แม่แบบ Backtracking",
-        "bool solve(state) {",
-        "  if (isSolved(state)) return true;",
-        "  for (each choice) {",
-        "    apply(choice);",
-        "    if (solve(state)) return true;",
-        "    undo(choice);    // ← backtrack",
-        "  }",
-        "  return false;",
-        "}",
-      ]} />
-      <DO2
-        prompt="เรียงขั้นตอน Recursive Function ให้ถูก:"
-        items={["เรียก function ตัวเอง", "ตรวจ base case (หยุดได้?)", "รับ parameter", "รวมผลลัพธ์ + return"]}
-        correct={["รับ parameter", "ตรวจ base case (หยุดได้?)", "เรียก function ตัวเอง", "รวมผลลัพธ์ + return"]}
-      />
       <Quiz2
         q="ถ้าลืมเขียน base case จะเกิดอะไรขึ้น?"
         options={[

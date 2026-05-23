@@ -19,10 +19,10 @@ function BipartiteMatchViz() {
   // Hungarian-style augmenting path (simple BFS approach with sequential add)
   const STEPS = [
     { msg: 'เริ่ม — ยังไม่มี matching', matched: [] },
-    { msg: 'Try A: เลือก edge (A,1)', matched: [['A','1']] },
-    { msg: 'Try B: edge (B,1) ติด A. Try augmenting → A ไป edge (A,2). B ได้ 1', matched: [['A','2'],['B','1']] },
-    { msg: 'Try C: edge (C,2) ติด A. Augment ไม่ได้ (A เลือก 2 อย่างเดียวที่ว่าง). Try (C,3) → ว่าง ✓', matched: [['A','2'],['B','1'],['C','3']] },
-    { msg: 'Try D: edge (D,3) ติด C. Augment: D→3, C→4. ✓ ทุกตัวจับคู่ได้', matched: [['A','2'],['B','1'],['C','4'],['D','3']] },
+    { msg: 'Try A: เลือก edge (A,1) — ว่าง ✓', matched: [['A','1']] },
+    { msg: 'Try B: edge (B,1) ติด A. Augment path B-1-A-2 → A ย้ายไป 2, B ได้ 1', matched: [['A','2'],['B','1']] },
+    { msg: 'Try C: edge (C,2) ติด A. (C,3) ว่าง → C ได้ 3 ตรงๆ (ไม่ต้อง augment)', matched: [['A','2'],['B','1'],['C','3']] },
+    { msg: 'Try D: edge (D,3) ติด C. Augment D-3-C-4 → C ย้ายไป 4, D ได้ 3 ✓ matching ครบ 4', matched: [['A','2'],['B','1'],['C','4'],['D','3']] },
   ];
 
   const [step, setStep] = useS16(0);

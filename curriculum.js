@@ -1,10 +1,15 @@
 /* Course catalog and lesson content data */
 /* eslint-disable no-unused-vars */
 
+// category:
+//   'core'  = หลักสอบ — ต้องเรียนทุกบทในนี้ (algorithm + DS หลัก, C++ พื้นฐาน)
+//   'exam'  = ออกสอบบ่อย / advanced topics ระดับมหาลัย (NP, Flow, Adv DP/Graph)
+//   'extra' = เสริม / tools / mock exams / interactive viz เพิ่มเติม
 const CURRICULUM = [
   {
     id: "math-onramp",
     title: "🧮 Math Prerequisites (ก่อนเรียน Algorithm)",
+    category: "extra",
     lessons: [
       { id: "math-induction", num: "115", title: "Mathematical Induction", level: "basic", time: "14 นาที", desc: "Base + Hypothesis + Step — รากของทุก proof" },
       { id: "math-summation", num: "116", title: "Summation Formulas (Σ)", level: "basic", time: "12 นาที", desc: "Σi, Σi², geometric, harmonic, telescoping — วิเคราะห์ nested loop" },
@@ -17,16 +22,18 @@ const CURRICULUM = [
   {
     id: "intro",
     title: "เริ่มต้น",
+    category: "core",
     lessons: [
       { id: "foundations", num: "00", title: "Foundations (C++ พื้นฐาน)", level: "basic", time: "12 นาที", desc: "ก่อนเริ่มอัลกอริทึม — algorithm คืออะไร, C++ syntax, vector, ฟังก์ชัน" },
       { id: "what-is-algo", num: "01", title: "Algorithm คืออะไร?", level: "basic", time: "8 นาที", desc: "ทำความเข้าใจอัลกอริทึม คุณสมบัติที่ดี และทำไมเราต้องเรียน" },
       { id: "big-o", num: "02", title: "Big-O Notation", level: "basic", time: "15 นาที", desc: "วิเคราะห์ความซับซ้อนของเวลาและพื้นที่ พร้อม animation เปรียบเทียบ" },
-      { id: "master-theorem", num: "03", title: "Master Theorem", level: "inter", time: "12 นาที", desc: "T(n) = aT(n/b) + O(n^d) — แก้ recurrence ใน 30 วินาที" },
+      { id: "master-theorem", num: "02a", title: "Master Theorem", level: "inter", time: "12 นาที", desc: "T(n) = aT(n/b) + O(n^d) — แก้ recurrence ใน 30 วินาที" },
     ]
   },
   {
     id: "cpp-deep",
     title: "🎓 C++ Foundations Deep",
+    category: "core",
     lessons: [
       { id: "cpp-variables", num: "121", title: "C++ Variables & Types", level: "basic", time: "12 นาที", desc: "int/long long/double/char/bool, const, overflow, floating point" },
       { id: "cpp-control-flow", num: "122", title: "C++ Control Flow (if/while/for)", level: "basic", time: "12 นาที", desc: "if/else, while, for, switch, break/continue, off-by-one" },
@@ -43,6 +50,7 @@ const CURRICULUM = [
   {
     id: "stl-containers",
     title: "📦 STL Mastery — Containers",
+    category: "core",
     lessons: [
       { id: "stl-overview", num: "00e", title: "STL Overview — เลือก container อะไรเมื่อไหร่", level: "basic", time: "14 นาที", desc: "ภาพรวม STL: 3 categories, complexity table, decision tree" },
       { id: "stl-vector-deep", num: "00f", title: "std::vector — Deep Dive", level: "basic", time: "18 นาที", desc: "push_back/resize/reserve/capacity, amortized O(1) proof, iterator invalidation" },
@@ -57,6 +65,7 @@ const CURRICULUM = [
   {
     id: "search",
     title: "การค้นหา (Searching)",
+    category: "core",
     lessons: [
       { id: "linear-search", num: "03", title: "Linear Search", level: "basic", time: "10 นาที", desc: "ค้นหาแบบตรงไปตรงมา O(n) ดูทีละช่อง" },
       { id: "binary-search", num: "04", title: "Binary Search", level: "basic", time: "12 นาที", desc: "แบ่งครึ่งทุกครั้ง O(log n) เร็วกว่ามาก" },
@@ -66,13 +75,15 @@ const CURRICULUM = [
   {
     id: "recursion-pre",
     title: "🔁 Recursion (ต้องรู้ก่อน Merge/Quick Sort)",
+    category: "core",
     lessons: [
-      { id: "recursion", num: "08.5", title: "Recursion พื้นฐาน (Pre-DAC)", level: "inter", time: "12 นาที", desc: "Base case + recursive case + call stack — ต้องเข้าใจก่อนเรียน Merge/Quick Sort" },
+      { id: "recursion", num: "05a", title: "Recursion พื้นฐาน (Pre-DAC)", level: "inter", time: "12 นาที", desc: "Base case + recursive case + call stack — ต้องเข้าใจก่อนเรียน Merge/Quick Sort" },
     ]
   },
   {
     id: "sort",
     title: "การจัดเรียง (Sorting)",
+    category: "core",
     lessons: [
       { id: "bubble-sort", num: "06", title: "Bubble Sort", level: "basic", time: "10 นาที", desc: "อัลกอริทึมพื้นฐานที่สุด เปรียบเทียบทีละคู่" },
       { id: "selection-sort", num: "07", title: "Selection Sort", level: "basic", time: "10 นาที", desc: "หาตัวน้อยสุดแล้วสลับไปข้างหน้า" },
@@ -86,6 +97,7 @@ const CURRICULUM = [
   {
     id: "ds",
     title: "โครงสร้างข้อมูล (Data Structures)",
+    category: "core",
     lessons: [
       { id: "stack", num: "12", title: "Stack", level: "basic", time: "10 นาที", desc: "LIFO — Last In First Out" },
       { id: "queue", num: "13", title: "Queue", level: "basic", time: "10 นาที", desc: "FIFO — First In First Out" },
@@ -97,6 +109,7 @@ const CURRICULUM = [
   {
     id: "stl-mastery",
     title: "🧮 STL Mastery — Set/Map/Algorithms + Bit",
+    category: "core",
     lessons: [
       { id: "bit-manip-101", num: "124", title: "Bit Manipulation 101", level: "basic", time: "16 นาที", desc: "&, |, ^, ~, <<, >> + 9 bit tricks + subset enumeration" },
       { id: "stl-set-map", num: "15b", title: "std::set & std::map (Sorted)", level: "inter", time: "16 นาที", desc: "RB-tree, O(log n), lower/upper_bound, range query" },
@@ -109,6 +122,7 @@ const CURRICULUM = [
   {
     id: "tree",
     title: "Tree & BST",
+    category: "core",
     lessons: [
       { id: "tree-basic", num: "16", title: "Binary Tree พื้นฐาน", level: "inter", time: "12 นาที", desc: "โครงสร้างต้นไม้ Traversal: pre/in/post-order" },
       { id: "bst", num: "17", title: "Binary Search Tree", level: "inter", time: "16 นาที", desc: "Insert / Search / Delete ใน BST" },
@@ -120,6 +134,7 @@ const CURRICULUM = [
   {
     id: "strings",
     title: "String Algorithms",
+    category: "exam",
     lessons: [
       { id: "string-match", num: "17c", title: "String Matching — KMP & Rabin-Karp", level: "adv", time: "16 นาที", desc: "หา pattern ใน text — O(n+m) ด้วย LPS array" },
       { id: "string-hashing", num: "128", title: "String Hashing (Rolling Hash)", level: "adv", time: "16 นาที", desc: "Polynomial hash + Double hash — substring เปรียบเทียบ O(1)" },
@@ -128,6 +143,7 @@ const CURRICULUM = [
   {
     id: "advanced-ds",
     title: "DS ขั้นสูง & Compression",
+    category: "exam",
     lessons: [
       { id: "huffman", num: "17e", title: "Huffman Coding", level: "adv", time: "14 นาที", desc: "Greedy compression — ZIP, JPEG, MP3 ใช้" },
     ]
@@ -135,6 +151,7 @@ const CURRICULUM = [
   {
     id: "dac",
     title: "Divide & Conquer",
+    category: "core",
     lessons: [
       { id: "quick-select", num: "18", title: "Quick Select", level: "inter", time: "12 นาที", desc: "หาค่าน้อยสุดอันดับ k โดยไม่ต้อง sort ทั้งหมด" },
       { id: "maxima-set", num: "18b", title: "Maxima Set (DAC)", level: "adv", time: "16 นาที", desc: "เซตจุดที่ไม่ถูก dominate — Pareto frontier — O(n log n) แทน O(n²)" },
@@ -145,6 +162,7 @@ const CURRICULUM = [
   {
     id: "graph",
     title: "Graph",
+    category: "core",
     lessons: [
       { id: "graph-rep", num: "21", title: "Graph Representation", level: "inter", time: "12 นาที", desc: "Adjacency Matrix vs Adjacency List" },
       { id: "bfs", num: "22", title: "Breadth-First Search (BFS)", level: "inter", time: "14 นาที", desc: "ค้นหาแบบกว้าง ใช้ Queue ระดับต่อระดับ" },
@@ -163,6 +181,7 @@ const CURRICULUM = [
   {
     id: "advanced",
     title: "เทคนิคขั้นสูง (Advanced)",
+    category: "core",
     lessons: [
       { id: "exhaustive", num: "28", title: "Exhaustive Search", level: "inter", time: "14 นาที", desc: "Brute force สำรวจคำตอบทุกแบบ — Permutation, Subset" },
       { id: "backtracking", num: "29", title: "Backtracking", level: "adv", time: "16 นาที", desc: "N-Queens, Subset Sum, Sudoku — ตัดกิ่งคำตอบ" },
@@ -177,6 +196,7 @@ const CURRICULUM = [
   {
     id: "geometry",
     title: "📐 Computational Geometry",
+    category: "exam",
     lessons: [
       { id: "convex-hull", num: "130", title: "Convex Hull (Andrew's monotone)", level: "adv", time: "16 นาที", desc: "Cross product + sort — O(n log n) เปลือกนูน" },
     ]
@@ -184,6 +204,7 @@ const CURRICULUM = [
   {
     id: "lab",
     title: "Lab & แบบฝึกหัด",
+    category: "extra",
     lessons: [
       { id: "compare", num: "32", title: "Compare Mode", level: "adv", time: "—", desc: "เปรียบเทียบ 2 อัลกอริทึมพร้อมกัน บนข้อมูลชุดเดียว" },
       { id: "race", num: "33", title: "Algorithm Race 🏁", level: "adv", time: "—", desc: "แข่ง 5 sorts บน input ต่าง ๆ — random, sorted, reversed, few-unique" },
@@ -197,6 +218,7 @@ const CURRICULUM = [
   {
     id: "tools",
     title: "Tools เตรียมสอบ",
+    category: "extra",
     lessons: [
       { id: "master-calc", num: "36", title: "Master Theorem Calculator 🧮", level: "adv", time: "—", desc: "กรอก a, b, d → ได้ T(n) + step ทั้งหมด" },
       { id: "recurrence-solver", num: "37", title: "Recurrence Solver 🔁", level: "adv", time: "—", desc: "แก้ T(n) แบบ substitution — เห็นทุก step" },
@@ -230,6 +252,7 @@ const CURRICULUM = [
   {
     id: "more",
     title: "Algorithm เพิ่มเติม",
+    category: "core",
     lessons: [
       { id: "bellman-ford", num: "58", title: "Bellman-Ford", level: "adv", time: "14 นาที", desc: "Shortest path กับ negative weight + ตรวจ negative cycle" },
       { id: "floyd-warshall", num: "59", title: "Floyd-Warshall", level: "adv", time: "12 นาที", desc: "All-pairs shortest path O(V³)" },
@@ -246,6 +269,7 @@ const CURRICULUM = [
   {
     id: "proofs",
     title: "📐 Proofs & Analysis (ระดับมหาลัย)",
+    category: "exam",
     lessons: [
       { id: "limit-lhopital", num: "63a", title: "L'Hôpital + Limit Method", level: "adv", time: "18 นาที", desc: "เปรียบเทียบ order of growth ด้วย lim f/g — KMUTNB s_1.pdf p.30-33" },
       { id: "big-o-proofs", num: "64", title: "Formal Big-O / Ω / Θ Proofs", level: "adv", time: "20 นาที", desc: "พิสูจน์จากนิยาม ∃c,n₀: T(n) ≤ cf(n) — Big-O, Omega, Theta, little-o" },
@@ -258,6 +282,7 @@ const CURRICULUM = [
   {
     id: "complexity",
     title: "🧠 Complexity Theory (NP)",
+    category: "exam",
     lessons: [
       { id: "p-vs-np", num: "68", title: "P, NP, NP-Hard, NP-Complete", level: "adv", time: "20 นาที", desc: "Decision problems, polynomial verifiers, P vs NP คืออะไร" },
       { id: "reductions", num: "69", title: "Polynomial Reductions", level: "adv", time: "18 นาที", desc: "A ≤ₚ B — วิธีพิสูจน์ว่าปัญหา B ยากเทียบเท่า A" },
@@ -268,6 +293,7 @@ const CURRICULUM = [
   {
     id: "flow",
     title: "🌊 Network Flow",
+    category: "exam",
     lessons: [
       { id: "max-flow", num: "72", title: "Max Flow — Ford-Fulkerson", level: "adv", time: "22 นาที", desc: "Residual graph, augmenting path, capacity constraints" },
       { id: "edmonds-karp", num: "73", title: "Edmonds-Karp (BFS-based)", level: "adv", time: "16 นาที", desc: "Ford-Fulkerson + BFS → O(VE²) guaranteed" },
@@ -278,6 +304,7 @@ const CURRICULUM = [
   {
     id: "adv-dp",
     title: "🎯 Advanced DP",
+    category: "exam",
     lessons: [
       { id: "lis", num: "76", title: "LIS — Longest Increasing Subseq", level: "adv", time: "18 นาที", desc: "O(n²) DP + O(n log n) patience sort + reconstruction" },
       { id: "dp-lis-anim", num: "140", title: "DP Fill: LIS 🎞️", level: "adv", time: "—", desc: "dp[i] = LIS ลงท้าย a[i] — เติมทีละช่อง" },
@@ -294,6 +321,7 @@ const CURRICULUM = [
   {
     id: "adv-graph",
     title: "🕸️ Advanced Graph",
+    category: "exam",
     lessons: [
       { id: "scc", num: "82", title: "SCC — Tarjan & Kosaraju", level: "adv", time: "22 นาที", desc: "Strongly Connected Components, condensation DAG" },
       { id: "two-sat", num: "126", title: "2-SAT (SCC-based)", level: "adv", time: "18 นาที", desc: "Boolean SAT clause 2 ตัว — implication graph + SCC O(N+M)" },
@@ -305,6 +333,7 @@ const CURRICULUM = [
   {
     id: "adv-strings",
     title: "🔤 Advanced Strings",
+    category: "exam",
     lessons: [
       { id: "z-algorithm", num: "85", title: "Z-Algorithm", level: "adv", time: "18 นาที", desc: "Z-array O(n) — pattern matching, periodicity" },
       { id: "suffix-array", num: "86", title: "Suffix Array & LCP", level: "adv", time: "22 นาที", desc: "O(n log n) construction, LCP via Kasai, suffix-based queries" },
@@ -315,6 +344,7 @@ const CURRICULUM = [
   {
     id: "number-theory",
     title: "🔢 Number Theory & Randomized",
+    category: "exam",
     lessons: [
       { id: "ext-gcd", num: "89", title: "Extended Euclidean", level: "adv", time: "16 นาที", desc: "หา gcd + สัมประสิทธิ์ ax + by = gcd(a,b)" },
       { id: "mod-inverse", num: "90", title: "Modular Inverse", level: "adv", time: "14 นาที", desc: "Fermat's little theorem + Extended Euclidean สำหรับ a⁻¹ mod p" },
@@ -328,6 +358,7 @@ const CURRICULUM = [
   {
     id: "design",
     title: "✍️ Design Problems (เขียน proof + ออกแบบ)",
+    category: "exam",
     lessons: [
       { id: "design-greedy", num: "95", title: "Design: Greedy Problems", level: "adv", time: "—", desc: "5 โจทย์ออกแบบ greedy + proof of optimality (exchange argument)" },
       { id: "design-dp", num: "96", title: "Design: DP Problems", level: "adv", time: "—", desc: "5 โจทย์ออกแบบ — เขียน recurrence + base case + complexity" },
@@ -341,6 +372,7 @@ const CURRICULUM = [
   {
     id: "tools-extra",
     title: "🚀 Tools เพิ่มเติม + Path",
+    category: "extra",
     lessons: [
       { id: "learning-paths", num: "102", title: "🗺️ Learning Paths — เส้นทางตามเป้าหมาย", level: "basic", time: "—", desc: "1 เดือน / 3 เดือน / Midterm / Final / Contest — เลือก path เหมาะกับเป้าหมายคุณ" },
       { id: "cpp-sandbox", num: "103", title: "💻 C++ Online Compiler Sandbox", level: "inter", time: "—", desc: "เขียน + รัน C++ ใน Wandbox/Godbolt/OnlineGDB/Coliru — 8 templates พร้อมใช้" },
@@ -353,6 +385,7 @@ const CURRICULUM = [
   {
     id: "complete-resource",
     title: "🎯 Complete Learning Resource",
+    category: "extra",
     lessons: [
       { id: "diagnostic-test", num: "105", title: "🧭 Diagnostic Test — รู้ตัวเองอยู่ตรงไหน", level: "basic", time: "10 นาที", desc: "Placement test 20 ข้อ → suggest learning path เหมาะกับ level คุณ" },
       { id: "mastery-tracker", num: "106", title: "📈 Mastery Tracker — radar chart per topic", level: "basic", time: "—", desc: "ภาพรวม strength/weakness ของคุณ + suggested topics ที่ควรทบทวน" },

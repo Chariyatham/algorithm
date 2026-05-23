@@ -122,11 +122,17 @@ function LHopitalDemo() {
     {
       key: 'ex4',
       label: 'T₁ = 2ⁿ  vs  T₂ = n¹⁰⁰',
+      // ใช้ logarithm comparison เพื่อหลีกเลี่ยง float overflow (2^1000 = Infinity ใน JS)
+      // log₂(ratio) = n - 100·log₂(n)
       f: (n) => Math.pow(2, Math.min(n, 50)),
       g: (n) => Math.pow(n, 100),
-      ratio: (n) => Math.pow(2, n) / Math.pow(n, 100),
-      symbolic: 'lim 2ⁿ/n¹⁰⁰ = ∞  (exponential ชนะ polynomial เสมอ ใช้ L\'Hôpital 100 ครั้งก็ได้)',
-      verdict: 'T₁ &gt; T₂ → exponential เติบโตเร็วกว่า polynomial เสมอ',
+      ratio: (n) => {
+        const log2Ratio = n - 100 * Math.log2(n);
+        // คืน "log ratio" แทน ratio ตรงๆ — ค่าบวก = T₁ใหญ่กว่า; ลบ = T₂ใหญ่กว่า
+        return Math.pow(2, Math.max(-1000, Math.min(1000, log2Ratio)));
+      },
+      symbolic: 'lim 2ⁿ/n¹⁰⁰ = ∞  (exponential ชนะ polynomial เสมอ ใช้ L\'Hôpital 100 ครั้งก็ได้)\n(แสดงผ่าน log₂ ratio = n − 100·log₂ n — หลีกเลี่ยง overflow ของ JS double)',
+      verdict: 'T₁ &gt; T₂ → exponential เติบโตเร็วกว่า polynomial เสมอ (crossover ราว n ≈ 1000)',
       verdictColor: 'var(--pink)'
     },
   ];

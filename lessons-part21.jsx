@@ -999,9 +999,14 @@ Total work = O(n) + O(n) extensions = O(n) ▢`
         q: "คำนวณ 2^1000 mod 17 ด้วย fast power และอธิบาย",
         hint: "log₂(1000) ≈ 10 — 10 iterations",
         ans: `2^1000 mod 17:
-1000 = 1111101000₂ (10 bits)
-ทำ 10 squarings + บางทีคูณ result.
-ผลลัพธ์ = 4 (จริง ๆ ต้องคำนวณ — แต่ method correct)
+ใช้ Fermat's Little Theorem: 17 prime, gcd(2,17)=1 → 2^16 ≡ 1 (mod 17)
+1000 = 16·62 + 8  →  2^1000 = (2^16)^62 · 2^8 ≡ 1^62 · 2^8 ≡ 2^8 (mod 17)
+2^8 = 256 = 17·15 + 1  →  256 ≡ 1 (mod 17)
+
+ตรวจอีกวิธี: 2^4 = 16 ≡ −1 (mod 17), 2^8 = (2^4)² ≡ 1, 2^1000 = (2^8)^125 ≡ 1
+ผลลัพธ์ = 1
+
+Fast Power เอง: 1000 = 1111101000₂ → 10 squarings + บาง multiplications
 Time: O(log n) — vs naive O(n) = 1000 multiplications`
       }
     ]

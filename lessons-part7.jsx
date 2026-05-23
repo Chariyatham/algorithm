@@ -409,12 +409,10 @@ ENRICH["recursion"] = function () {
   );
 };
 
-/* Compose enrich into final lesson components */
-const _origLessons = {
-  ...(window.LessonsPart1 || {}),
-  ...(window.LessonsPart2 || {}),
-  ...(window.LessonsPart3 || {}),
-};
+/* Compose enrich into final lesson components — ค้นใน part 1-31 ทั้งหมด */
+const _ALL_PARTS_P7 = Array.from({ length: 31 }, (_, i) => 'LessonsPart' + (i + 1));
+const _origLessons = {};
+_ALL_PARTS_P7.forEach(k => { if (window[k]) Object.assign(_origLessons, window[k]); });
 
 Object.keys(ENRICH).forEach(id => {
   const Original = _origLessons[id];
@@ -428,9 +426,9 @@ Object.keys(ENRICH).forEach(id => {
         </React.Fragment>
       );
     };
-    // Inject back into the right Lessons object
-    if (window.LessonsPart1 && window.LessonsPart1[id]) window.LessonsPart1[id] = Wrapped;
-    else if (window.LessonsPart2 && window.LessonsPart2[id]) window.LessonsPart2[id] = Wrapped;
-    else if (window.LessonsPart3 && window.LessonsPart3[id]) window.LessonsPart3[id] = Wrapped;
+    // Inject back into ตรง part ที่ host lesson นี้
+    for (const k of _ALL_PARTS_P7) {
+      if (window[k] && window[k][id]) { window[k][id] = Wrapped; break; }
+    }
   }
 });

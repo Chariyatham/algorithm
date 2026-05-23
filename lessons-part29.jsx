@@ -132,18 +132,19 @@ function bfsFrames(start = 0) {
   const visited = new Set([start]);
   const queue = [start];
   const parent = { [start]: -1 };
-  frames.push({ visited: new Set(visited), queue: [...queue], current: -1, parent: { ...parent }, msg: `เริ่ม ใส่ ${G_NODES[start].label} ลง queue` });
+  // codeLine ชี้บรรทัดใน BFS_CODE (ดู Lessons29["bfs-anim"] ด้านล่าง)
+  frames.push({ visited: new Set(visited), queue: [...queue], current: -1, parent: { ...parent }, msg: `เริ่ม ใส่ ${G_NODES[start].label} ลง queue`, codeLine: 13 });
   while (queue.length) {
     const u = queue.shift();
-    frames.push({ visited: new Set(visited), queue: [...queue], current: u, parent: { ...parent }, msg: `dequeue ${G_NODES[u].label}` });
+    frames.push({ visited: new Set(visited), queue: [...queue], current: u, parent: { ...parent }, msg: `dequeue ${G_NODES[u].label}`, codeLine: 16 });
     for (const v of adj[u]) {
       if (!visited.has(v)) {
         visited.add(v); queue.push(v); parent[v] = u;
-        frames.push({ visited: new Set(visited), queue: [...queue], current: u, parent: { ...parent }, msg: `เยี่ยม ${G_NODES[v].label} จาก ${G_NODES[u].label} — enqueue` });
+        frames.push({ visited: new Set(visited), queue: [...queue], current: u, parent: { ...parent }, msg: `เยี่ยม ${G_NODES[v].label} จาก ${G_NODES[u].label} — enqueue`, codeLine: 22 });
       }
     }
   }
-  frames.push({ visited: new Set(visited), queue: [], current: -1, parent: { ...parent }, msg: 'เสร็จสิ้น' });
+  frames.push({ visited: new Set(visited), queue: [], current: -1, parent: { ...parent }, msg: 'เสร็จสิ้น', codeLine: 26 });
   return frames;
 }
 
@@ -176,19 +177,37 @@ Lessons29["bfs-anim"] = function () {
         </div>
       </div>
 
-      <h3 style={{ marginTop: 16 }}>โค้ด</h3>
+      <h3 style={{ marginTop: 16 }}>โค้ด BFS (เต็ม)</h3>
       <CodeBlock code={[
-        "queue<int> q;",
-        "vector<bool> visited(n, false);",
-        "q.push(start); visited[start] = true;",
-        "while (!q.empty()) {",
-        "  int u = q.front(); q.pop();",
-        "  for (int v : adj[u])",
-        "    if (!visited[v]) {",
-        "      visited[v] = true; q.push(v);",
-        "    }",
-        "}",
-      ]} />
+        "#include <queue>",                              // 0
+        "#include <vector>",                              // 1
+        "using namespace std;",                           // 2
+        "",                                               // 3
+        "// BFS จาก start — เยี่ยม node ระดับต่อระดับ",      // 4
+        "vector<int> bfs(vector<vector<int>>& adj,",      // 5
+        "                int start) {",                   // 6
+        "  int n = adj.size();",                          // 7
+        "  vector<bool> visited(n, false);",              // 8
+        "  vector<int> parent(n, -1);",                   // 9
+        "  queue<int> q;",                                // 10
+        "",                                               // 11
+        "  visited[start] = true;",                       // 12
+        "  q.push(start);                  // ← เริ่ม",   // 13
+        "",                                               // 14
+        "  while (!q.empty()) {",                         // 15
+        "    int u = q.front(); q.pop();   // ← dequeue", // 16
+        "    // เยี่ยม u (process node)",                  // 17
+        "    for (int v : adj[u]) {",                     // 18
+        "      if (!visited[v]) {",                       // 19
+        "        visited[v] = true;",                     // 20
+        "        parent[v] = u;",                         // 21
+        "        q.push(v);                // ← enqueue", // 22
+        "      }",                                        // 23
+        "    }",                                          // 24
+        "  }",                                            // 25
+        "  return parent;                   // ← จบ",     // 26
+        "}",                                              // 27
+      ]} highlight={[p.frame.codeLine]} />
 
       <Quiz29
         q="ทำไม BFS ใช้ Queue ไม่ใช่ Stack?"
@@ -232,19 +251,20 @@ function dfsFrames(start = 0) {
     visited.add(u);
     parent[u] = p;
     stk.push(u);
-    frames.push({ visited: new Set(visited), queue: [...stk], current: u, parent: { ...parent }, msg: `เยี่ยม ${G_NODES[u].label} (push stack)` });
+    // codeLine ชี้ DFS_CODE (ดู Lessons29["dfs-anim"])
+    frames.push({ visited: new Set(visited), queue: [...stk], current: u, parent: { ...parent }, msg: `เยี่ยม ${G_NODES[u].label} (push stack)`, codeLine: 8 });
     for (const v of adj[u]) {
       if (!visited.has(v)) {
-        frames.push({ visited: new Set(visited), queue: [...stk], current: u, parent: { ...parent }, msg: `${G_NODES[u].label} → ${G_NODES[v].label} (recurse)` });
+        frames.push({ visited: new Set(visited), queue: [...stk], current: u, parent: { ...parent }, msg: `${G_NODES[u].label} → ${G_NODES[v].label} (recurse)`, codeLine: 13 });
         dfs(v, u);
-        frames.push({ visited: new Set(visited), queue: [...stk], current: u, parent: { ...parent }, msg: `กลับมาที่ ${G_NODES[u].label}` });
+        frames.push({ visited: new Set(visited), queue: [...stk], current: u, parent: { ...parent }, msg: `กลับมาที่ ${G_NODES[u].label}`, codeLine: 13 });
       }
     }
     stk.pop();
-    frames.push({ visited: new Set(visited), queue: [...stk], current: u, parent: { ...parent }, msg: `เสร็จ ${G_NODES[u].label} (pop stack)` });
+    frames.push({ visited: new Set(visited), queue: [...stk], current: u, parent: { ...parent }, msg: `เสร็จ ${G_NODES[u].label} (pop stack)`, codeLine: 17 });
   }
   dfs(start, -1);
-  frames.push({ visited: new Set(visited), queue: [], current: -1, parent: { ...parent }, msg: 'เสร็จสิ้น' });
+  frames.push({ visited: new Set(visited), queue: [], current: -1, parent: { ...parent }, msg: 'เสร็จสิ้น', codeLine: 19 });
   return frames;
 }
 
@@ -269,14 +289,33 @@ Lessons29["dfs-anim"] = function () {
         </div>
       </div>
 
-      <h3 style={{ marginTop: 16 }}>โค้ด (recursive)</h3>
+      <h3 style={{ marginTop: 16 }}>โค้ด DFS (เต็ม, recursive)</h3>
       <CodeBlock code={[
-        "void dfs(int u) {",
-        "  visited[u] = true;",
-        "  for (int v : adj[u])",
-        "    if (!visited[v]) dfs(v);",
-        "}",
-      ]} />
+        "#include <vector>",                              // 0
+        "using namespace std;",                           // 1
+        "",                                               // 2
+        "vector<vector<int>> adj;",                       // 3
+        "vector<bool> visited;",                          // 4
+        "vector<int> parent;",                            // 5
+        "",                                               // 6
+        "void dfs(int u, int p = -1) {",                  // 7
+        "  visited[u] = true;             // ← push",     // 8
+        "  parent[u] = p;",                               // 9
+        "  // เยี่ยม u (process)",                          // 10
+        "",                                               // 11
+        "  for (int v : adj[u]) {",                       // 12
+        "    if (!visited[v]) {           // ← recurse",  // 13
+        "      dfs(v, u);",                               // 14
+        "    }",                                          // 15
+        "  }",                                            // 16
+        "  // จบ u (กลับขึ้น parent)       // ← pop",      // 17
+        "}",                                              // 18
+        "",                                               // 19
+        "// เรียกใช้:",                                    // 20
+        "// visited.assign(n, false);",                   // 21
+        "// parent.assign(n, -1);",                       // 22
+        "// dfs(start);",                                 // 23
+      ]} highlight={[p.frame.codeLine]} />
 
       <Quiz29
         q="DFS ใช้ memory เท่าไหร่ในกรณีแย่สุด?"
@@ -315,7 +354,8 @@ function dijkstraFrames(start = 0) {
   const parent = {};
   const visited = new Set();
   const frames = [];
-  frames.push({ visited: new Set(), queue: [start], current: -1, dist: { ...dist }, parent: {}, msg: `เริ่ม dist[${G_NODES[start].label}] = 0` });
+  // codeLine ชี้ DIJKSTRA_CODE (ดู Lessons29["dijkstra-anim"])
+  frames.push({ visited: new Set(), queue: [start], current: -1, dist: { ...dist }, parent: {}, msg: `เริ่ม dist[${G_NODES[start].label}] = 0`, codeLine: 12 });
   for (let iter = 0; iter < n; iter++) {
     let u = -1, best = Infinity;
     for (const nd of G_NODES) {
@@ -323,16 +363,16 @@ function dijkstraFrames(start = 0) {
     }
     if (u === -1) break;
     visited.add(u);
-    frames.push({ visited: new Set(visited), queue: [], current: u, dist: { ...dist }, parent: { ...parent }, msg: `เลือก ${G_NODES[u].label} (dist=${best}) — ขั้นต่ำใน unvisited` });
+    frames.push({ visited: new Set(visited), queue: [], current: u, dist: { ...dist }, parent: { ...parent }, msg: `เลือก ${G_NODES[u].label} (dist=${best}) — ขั้นต่ำใน unvisited`, codeLine: 16 });
     for (const { to: v, w } of adj[u]) {
       if (!visited.has(v) && dist[u] + w < dist[v]) {
         dist[v] = dist[u] + w;
         parent[v] = u;
-        frames.push({ visited: new Set(visited), queue: [], current: u, dist: { ...dist }, parent: { ...parent }, msg: `relax ${G_NODES[u].label}→${G_NODES[v].label}: dist[${G_NODES[v].label}] = ${dist[v]}` });
+        frames.push({ visited: new Set(visited), queue: [], current: u, dist: { ...dist }, parent: { ...parent }, msg: `relax ${G_NODES[u].label}→${G_NODES[v].label}: dist[${G_NODES[v].label}] = ${dist[v]}`, codeLine: 22 });
       }
     }
   }
-  frames.push({ visited: new Set(visited), queue: [], current: -1, dist: { ...dist }, parent: { ...parent }, msg: 'เสร็จสิ้น' });
+  frames.push({ visited: new Set(visited), queue: [], current: -1, dist: { ...dist }, parent: { ...parent }, msg: 'เสร็จสิ้น', codeLine: 27 });
   return frames;
 }
 
@@ -366,21 +406,39 @@ Lessons29["dijkstra-anim"] = function () {
         </tbody>
       </table>
 
-      <h3 style={{ marginTop: 16 }}>โค้ด (priority_queue)</h3>
+      <h3 style={{ marginTop: 16 }}>โค้ด Dijkstra (เต็ม)</h3>
       <CodeBlock code={[
-        "priority_queue<pii, vector<pii>, greater<>> pq;",
-        "dist[start] = 0;",
-        "pq.push({0, start});",
-        "while (!pq.empty()) {",
-        "  auto [d, u] = pq.top(); pq.pop();",
-        "  if (d > dist[u]) continue;",
-        "  for (auto [v, w] : adj[u])",
-        "    if (dist[u] + w < dist[v]) {",
-        "      dist[v] = dist[u] + w;",
-        "      pq.push({dist[v], v});",
-        "    }",
-        "}",
-      ]} />
+        "#include <queue>",                                       // 0
+        "#include <vector>",                                       // 1
+        "#include <climits>",                                      // 2
+        "using namespace std;",                                    // 3
+        "typedef pair<int,int> pii;  // (dist, node)",             // 4
+        "",                                                        // 5
+        "vector<int> dijkstra(",                                   // 6
+        "    vector<vector<pii>>& adj,  // adj[u] = {(v,w),...}",  // 7
+        "    int start) {",                                        // 8
+        "  int n = adj.size();",                                   // 9
+        "  vector<int> dist(n, INT_MAX);",                         // 10
+        "  vector<int> parent(n, -1);",                            // 11
+        "  dist[start] = 0;             // ← เริ่ม",                // 12
+        "  priority_queue<pii, vector<pii>, greater<>> pq;",       // 13
+        "  pq.push({0, start});",                                  // 14
+        "",                                                        // 15
+        "  while (!pq.empty()) {",                                 // 16 ← เลือก u
+        "    auto [d, u] = pq.top(); pq.pop();",                   // 17
+        "    if (d > dist[u]) continue;  // outdated",             // 18
+        "",                                                        // 19
+        "    for (auto& [v, w] : adj[u]) {",                       // 20
+        "      if (dist[u] + w < dist[v]) {",                      // 21
+        "        dist[v] = dist[u] + w;   // ← relax",             // 22
+        "        parent[v] = u;",                                  // 23
+        "        pq.push({dist[v], v});",                          // 24
+        "      }",                                                 // 25
+        "    }",                                                   // 26
+        "  }",                                                     // 27 ← จบ
+        "  return dist;",                                          // 28
+        "}",                                                       // 29
+      ]} highlight={[p.frame.codeLine]} />
 
       <Quiz29
         q="Dijkstra ทำงานบน graph ที่มี negative edge ได้ไหม?"
@@ -417,7 +475,8 @@ function primFrames(start = 0) {
   const mst = new Set();
   const frames = [];
   let total = 0;
-  frames.push({ visited: new Set(visited), mst: new Set(mst), current: start, msg: `เริ่มที่ ${G_NODES[start].label} — total = 0`, total });
+  // codeLine ชี้ PRIM_CODE (ดู Lessons29["prim-anim"])
+  frames.push({ visited: new Set(visited), mst: new Set(mst), current: start, msg: `เริ่มที่ ${G_NODES[start].label} — total = 0`, total, codeLine: 14 });
   while (visited.size < G_NODES.length) {
     let best = null;
     for (const u of visited) {
@@ -435,7 +494,7 @@ function primFrames(start = 0) {
     frames.push({
       visited: new Set(visited), mst: new Set(mst), current: best.v,
       msg: `เพิ่ม edge ${G_NODES[best.u].label}—${G_NODES[best.v].label} (w=${best.w}) | total = ${total}`,
-      total
+      total, codeLine: 22
     });
   }
   return frames;
@@ -456,21 +515,40 @@ Lessons29["prim-anim"] = function () {
         💬 {p.frame.msg}
       </div>
 
-      <h3 style={{ marginTop: 16 }}>โค้ด (priority queue)</h3>
+      <h3 style={{ marginTop: 16 }}>โค้ด Prim's MST (เต็ม)</h3>
       <CodeBlock code={[
-        "priority_queue<tuple<int,int,int>, ..., greater<>> pq;",
-        "vector<bool> in(n, false);",
-        "in[start] = true;",
-        "for (auto [v, w] : adj[start]) pq.push({w, start, v});",
-        "int total = 0;",
-        "while (!pq.empty()) {",
-        "  auto [w, u, v] = pq.top(); pq.pop();",
-        "  if (in[v]) continue;",
-        "  in[v] = true; total += w;",
-        "  // add edge (u, v)",
-        "  for (auto [x, ww] : adj[v]) if (!in[x]) pq.push({ww, v, x});",
-        "}",
-      ]} />
+        "#include <queue>",                                            // 0
+        "#include <vector>",                                            // 1
+        "using namespace std;",                                         // 2
+        "typedef tuple<int,int,int> tup;  // (w, u, v)",                // 3
+        "typedef pair<int,int> pii;       // (v, w)",                   // 4
+        "",                                                             // 5
+        "int prim(",                                                    // 6
+        "    vector<vector<pii>>& adj,  // adj[u] = {(v,w),...}",       // 7
+        "    int start) {",                                             // 8
+        "  int n = adj.size();",                                        // 9
+        "  vector<bool> inMST(n, false);",                              // 10
+        "  priority_queue<tup, vector<tup>, greater<>> pq;",            // 11
+        "  int total = 0;",                                             // 12
+        "",                                                             // 13
+        "  inMST[start] = true;            // ← เริ่ม",                  // 14
+        "  for (auto& [v, w] : adj[start])",                            // 15
+        "    pq.push({w, start, v});",                                  // 16
+        "",                                                             // 17
+        "  while (!pq.empty()) {",                                      // 18
+        "    auto [w, u, v] = pq.top(); pq.pop();",                     // 19
+        "    if (inMST[v]) continue;",                                  // 20
+        "",                                                             // 21
+        "    inMST[v] = true;              // ← เพิ่ม edge",             // 22
+        "    total += w;",                                              // 23
+        "    // add edge (u, v) to MST",                                // 24
+        "",                                                             // 25
+        "    for (auto& [x, ww] : adj[v])",                             // 26
+        "      if (!inMST[x]) pq.push({ww, v, x});",                    // 27
+        "  }",                                                          // 28
+        "  return total;",                                              // 29
+        "}",                                                            // 30
+      ]} highlight={[p.frame.codeLine]} />
 
       <Quiz29
         q="Prim's vs Kruskal's MST — ต่างกันยังไง?"
@@ -505,16 +583,18 @@ function lisFrames(a) {
   const n = a.length;
   const dp = new Array(n).fill(1);
   const frames = [];
-  frames.push({ dp: [...dp], i: -1, j: -1, msg: 'เริ่ม: ทุก dp[i] = 1 (อย่างน้อยตัวเอง)' });
+  // codeLine ชี้ LIS_CODE (ดู Lessons29["dp-lis-anim"])
+  frames.push({ dp: [...dp], i: -1, j: -1, msg: 'เริ่ม: ทุก dp[i] = 1 (อย่างน้อยตัวเอง)', codeLine: 7 });
   for (let i = 1; i < n; i++) {
     for (let j = 0; j < i; j++) {
-      if (a[j] < a[i] && dp[j] + 1 > dp[i]) {
+      const updated = a[j] < a[i] && dp[j] + 1 > dp[i];
+      if (updated) {
         dp[i] = dp[j] + 1;
       }
-      frames.push({ dp: [...dp], i, j, msg: `เปรียบ a[${j}]=${a[j]} < a[${i}]=${a[i]}? ${a[j] < a[i] ? `dp[${i}]=${dp[i]}` : 'ไม่ใช่'}` });
+      frames.push({ dp: [...dp], i, j, msg: `เปรียบ a[${j}]=${a[j]} < a[${i}]=${a[i]}? ${a[j] < a[i] ? `dp[${i}]=${dp[i]}` : 'ไม่ใช่'}`, codeLine: updated ? 13 : 12 });
     }
   }
-  frames.push({ dp: [...dp], i: -1, j: -1, msg: `เสร็จ — LIS = ${Math.max(...dp)}` });
+  frames.push({ dp: [...dp], i: -1, j: -1, msg: `เสร็จ — LIS = ${Math.max(...dp)}`, codeLine: 19 });
   return frames;
 }
 
@@ -560,15 +640,30 @@ Lessons29["dp-lis-anim"] = function () {
         💬 {p.frame.msg}
       </div>
 
-      <h3 style={{ marginTop: 16 }}>โค้ด</h3>
+      <h3 style={{ marginTop: 16 }}>โค้ด LIS — O(n²) DP (เต็ม)</h3>
       <CodeBlock code={[
-        "vector<int> dp(n, 1);",
-        "for (int i = 1; i < n; i++)",
-        "  for (int j = 0; j < i; j++)",
-        "    if (a[j] < a[i])",
-        "      dp[i] = max(dp[i], dp[j] + 1);",
-        "int LIS = *max_element(dp.begin(), dp.end());",
-      ]} />
+        "#include <vector>",                              // 0
+        "#include <algorithm>",                           // 1
+        "using namespace std;",                           // 2
+        "",                                               // 3
+        "// dp[i] = LIS ที่ลงท้ายด้วย a[i]",                // 4
+        "int lis(vector<int>& a) {",                      // 5
+        "  int n = a.size();",                            // 6
+        "  vector<int> dp(n, 1);    // ← เริ่ม dp = 1",   // 7
+        "  vector<int> prev(n, -1); // สำหรับ reconstruct",// 8
+        "",                                               // 9
+        "  for (int i = 1; i < n; i++) {",                // 10
+        "    for (int j = 0; j < i; j++) {",              // 11
+        "      if (a[j] < a[i] &&",                       // 12 ← compare
+        "          dp[j] + 1 > dp[i]) {                                                  // ← update", // 13
+        "        dp[i] = dp[j] + 1;",                     // 14
+        "        prev[i] = j;",                           // 15
+        "      }",                                        // 16
+        "    }",                                          // 17
+        "  }",                                            // 18
+        "  return *max_element(dp.begin(), dp.end()); // ← จบ", // 19
+        "}",                                              // 20
+      ]} highlight={[p.frame.codeLine]} />
 
       <Quiz29
         q="LIS O(n²) DP จะลดเป็น O(n log n) ได้ยังไง?"
@@ -603,19 +698,22 @@ function lcsFrames(s, t) {
   const m = s.length, n = t.length;
   const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
   const frames = [];
-  frames.push({ dp: dp.map(r => [...r]), i: -1, j: -1, msg: 'เริ่ม — แถว 0 และ คอลัมน์ 0 เป็น 0' });
+  // codeLine ชี้ LCS_CODE (ดู Lessons29["dp-lcs-anim"])
+  frames.push({ dp: dp.map(r => [...r]), i: -1, j: -1, msg: 'เริ่ม — แถว 0 และ คอลัมน์ 0 เป็น 0', codeLine: 7 });
   for (let i = 1; i <= m; i++) {
     for (let j = 1; j <= n; j++) {
-      if (s[i - 1] === t[j - 1]) {
+      const match = s[i - 1] === t[j - 1];
+      if (match) {
         dp[i][j] = dp[i - 1][j - 1] + 1;
       } else {
         dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
       }
       frames.push({
         dp: dp.map(r => [...r]), i, j,
-        msg: s[i - 1] === t[j - 1]
+        msg: match
           ? `${s[i - 1]}=${t[j - 1]} ✓ → dp[${i}][${j}] = dp[${i - 1}][${j - 1}] + 1 = ${dp[i][j]}`
           : `${s[i - 1]}≠${t[j - 1]} → max(dp[${i - 1}][${j}], dp[${i}][${j - 1}]) = ${dp[i][j]}`,
+        codeLine: match ? 12 : 14
       });
     }
   }
@@ -667,15 +765,30 @@ Lessons29["dp-lcs-anim"] = function () {
         💬 {p.frame.msg}
       </div>
 
-      <h3 style={{ marginTop: 16 }}>Recurrence</h3>
+      <h3 style={{ marginTop: 16 }}>โค้ด LCS (เต็ม)</h3>
       <CodeBlock code={[
-        "if (s[i-1] == t[j-1])",
-        "  dp[i][j] = dp[i-1][j-1] + 1;",
-        "else",
-        "  dp[i][j] = max(dp[i-1][j], dp[i][j-1]);",
-        "",
-        "// LCS length = dp[m][n]",
-      ]} />
+        "#include <vector>",                                       // 0
+        "#include <string>",                                       // 1
+        "#include <algorithm>",                                    // 2
+        "using namespace std;",                                    // 3
+        "",                                                        // 4
+        "int lcs(string s, string t) {",                           // 5
+        "  int m = s.size(), n = t.size();",                       // 6
+        "  vector<vector<int>> dp(m+1, vector<int>(n+1, 0)); // ← init", // 7
+        "",                                                        // 8
+        "  for (int i = 1; i <= m; i++) {",                        // 9
+        "    for (int j = 1; j <= n; j++) {",                      // 10
+        "      if (s[i-1] == t[j-1]) {",                           // 11
+        "        dp[i][j] = dp[i-1][j-1] + 1;   // ← match",       // 12
+        "      } else {",                                          // 13
+        "        dp[i][j] = max(dp[i-1][j],     // ← no match",    // 14
+        "                       dp[i][j-1]);",                     // 15
+        "      }",                                                 // 16
+        "    }",                                                   // 17
+        "  }",                                                     // 18
+        "  return dp[m][n];  // LCS length",                       // 19
+        "}",                                                       // 20
+      ]} highlight={[p.frame.codeLine]} />
 
       <Quiz29
         q="LCS ของ 'ABC' และ 'AC' = ?"
@@ -700,19 +813,22 @@ function knapsackFrames(w, v, W) {
   const n = w.length;
   const dp = Array.from({ length: n + 1 }, () => new Array(W + 1).fill(0));
   const frames = [];
-  frames.push({ dp: dp.map(r => [...r]), i: -1, j: -1, msg: 'เริ่ม — แถว 0 ทุกค่า = 0 (ไม่มี item)' });
+  // codeLine ชี้ KNAPSACK_CODE (ดู Lessons29["dp-knapsack-anim"])
+  frames.push({ dp: dp.map(r => [...r]), i: -1, j: -1, msg: 'เริ่ม — แถว 0 ทุกค่า = 0 (ไม่มี item)', codeLine: 7 });
   for (let i = 1; i <= n; i++) {
     for (let j = 0; j <= W; j++) {
-      if (w[i - 1] > j) {
+      const overflow = w[i - 1] > j;
+      if (overflow) {
         dp[i][j] = dp[i - 1][j];
       } else {
         dp[i][j] = Math.max(dp[i - 1][j], dp[i - 1][j - w[i - 1]] + v[i - 1]);
       }
       frames.push({
         dp: dp.map(r => [...r]), i, j,
-        msg: w[i - 1] > j
+        msg: overflow
           ? `item ${i} (w=${w[i - 1]}) > cap ${j} → ใช้ค่าเดิม = ${dp[i][j]}`
           : `เลือก max(ไม่เอา=${dp[i - 1][j]}, เอา=${dp[i - 1][j - w[i - 1]] + v[i - 1]}) = ${dp[i][j]}`,
+        codeLine: overflow ? 13 : 16
       });
     }
   }
@@ -764,14 +880,32 @@ Lessons29["dp-knapsack-anim"] = function () {
         💬 {p.frame.msg}
       </div>
 
-      <h3 style={{ marginTop: 16 }}>Recurrence</h3>
+      <h3 style={{ marginTop: 16 }}>โค้ด 0/1 Knapsack (เต็ม)</h3>
       <CodeBlock code={[
-        "for (int i = 1; i <= n; i++)",
-        "  for (int j = 0; j <= W; j++) {",
-        "    if (w[i-1] > j) dp[i][j] = dp[i-1][j];",
-        "    else dp[i][j] = max(dp[i-1][j], dp[i-1][j-w[i-1]] + v[i-1]);",
-        "  }",
-      ]} />
+        "#include <vector>",                                                 // 0
+        "#include <algorithm>",                                              // 1
+        "using namespace std;",                                              // 2
+        "",                                                                  // 3
+        "int knapsack(vector<int>& w, vector<int>& v, int W) {",             // 4
+        "  int n = w.size();",                                               // 5
+        "  // dp[i][j] = max value โดยใช้ item 1..i, capacity j",             // 6
+        "  vector<vector<int>> dp(n+1, vector<int>(W+1, 0)); // ← init",     // 7
+        "",                                                                  // 8
+        "  for (int i = 1; i <= n; i++) {",                                  // 9
+        "    for (int j = 0; j <= W; j++) {",                                // 10
+        "      if (w[i-1] > j) {",                                           // 11
+        "        // item เกิน capacity — ไม่เอาได้อย่างเดียว",                  // 12
+        "        dp[i][j] = dp[i-1][j];               // ← overflow",        // 13
+        "      } else {",                                                    // 14
+        "        // เลือก max(ไม่เอา, เอา item i)",                            // 15
+        "        dp[i][j] = max(dp[i-1][j],          // ← เลือก max",        // 16
+        "                       dp[i-1][j-w[i-1]] + v[i-1]);",               // 17
+        "      }",                                                           // 18
+        "    }",                                                             // 19
+        "  }",                                                               // 20
+        "  return dp[n][W];",                                                // 21
+        "}",                                                                 // 22
+      ]} highlight={[p.frame.codeLine]} />
 
       <Quiz29
         q="0/1 Knapsack complexity?"
@@ -803,19 +937,22 @@ function editFrames(s, t) {
   for (let i = 0; i <= m; i++) dp[i][0] = i;
   for (let j = 0; j <= n; j++) dp[0][j] = j;
   const frames = [];
-  frames.push({ dp: dp.map(r => [...r]), i: -1, j: -1, msg: 'เริ่ม: dp[i][0] = i (ลบทั้งหมด), dp[0][j] = j (เพิ่มทั้งหมด)' });
+  // codeLine ชี้ EDIT_CODE (ดู Lessons29["dp-edit-anim"])
+  frames.push({ dp: dp.map(r => [...r]), i: -1, j: -1, msg: 'เริ่ม: dp[i][0] = i (ลบทั้งหมด), dp[0][j] = j (เพิ่มทั้งหมด)', codeLine: 10 });
   for (let i = 1; i <= m; i++) {
     for (let j = 1; j <= n; j++) {
-      if (s[i - 1] === t[j - 1]) {
+      const match = s[i - 1] === t[j - 1];
+      if (match) {
         dp[i][j] = dp[i - 1][j - 1];
       } else {
         dp[i][j] = 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
       }
       frames.push({
         dp: dp.map(r => [...r]), i, j,
-        msg: s[i - 1] === t[j - 1]
+        msg: match
           ? `${s[i - 1]}=${t[j - 1]} → dp = dp[${i - 1}][${j - 1}] = ${dp[i][j]}`
           : `${s[i - 1]}≠${t[j - 1]} → 1 + min(del=${dp[i - 1][j]}, ins=${dp[i][j - 1]}, rep=${dp[i - 1][j - 1]}) = ${dp[i][j]}`,
+        codeLine: match ? 16 : 19
       });
     }
   }
@@ -867,15 +1004,38 @@ Lessons29["dp-edit-anim"] = function () {
         💬 {p.frame.msg}
       </div>
 
-      <h3 style={{ marginTop: 16 }}>Recurrence</h3>
+      <h3 style={{ marginTop: 16 }}>โค้ด Edit Distance (เต็ม)</h3>
       <CodeBlock code={[
-        "if (s[i-1] == t[j-1])",
-        "  dp[i][j] = dp[i-1][j-1];",
-        "else",
-        "  dp[i][j] = 1 + min({dp[i-1][j],   // delete",
-        "                     dp[i][j-1],   // insert",
-        "                     dp[i-1][j-1]}); // replace",
-      ]} />
+        "#include <vector>",                                          // 0
+        "#include <string>",                                          // 1
+        "#include <algorithm>",                                       // 2
+        "using namespace std;",                                       // 3
+        "",                                                           // 4
+        "int editDistance(string s, string t) {",                     // 5
+        "  int m = s.size(), n = t.size();",                          // 6
+        "  vector<vector<int>> dp(m+1, vector<int>(n+1, 0));",        // 7
+        "",                                                           // 8
+        "  // base: ลบทั้งหมด / เพิ่มทั้งหมด",                            // 9
+        "  for (int i = 0; i <= m; i++) dp[i][0] = i; // ← init",     // 10
+        "  for (int j = 0; j <= n; j++) dp[0][j] = j;",               // 11
+        "",                                                           // 12
+        "  for (int i = 1; i <= m; i++) {",                           // 13
+        "    for (int j = 1; j <= n; j++) {",                         // 14
+        "      if (s[i-1] == t[j-1]) {",                              // 15
+        "        dp[i][j] = dp[i-1][j-1];        // ← match (ฟรี)",   // 16
+        "      } else {",                                             // 17
+        "        // 1 + min(delete, insert, replace)",                // 18
+        "        dp[i][j] = 1 + min({                                                  // ← no match", // 19
+        "          dp[i-1][j],      // delete s[i-1]",                // 20
+        "          dp[i][j-1],      // insert t[j-1]",                // 21
+        "          dp[i-1][j-1]     // replace s[i-1] → t[j-1]",      // 22
+        "        });",                                                // 23
+        "      }",                                                    // 24
+        "    }",                                                      // 25
+        "  }",                                                        // 26
+        "  return dp[m][n];",                                         // 27
+        "}",                                                          // 28
+      ]} highlight={[p.frame.codeLine]} />
 
       <Quiz29
         q="Edit distance ระหว่าง 'cat' กับ 'cat' เท่าไหร่?"
