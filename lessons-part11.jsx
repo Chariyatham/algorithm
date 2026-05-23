@@ -251,6 +251,218 @@ for k = 0 to V-1:
 };
 
 /* ============================================================
+   57b — WARSHALL'S TRANSITIVE CLOSURE
+   distinct from Floyd-Warshall — boolean reachability instead of shortest path
+============================================================ */
+function WarshallTCViz() {
+  // KMUTNB graph_explor sheet example: 5 vertices, directed edges
+  // 0→1, 1→2, 2→0, 3→4 (two components)
+  // Or use sheet's diagram: vertices A,B,C,D with edges A→B, B→C, C→D
+  // We'll demo: 4 vertices, edges 0→1, 1→2, 2→3
+  const N = 4;
+  const edges = [[0, 1], [1, 2], [2, 3], [3, 1]];
+  // initial adjacency
+  const init = Array.from({ length: N }, () => Array(N).fill(0));
+  for (const [u, v] of edges) init[u][v] = 1;
+
+  // Compute snapshot after considering intermediate vertex k = 0, 1, ..., N-1
+  const snapshots = [init.map(r => [...r])];
+  {
+    const R = init.map(r => [...r]);
+    for (let k = 0; k < N; k++) {
+      for (let i = 0; i < N; i++) {
+        for (let j = 0; j < N; j++) {
+          R[i][j] = R[i][j] || (R[i][k] && R[k][j]);
+        }
+      }
+      snapshots.push(R.map(r => [...r]));
+    }
+  }
+  const [step, setStep] = useS11(0);
+  const cur = snapshots[step];
+  const stepLabel = step === 0
+    ? 'เริ่มต้น — R = adjacency matrix ของกราฟ'
+    : `หลังพิจารณา intermediate vertex k = ${step - 1}`;
+  // Determine "new" cells (filled in this step compared with previous)
+  const prev = step > 0 ? snapshots[step - 1] : null;
+
+  return (
+    <div className="dsv">
+      <div className="ctrls">
+        <button onClick={() => setStep(Math.max(0, step - 1))} disabled={step === 0}>◀</button>
+        <span style={{ color: 'var(--text-2)' }}>step {step + 1} / {snapshots.length}</span>
+        <button onClick={() => setStep(Math.min(snapshots.length - 1, step + 1))} disabled={step >= snapshots.length - 1}>▶</button>
+        <button onClick={() => setStep(0)}>↺</button>
+      </div>
+      <div className="callout info" style={{ marginTop: 8 }}>
+        <div className="ttl">{stepLabel}</div>
+        <span style={{ color: 'var(--text-1)' }}>
+          {step === 0
+            ? `Edge: ${edges.map(([u, v]) => `${u}→${v}`).join(', ')}`
+            : `กฎ: R[i][j] = R[i][j] OR (R[i][${step - 1}] AND R[${step - 1}][j])`}
+        </span>
+      </div>
+      <div style={{ display: 'flex', gap: 24, marginTop: 12, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+        {/* Matrix */}
+        <div>
+          <div style={{ fontSize: 12, color: 'var(--text-2)', marginBottom: 4 }}>R matrix:</div>
+          <table className="tbl" style={{ width: 'auto' }}>
+            <thead>
+              <tr>
+                <th></th>
+                {[...Array(N).keys()].map(j => <th key={j} style={{ textAlign: 'center', width: 36 }}>{j}</th>)}
+              </tr>
+            </thead>
+            <tbody>
+              {cur.map((row, i) => (
+                <tr key={i}>
+                  <th style={{ textAlign: 'center' }}>{i}</th>
+                  {row.map((v, j) => {
+                    const isNew = prev && v === 1 && prev[i][j] === 0;
+                    const isK = step > 0 && (i === step - 1 || j === step - 1);
+                    return (
+                      <td key={j} style={{
+                        textAlign: 'center',
+                        background: isNew ? 'var(--success)' : isK ? 'var(--bg-1)' : 'var(--bg-2)',
+                        color: isNew ? '#000' : v === 1 ? 'var(--accent)' : 'var(--text-2)',
+                        fontFamily: 'monospace',
+                        fontWeight: v === 1 ? 'bold' : 'normal',
+                      }}>{v}</td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {/* Graph diagram (simple SVG) */}
+        <div>
+          <div style={{ fontSize: 12, color: 'var(--text-2)', marginBottom: 4 }}>Directed graph:</div>
+          <svg viewBox="0 0 200 180" style={{ background: 'var(--bg-2)', borderRadius: 6, width: 200, height: 180 }}>
+            <defs>
+              <marker id="arr-w" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-1)" />
+              </marker>
+            </defs>
+            {[{ x: 40, y: 40, l: '0' }, { x: 160, y: 40, l: '1' }, { x: 160, y: 140, l: '2' }, { x: 40, y: 140, l: '3' }].map((p, i) => (
+              <g key={i}>
+                <circle cx={p.x} cy={p.y} r="16" fill={step > 0 && i === step - 1 ? 'var(--warn)' : 'var(--accent)'} />
+                <text x={p.x} y={p.y + 5} textAnchor="middle" fontSize="14" fill="#000" fontWeight="bold">{p.l}</text>
+              </g>
+            ))}
+            {/* edges with arrows */}
+            <line x1="56" y1="40" x2="144" y2="40" stroke="var(--text-1)" strokeWidth="1.5" markerEnd="url(#arr-w)" />
+            <line x1="160" y1="56" x2="160" y2="124" stroke="var(--text-1)" strokeWidth="1.5" markerEnd="url(#arr-w)" />
+            <line x1="144" y1="140" x2="56" y2="140" stroke="var(--text-1)" strokeWidth="1.5" markerEnd="url(#arr-w)" />
+            {/* 3→1: curved */}
+            <path d="M 50,128 Q 100,80 150,52" fill="none" stroke="var(--text-1)" strokeWidth="1.5" markerEnd="url(#arr-w)" />
+          </svg>
+        </div>
+      </div>
+      {step === snapshots.length - 1 && (
+        <div className="callout success" style={{ marginTop: 12 }}>
+          <div className="ttl">✓ Transitive closure ครบ</div>
+          R[i][j] = 1 ⇔ มี path จาก i ไป j (อาจตรง หรือผ่านหลายขั้นก็ได้)
+        </div>
+      )}
+      <div style={{ marginTop: 10, fontSize: 12, color: 'var(--text-2)' }}>
+        <span style={{ display: 'inline-block', width: 10, height: 10, background: 'var(--success)', marginRight: 6, borderRadius: 2 }}></span>cell ใหม่ที่เปลี่ยน 0 → 1 ในรอบนี้
+        &nbsp; <span style={{ display: 'inline-block', width: 10, height: 10, background: 'var(--bg-1)', marginRight: 6, borderRadius: 2, border: '1px solid var(--bg-3)' }}></span>row/col ของ k
+      </div>
+    </div>
+  );
+}
+
+Lessons11["warshall-tc"] = function () {
+  return (
+    <React.Fragment>
+      <div className="callout info">
+        <div className="ttl">Warshall's Transitive Closure — มี "path" ระหว่าง u → v ไหม?</div>
+        ไม่ใช่ Floyd-Warshall (shortest path)! Warshall's TC ตอบคำถาม <b>reachability</b> เป็น boolean:
+        R[i][j] = 1 ⇔ มีเส้นทางจาก i ไป j (จะตรงหรือผ่าน intermediate vertex ก็ได้)
+      </div>
+
+      <h3>ความแตกต่างจาก Floyd-Warshall</h3>
+      <table className="cmp">
+        <thead><tr><th></th><th>Warshall TC</th><th>Floyd-Warshall</th></tr></thead>
+        <tbody>
+          <tr><td>ตอบ</td><td>มี path ไหม (boolean)</td><td>ระยะทางสั้นสุดเท่าไร (numeric)</td></tr>
+          <tr><td>ค่าในเมทริกซ์</td><td>0 / 1</td><td>distance (≥ 0, ∞)</td></tr>
+          <tr><td>operator ใน DP</td><td>OR, AND</td><td>min, +</td></tr>
+          <tr><td>กราฟ</td><td>directed (unweighted) ก็พอ</td><td>weighted</td></tr>
+          <tr><td>Time / Space</td><td>O(V³) / O(V²)</td><td>O(V³) / O(V²)</td></tr>
+        </tbody>
+      </table>
+
+      <h3>แนวคิด — DP บน intermediate vertex</h3>
+      <p style={{ color: 'var(--text-1)' }}>เช่นเดียวกับ Floyd: พิจารณาว่ามี vertex <code>k</code> เป็นทางเชื่อมจาก i → j ได้ไหม</p>
+      <div style={{ background: 'var(--bg-2)', padding: 14, borderRadius: 10 }}>
+        <div style={{ fontFamily: 'monospace', fontSize: 15, lineHeight: 1.7 }}>
+          R<sub>k</sub>[i][j] = R<sub>k-1</sub>[i][j] <span style={{ color: 'var(--accent)' }}>OR</span>
+          (R<sub>k-1</sub>[i][k] <span style={{ color: 'var(--accent-2)' }}>AND</span> R<sub>k-1</sub>[k][j])
+        </div>
+        <div style={{ marginTop: 8, fontSize: 12, color: 'var(--text-2)' }}>
+          "มี path i→j โดยใช้ vertex 0..k เป็น intermediate ก็ต่อเมื่อ มี path เดิม หรือ ผ่าน k"
+        </div>
+      </div>
+
+      <h3>Pseudocode</h3>
+      <pre className="code">{`// Initialize: R = adjacency matrix
+for k = 0 to n-1:
+  for i = 0 to n-1:
+    for j = 0 to n-1:
+      R[i][j] = R[i][j] OR (R[i][k] AND R[k][j])`}</pre>
+
+      <h3>Demo — graph 4 vertices (0→1→2→3→1)</h3>
+      <WarshallTCViz />
+
+      <h3>C++ Implementation</h3>
+      <pre className="code">{`void warshall(vector<vector<int>>& R, int n) {
+  for (int k = 0; k < n; k++)
+    for (int i = 0; i < n; i++)
+      for (int j = 0; j < n; j++)
+        R[i][j] = R[i][j] || (R[i][k] && R[k][j]);
+}`}</pre>
+
+      <h3>การประยุกต์</h3>
+      <ul style={{ color: 'var(--text-1)' }}>
+        <li><b>Reachability query</b> — ตอบล่วงหน้าว่า u ไปถึง v ได้ไหม (precompute O(V³), query O(1))</li>
+        <li><b>Connected component</b> ในกราฟทิศทาง: i, j อยู่ component เดียวกัน ⇔ R[i][j] ∧ R[j][i]</li>
+        <li><b>Compiler / Dataflow</b> — ตัวแปร x ถูก def แล้ว reach ถึง use ไหน</li>
+        <li><b>Relation closure</b> — เปลี่ยน relation ให้เป็น transitive</li>
+      </ul>
+
+      <CS11 title="Warshall TC vs Floyd-Warshall" sections={[
+        { label: "WARSHALL TC", value: "R[i][j] ∈ {0,1}<br>OR / AND<br>O(V³) / O(V²)<br>ตอบ: มี path ไหม", mono: true },
+        { label: "FLOYD-WARSHALL", value: "dist[i][j] ∈ ℤ ∪ {∞}<br>min / +<br>O(V³) / O(V²)<br>ตอบ: ระยะสั้นสุด", mono: true },
+        { label: "เทียบ BFS×V", value: "Warshall: O(V³)<br>BFS×V: O(V·(V+E)) — ดีกว่าเมื่อ sparse" },
+      ]} />
+
+      <PF11 items={[
+        { trap: "เขียน R[i][j] = R[i][k] && R[k][j] (ไม่มี OR)", fix: "ต้อง OR กับค่าเดิม — ไม่งั้นค่าเดิมหาย" },
+        { trap: "ใช้กับ shortest path", fix: "Warshall TC ไม่บอกระยะทาง — ใช้ Floyd-Warshall แทน" },
+        { trap: "ลืม init diagonal: R[i][i] = 1", fix: "บางตำราถือว่า i reach i ในตัวเอง — เช็คโจทย์ว่านิยามอย่างไร" },
+      ]} />
+
+      <Quiz11 q="กำหนดกราฟทิศทาง 0→1, 1→2, 2→3, 3→1. หา R[0][3]?"
+        options={["0", "1", "ขึ้นกับ k", "ไม่นิยาม"]}
+        answer={1}
+        explain="path 0→1→2→3 มี → R[0][3] = 1" />
+
+      <Quiz11 q="ความต่างหลักของ Warshall TC กับ Floyd-Warshall?"
+        options={[
+          "ความเร็วต่างกัน",
+          "ใช้ operator ต่างกัน (OR/AND vs min/+) — ตอบคำถามคนละแบบ",
+          "Warshall ใช้กับ undirected เท่านั้น",
+          "Floyd ต้องเรียงเรนเดอร์ก่อน"
+        ]}
+        answer={1}
+        explain="โครงสร้าง 3-loop เหมือนกัน แต่ Warshall = boolean reachability, Floyd = numeric distance" />
+    </React.Fragment>
+  );
+};
+
+/* ============================================================
    58 — COUNTING / RADIX SORT
 ============================================================ */
 Lessons11["counting-sort"] = function () {
@@ -329,6 +541,178 @@ void countingSortByDigit(vector<int>& a, int exp) {
       <Quiz11 q="Counting sort 100 ค่าที่อยู่ในช่วง 0-1000000 ดีไหม?"
         options={["ดี O(n)", "ไม่ดี memory O(10⁶)", "ดีถ้าเรียงแล้ว", "ไม่มีผล"]}
         answer={1} explain="k=10⁶ → ใช้ memory เกินจำเป็น; ใช้ Quicksort หรือ Merge sort ดีกว่า" />
+    </React.Fragment>
+  );
+};
+
+/* ============================================================
+   58b — BUCKET SORT (digit-based, ตามชีท week_2)
+============================================================ */
+function BucketSortViz() {
+  // KMUTNB sheet example: 29, 25, 3, 49, 9, 37, 21, 43
+  const INITIAL = [29, 25, 3, 49, 9, 37, 21, 43];
+  const [step, setStep] = useS11(0);
+  const arr = INITIAL;
+  const n = arr.length;
+  const digits = ['ones', 'tens'];
+  // Compute pass results
+  const passes = [];
+  {
+    let cur = [...arr];
+    for (let exp = 1, label = 0; label < 2; exp *= 10, label++) {
+      const buckets = Array.from({ length: 10 }, () => []);
+      for (const x of cur) buckets[Math.floor(x / exp) % 10].push(x);
+      const collected = [].concat(...buckets);
+      passes.push({ digit: label === 0 ? 'หลักหน่วย (ones)' : 'หลักสิบ (tens)', exp, before: [...cur], buckets, after: collected });
+      cur = collected;
+    }
+  }
+  // 5 steps: 0=initial, 1=after pass1 distribute, 2=after pass1 collect, 3=after pass2 distribute, 4=sorted
+  const STEPS = [
+    { title: '1) เริ่มต้น', desc: `อาเรย์: [${arr.join(', ')}]` },
+    { title: '2) Pass หลักหน่วย — แจก buckets[d] = (x ÷ 1) mod 10', desc: 'เลขแต่ละตัวลงตามหลักหน่วยของมัน' },
+    { title: '3) Pass หลักหน่วย — เก็บกลับเป็นอาเรย์', desc: `เรียงตาม bucket index 0→9: [${passes[0].after.join(', ')}]` },
+    { title: '4) Pass หลักสิบ — แจก buckets[d] = (x ÷ 10) mod 10', desc: 'เลขลงตามหลักสิบ — ข้อมูลถูก stable เรียงตามหลักหน่วยอยู่แล้ว' },
+    { title: '5) เก็บกลับ — เรียงเสร็จ', desc: `ผลลัพธ์: [${passes[1].after.join(', ')}] ✓` },
+  ];
+  const cur = STEPS[step];
+  // pick which pass's buckets to display
+  const showBuckets = step === 1 ? passes[0].buckets : step === 3 ? passes[1].buckets : null;
+  const before = step <= 2 ? passes[0].before : passes[1].before;
+  const after = step <= 1 ? null : step === 2 ? passes[0].after : step >= 4 ? passes[1].after : null;
+
+  return (
+    <div className="dsv">
+      <div className="ctrls">
+        <button onClick={() => setStep(Math.max(0, step - 1))} disabled={step === 0}>◀</button>
+        <span style={{ color: 'var(--text-2)' }}>step {step + 1} / {STEPS.length}</span>
+        <button onClick={() => setStep(Math.min(STEPS.length - 1, step + 1))} disabled={step >= STEPS.length - 1}>▶</button>
+        <button onClick={() => setStep(0)}>↺</button>
+      </div>
+      <div className="callout info" style={{ marginTop: 8 }}>
+        <div className="ttl">{cur.title}</div>
+        <span style={{ color: 'var(--text-1)' }}>{cur.desc}</span>
+      </div>
+      {/* before array */}
+      <div style={{ marginTop: 10, fontSize: 12, color: 'var(--text-2)' }}>Input:</div>
+      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 4 }}>
+        {before.map((v, i) => (
+          <div key={i} className="cell" style={{ background: 'var(--bg-2)', color: 'var(--text-0)', minWidth: 36 }}>{v}</div>
+        ))}
+      </div>
+      {/* buckets grid */}
+      {showBuckets && (
+        <div style={{ marginTop: 12 }}>
+          <div style={{ fontSize: 12, color: 'var(--text-2)', marginBottom: 4 }}>Buckets (index = digit ที่กำลังพิจารณา):</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(10, 1fr)', gap: 4 }}>
+            {showBuckets.map((b, d) => (
+              <div key={d} style={{ background: 'var(--bg-1)', border: '1px solid var(--bg-3)', borderRadius: 6, padding: 4, minHeight: 60 }}>
+                <div style={{ fontSize: 10, color: 'var(--text-2)', textAlign: 'center', marginBottom: 4 }}>{d}</div>
+                {b.map((v, i) => (
+                  <div key={i} className="cell" style={{ background: 'var(--accent)', color: '#000', fontSize: 11, padding: '2px 4px', margin: '2px 0', textAlign: 'center' }}>{v}</div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      {/* after array */}
+      {after && (
+        <>
+          <div style={{ marginTop: 12, fontSize: 12, color: 'var(--text-2)' }}>หลัง collect:</div>
+          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 4 }}>
+            {after.map((v, i) => (
+              <div key={i} className="cell" style={{ background: step === 4 ? 'var(--success)' : 'var(--accent-3)', color: '#000', minWidth: 36 }}>{v}</div>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+Lessons11["bucket-sort"] = function () {
+  return (
+    <React.Fragment>
+      <div className="callout info">
+        <div className="ttl">Bucket Sort — เรียงด้วย "ถัง" (digit-based, ตามชีท KMUTNB)</div>
+        ใช้ "ถัง 10 ใบ" (bucket 0–9) แจกข้อมูลตามหลักของเลข เริ่มจากหลักหน่วย → หลักสิบ → ... จนครบทุกหลัก
+        — เป็นวิธีหนึ่งของ <b>LSD Radix-by-digit</b>
+      </div>
+
+      <h3>แนวคิด</h3>
+      <ol style={{ color: 'var(--text-1)' }}>
+        <li>สร้างถัง 10 ใบ (index 0 ถึง 9)</li>
+        <li>แจกแต่ละเลขใน input ลงถัง <code>buckets[(x ÷ exp) mod 10]</code> เริ่มจาก exp = 1 (หลักหน่วย)</li>
+        <li>เก็บกลับเป็นอาเรย์ตามลำดับ bucket index (0 → 9)</li>
+        <li>ไป exp = 10, 100, ... ทำซ้ำจนหมดหลัก</li>
+        <li><b>สำคัญ</b>: ต้อง stable (ลำดับเดิมในถังเดียวกันต้องคงเดิม) ไม่งั้น sort ผิด</li>
+      </ol>
+
+      <h3>ตัวอย่าง — week_2 p.52-54 (n = 8)</h3>
+      <BucketSortViz />
+
+      <h3>Pseudocode</h3>
+      <pre className="code">{`void bucketSort(int a[], int n) {
+  int mx = max(a, a+n);
+  // ทำทีละหลัก: ones → tens → hundreds → ...
+  for (int exp = 1; mx / exp > 0; exp *= 10) {
+    vector<int> buckets[10];
+    for (int i = 0; i < n; i++)
+      buckets[(a[i] / exp) % 10].push_back(a[i]);
+
+    int k = 0;
+    for (int d = 0; d < 10; d++)
+      for (int v : buckets[d])
+        a[k++] = v;     // stable: เก็บตามลำดับเดิม
+  }
+}`}</pre>
+
+      <h3>Complexity</h3>
+      <table className="tbl">
+        <thead><tr><th>กรณี</th><th>เวลา</th><th>หมายเหตุ</th></tr></thead>
+        <tbody>
+          <tr><td>เวลา</td><td>O(d · (n + k))</td><td>d = จำนวนหลัก, k = 10</td></tr>
+          <tr><td>เวลา (n ใหญ่, ตัวเลขจำกัด)</td><td>O(n)</td><td>เมื่อ d คงที่</td></tr>
+          <tr><td>พื้นที่</td><td>O(n + k)</td><td>สำหรับ buckets</td></tr>
+        </tbody>
+      </table>
+
+      <h3>เปรียบเทียบกับ Counting / Radix</h3>
+      <table className="cmp">
+        <thead><tr><th>แบบ</th><th>หลักการ</th><th>เมื่อใช้</th></tr></thead>
+        <tbody>
+          <tr><td>Bucket (digit-based)</td><td>10 ถัง ตามหลัก</td><td>integer หลายหลัก, k คงที่</td></tr>
+          <tr><td>Counting</td><td>count[ค่า] ของแต่ละค่า</td><td>integer, k ไม่ใหญ่</td></tr>
+          <tr><td>Radix (LSD)</td><td>Counting Sort เป็น subroutine ทีละหลัก</td><td>integer, k ใหญ่</td></tr>
+        </tbody>
+      </table>
+
+      <PF11 items={[
+        { trap: "ใช้กับ floating point หรือเลขลบ", fix: "ต้อง normalize เป็น int positive ก่อน — หรือใช้ Counting/Comparison sort" },
+        { trap: "ลืม stable — ลำดับในถังพัง", fix: "ใช้ queue (FIFO) ในถัง — push เข้าท้าย pop จากหน้า" },
+        { trap: "คิดว่า O(n) เสมอ", fix: "d = log₁₀(max) — ถ้าค่าใหญ่มาก d ก็มาก → ไม่ได้ดีกว่า quicksort เสมอ" },
+      ]} />
+
+      <Quiz11 q="Bucket Sort กับ [29, 25, 3, 49, 9, 37, 21, 43] — หลัง pass หลักหน่วย จะได้ลำดับ?"
+        options={[
+          "[3, 9, 21, 25, 29, 37, 43, 49]",
+          "[21, 3, 43, 25, 37, 29, 9, 49]",
+          "[3, 21, 25, 29, 37, 43, 49, 9]",
+          "[29, 25, 3, 49, 9, 37, 21, 43]"
+        ]}
+        answer={1}
+        explain="แจกตามหลักหน่วย: bucket[1]={21}, bucket[3]={3,43}, bucket[5]={25}, bucket[7]={37}, bucket[9]={29,49,9} → เก็บกลับเรียงตาม index ถัง" />
+
+      <Quiz11 q="ถ้าเลขใหญ่ถึง 1,000,000,000 (9 หลัก) Bucket Sort ทำงาน?"
+        options={[
+          "O(n)",
+          "O(9 · (n + 10)) = O(n)",
+          "O(n²)",
+          "ใช้ไม่ได้"
+        ]}
+        answer={1}
+        explain="d = 9 หลัก เป็น constant → O(d·n) = O(n) แต่ค่า constant ใหญ่กว่าตอน d เล็ก" />
     </React.Fragment>
   );
 };

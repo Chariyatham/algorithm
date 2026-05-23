@@ -565,6 +565,518 @@ int main() {
 }`,
     complexity: "O(p·q·k) → O(n³) เมื่อ matrix square"
   },
+  // ============================================================
+  // จาก "รวม code midterm.pdf" — เฉลย C++ ที่ instructor KMUTNB ให้
+  // ============================================================
+  {
+    id: "shell-sort-midterm",
+    title: "Shell Sort (รวม code midterm)",
+    cat: "Sort",
+    problem: "เรียงข้อมูลด้วย Shell Sort พร้อมพิมพ์อาเรย์หลังแต่ละ gap pass",
+    approach: "ใช้ gap sequence (Shell's n/2 ÷ 2 หรือ Knuth/Sedgewick) — เป็น Insertion Sort ที่กระโดดทีละ gap",
+    code: `#include <iostream>
+#include <vector>
+using namespace std;
+
+void shellSort(vector<int>& arr) {
+  int n = arr.size();
+  for (int gap = n / 2; gap > 0; gap /= 2) {
+    for (int i = gap; i < n; i++) {
+      int temp = arr[i];
+      int j = i;
+      while (j >= gap && arr[j - gap] > temp) {
+        arr[j] = arr[j - gap];
+        j -= gap;
+      }
+      arr[j] = temp;
+    }
+    // พิมพ์อาเรย์หลังแต่ละ gap (ตามชีท)
+    cout << "Array after gap " << gap << ": ";
+    for (int x : arr) cout << x << " ";
+    cout << "\\n";
+  }
+}
+
+int main() {
+  vector<int> arr = {16, 25, 2, 54, 36, 9, 12, 66};
+  shellSort(arr);
+  return 0;
+}`,
+    complexity: "O(n^1.3) - O(n²) ขึ้นกับ gap sequence"
+  },
+  {
+    id: "quick-sort-median-midterm",
+    title: "Quick Sort with Median-of-Three (รวม code midterm)",
+    cat: "Sort",
+    problem: "Quick Sort ที่ใช้ median-of-three pivot — กัน worst case O(n²) เมื่อข้อมูล sorted",
+    approach: "เรียง a[low], a[mid], a[high] ก่อน → median อยู่ที่ a[mid] → swap ไป a[high-1] → ใช้เป็น pivot",
+    code: `#include <iostream>
+#include <vector>
+using namespace std;
+
+void printArray(const vector<int>& a) {
+  for (int x : a) cout << x << " ";
+  cout << "\\n";
+}
+
+int medianOfThree(vector<int>& arr, int low, int high) {
+  int mid = low + (high - low) / 2;
+  if (arr[low] > arr[mid]) swap(arr[low], arr[mid]);
+  if (arr[low] > arr[high]) swap(arr[low], arr[high]);
+  if (arr[mid] > arr[high]) swap(arr[mid], arr[high]);
+  swap(arr[mid], arr[high - 1]);   // hide pivot at high-1
+  return arr[high - 1];
+}
+
+int partitionMedian(vector<int>& arr, int low, int high) {
+  int pivot = medianOfThree(arr, low, high);
+  int i = low, j = high - 1;
+  while (true) {
+    while (arr[++i] < pivot);
+    while (arr[--j] > pivot);
+    if (i < j) swap(arr[i], arr[j]);
+    else break;
+  }
+  swap(arr[i], arr[high - 1]);   // restore pivot
+  return i;
+}
+
+void quickSortMedian(vector<int>& arr, int low, int high) {
+  if (low + 2 <= high) {
+    int pi = partitionMedian(arr, low, high);
+    cout << "Pivot index: " << pi << ", Pivot value: " << arr[pi] << "\\n";
+    cout << "Array state: "; printArray(arr);
+    quickSortMedian(arr, low, pi - 1);
+    quickSortMedian(arr, pi + 1, high);
+  } else if (low < high) {
+    if (arr[low] > arr[high]) swap(arr[low], arr[high]);
+  }
+}
+
+int main() {
+  vector<int> arr = {5, 2, 9, 1, 5, 6};
+  quickSortMedian(arr, 0, arr.size() - 1);
+  cout << "Sorted: "; printArray(arr);
+  return 0;
+}`,
+    complexity: "average O(n log n) — worst-case ยัง O(n²) แต่หา input ที่ trigger ยากขึ้น"
+  },
+  {
+    id: "quick-select-median-midterm",
+    title: "Quick Select with Median-of-Three (รวม code midterm)",
+    cat: "D&C",
+    problem: "หาเลขน้อยสุดอันดับ k ใน arr — ใช้ partition แบบ median-of-three",
+    approach: "เหมือน Quick Sort แต่ recurse เฉพาะฝั่งที่มี k → average O(n)",
+    code: `#include <iostream>
+#include <vector>
+using namespace std;
+
+int medianOfThree(vector<int>& arr, int low, int high) {
+  int mid = low + (high - low) / 2;
+  if (arr[low] > arr[mid]) swap(arr[low], arr[mid]);
+  if (arr[low] > arr[high]) swap(arr[low], arr[high]);
+  if (arr[mid] > arr[high]) swap(arr[mid], arr[high]);
+  swap(arr[mid], arr[high - 1]);
+  return arr[high - 1];
+}
+
+int partition(vector<int>& arr, int low, int high) {
+  int pivot = medianOfThree(arr, low, high);
+  int i = low, j = high - 1;
+  while (true) {
+    while (arr[++i] < pivot);
+    while (arr[--j] > pivot);
+    if (i < j) swap(arr[i], arr[j]);
+    else break;
+  }
+  swap(arr[i], arr[high - 1]);
+  return i;
+}
+
+int quickSelect(vector<int>& arr, int low, int high, int k) {
+  if (low == high) return arr[low];
+  if (low + 2 > high) {
+    if (arr[low] > arr[high]) swap(arr[low], arr[high]);
+    return arr[low + k - 1];
+  }
+  int p = partition(arr, low, high);
+  int leftSize = p - low + 1;
+  if (k == leftSize) return arr[p];     // case k = Pivot position
+  if (k < leftSize)
+    return quickSelect(arr, low, p - 1, k);
+  return quickSelect(arr, p + 1, high, k - leftSize);
+}
+
+int main() {
+  int n, k; cin >> n >> k;
+  vector<int> arr(n);
+  for (int& x : arr) cin >> x;
+  cout << quickSelect(arr, 0, n - 1, k) << "\\n";
+  return 0;
+}`,
+    complexity: "average O(n), worst O(n²)"
+  },
+  {
+    id: "karatsuba-midterm",
+    title: "Karatsuba Integer Multiplication (รวม code midterm)",
+    cat: "D&C",
+    problem: "คูณเลข 2 ตัว a, b — ใช้ Karatsuba ลดจำนวนการคูณจาก 4 → 3 ครั้ง per level",
+    approach: "X·Y = z₂·10^(2m) + z₁·10^m + z₀ โดย z₁ = (a+b)(c+d) − z₂ − z₀",
+    code: `#include <iostream>
+#include <string>
+using namespace std;
+
+long long pow10(int n) {
+  long long r = 1; while (n--) r *= 10; return r;
+}
+
+long long karatsuba(long long x, long long y, int depth = 0) {
+  string indent(depth * 2, ' ');
+  cout << indent << "Karatsuba(" << x << ", " << y << ")\\n";
+
+  if (x < 10 || y < 10) {
+    cout << indent << "Base: " << x << "*" << y << " = " << x*y << "\\n";
+    return x * y;
+  }
+
+  int n = max((int)to_string(x).size(), (int)to_string(y).size());
+  if (n % 2) ++n;
+  int m = n / 2;
+  long long p = pow10(m);
+
+  long long a = x / p, b = x % p;
+  long long c = y / p, d = y % p;
+
+  cout << indent << "Split x=" << x << " → (" << a << ", " << b << ")\\n";
+  cout << indent << "Split y=" << y << " → (" << c << ", " << d << ")\\n";
+
+  long long z2 = karatsuba(a, c, depth + 1);
+  long long z0 = karatsuba(b, d, depth + 1);
+  long long z1 = karatsuba(a + b, c + d, depth + 1) - z2 - z0;
+
+  long long result = z2 * pow10(2*m) + z1 * p + z0;
+  cout << indent << "Result: " << result << "\\n";
+  return result;
+}
+
+int main() {
+  long long a, b; cin >> a >> b;
+  cout << karatsuba(a, b) << "\\n";
+  return 0;
+}`,
+    complexity: "O(n^log₂3) ≈ O(n^1.585) เมื่อ n = #digits — ดีกว่า schoolbook O(n²)"
+  },
+  {
+    id: "strassen-midterm",
+    title: "Strassen Matrix Multiplication (รวม code midterm)",
+    cat: "D&C",
+    problem: "คูณเมตริกซ์ A·B โดยใช้ Strassen — 7 multiplications แทน 8 ของ DAC ปกติ",
+    approach: "M₁..M₇ ครอบคลุม C₁₁ C₁₂ C₂₁ C₂₂ — ต้อง pad matrix ให้เป็น 2^k × 2^k ก่อน",
+    code: `#include <iostream>
+#include <vector>
+using namespace std;
+using Mat = vector<vector<long long>>;
+
+int nextPow2(int x) { int p = 1; while (p < x) p <<= 1; return p; }
+
+Mat resize(const Mat& m, int n) {
+  Mat r(n, vector<long long>(n, 0));
+  for (size_t i = 0; i < m.size(); i++)
+    for (size_t j = 0; j < m[0].size(); j++)
+      r[i][j] = m[i][j];
+  return r;
+}
+
+Mat add(const Mat& A, const Mat& B) {
+  int n = A.size();
+  Mat C(n, vector<long long>(n));
+  for (int i = 0; i < n; i++)
+    for (int j = 0; j < n; j++) C[i][j] = A[i][j] + B[i][j];
+  return C;
+}
+
+Mat sub(const Mat& A, const Mat& B) {
+  int n = A.size();
+  Mat C(n, vector<long long>(n));
+  for (int i = 0; i < n; i++)
+    for (int j = 0; j < n; j++) C[i][j] = A[i][j] - B[i][j];
+  return C;
+}
+
+Mat strassen(const Mat& A, const Mat& B) {
+  int n = A.size();
+  if (n == 1) return {{A[0][0] * B[0][0]}};
+
+  int k = n / 2;
+  Mat A11(k, vector<long long>(k)), A12(k, vector<long long>(k)),
+      A21(k, vector<long long>(k)), A22(k, vector<long long>(k));
+  Mat B11(k, vector<long long>(k)), B12(k, vector<long long>(k)),
+      B21(k, vector<long long>(k)), B22(k, vector<long long>(k));
+  for (int i = 0; i < k; i++) for (int j = 0; j < k; j++) {
+    A11[i][j] = A[i][j];        A12[i][j] = A[i][j+k];
+    A21[i][j] = A[i+k][j];      A22[i][j] = A[i+k][j+k];
+    B11[i][j] = B[i][j];        B12[i][j] = B[i][j+k];
+    B21[i][j] = B[i+k][j];      B22[i][j] = B[i+k][j+k];
+  }
+
+  Mat M1 = strassen(add(A11, A22), add(B11, B22));
+  Mat M2 = strassen(add(A21, A22), B11);
+  Mat M3 = strassen(A11, sub(B12, B22));
+  Mat M4 = strassen(A22, sub(B21, B11));
+  Mat M5 = strassen(add(A11, A12), B22);
+  Mat M6 = strassen(sub(A21, A11), add(B11, B12));
+  Mat M7 = strassen(sub(A12, A22), add(B21, B22));
+
+  Mat C11 = add(sub(add(M1, M4), M5), M7);
+  Mat C12 = add(M3, M5);
+  Mat C21 = add(M2, M4);
+  Mat C22 = add(sub(add(M1, M3), M2), M6);
+
+  Mat C(n, vector<long long>(n));
+  for (int i = 0; i < k; i++) for (int j = 0; j < k; j++) {
+    C[i][j] = C11[i][j];        C[i][j+k] = C12[i][j];
+    C[i+k][j] = C21[i][j];      C[i+k][j+k] = C22[i][j];
+  }
+  return C;
+}
+
+int main() {
+  // ตัวอย่าง 2×2
+  Mat A = {{1,3},{7,5}};
+  Mat B = {{6,8},{4,2}};
+  Mat C = strassen(A, B);
+  for (auto& row : C) {
+    for (auto x : row) cout << x << " ";
+    cout << "\\n";
+  }
+  return 0;
+}`,
+    complexity: "O(n^log₂7) ≈ O(n^2.807)"
+  },
+  {
+    id: "maxima-set-midterm",
+    title: "Maxima Set DAC (รวม code midterm)",
+    cat: "D&C",
+    problem: "หา maxima set ของ n จุดบน plane (จุดที่ไม่ถูก dominate)",
+    approach: "Sort by x → split mid → recurse → combine โดยตัด M₁ ที่ถูก M₂ dominate",
+    code: `#include <iostream>
+#include <vector>
+#include <algorithm>
+using namespace std;
+
+struct Point { long long x, y; };
+
+static bool lexLess(const Point& a, const Point& b) {
+  if (a.x != b.x) return a.x < b.x;
+  return a.y < b.y;
+}
+
+vector<Point> maximaSet(vector<Point> S) {
+  if (S.size() <= 1) return S;
+  sort(S.begin(), S.end(), lexLess);
+
+  // split at median by x
+  int m = S.size() / 2;
+  vector<Point> L(S.begin(), S.begin() + m);
+  vector<Point> G(S.begin() + m, S.end());
+
+  auto M1 = maximaSet(L);
+  auto M2 = maximaSet(G);
+
+  // combine: ตัดจาก M1 จุดที่ถูก M2 dominate (q.y > r.y ใด ๆ)
+  long long maxY = 0;
+  for (auto& q : M2) maxY = max(maxY, q.y);
+
+  vector<Point> result;
+  for (auto& r : M1) if (r.y > maxY) result.push_back(r);
+  result.insert(result.end(), M2.begin(), M2.end());
+  return result;
+}
+
+int main() {
+  // ตัวอย่างชีท: P = {(1,4),(2,6),(3,1),(4,5),(5,7),(6,9),(7,2),(8,6),(9,3)}
+  vector<Point> S = {{1,4},{2,6},{3,1},{4,5},{5,7},{6,9},{7,2},{8,6},{9,3}};
+  auto M = maximaSet(S);
+  for (auto& p : M) cout << "(" << p.x << "," << p.y << ")\\n";
+  return 0;
+}`,
+    complexity: "O(n log n) — recursion T(n) = 2T(n/2) + O(n)"
+  },
+  {
+    id: "binary-search-rec-midterm",
+    title: "Binary Search (Iter + Recursive) — รวม code midterm",
+    cat: "Search",
+    problem: "ค้นหา target ใน sorted array — iterative + recursive version",
+    approach: "Recursive: T(n) = T(n/2) + c → O(log n). Iterative: while loop เดียวกัน",
+    code: `#include <iostream>
+#include <vector>
+using namespace std;
+
+// iterative
+int binarySearch(const vector<int>& arr, int target) {
+  int l = 0, r = arr.size() - 1;
+  while (l <= r) {
+    int mid = l + (r - l) / 2;
+    if (arr[mid] == target) return mid;
+    if (arr[mid] < target) l = mid + 1;
+    else r = mid - 1;
+  }
+  return -1;
+}
+
+// recursive
+int binarySearchRec(const vector<int>& arr, int l, int r, int target) {
+  if (l > r) return -1;
+  int mid = l + (r - l) / 2;
+  if (arr[mid] == target) return mid;
+  if (arr[mid] < target)
+    return binarySearchRec(arr, mid + 1, r, target);
+  return binarySearchRec(arr, l, mid - 1, target);
+}
+
+int main() {
+  vector<int> a = {1, 3, 5, 7, 9, 11, 13, 15};
+  cout << binarySearch(a, 7) << " " << binarySearchRec(a, 0, a.size()-1, 7) << "\\n";
+  return 0;
+}`,
+    complexity: "O(log n) ทั้งสอง — recursion มี call stack O(log n)"
+  },
+  {
+    id: "interpolation-search-midterm",
+    title: "Interpolation Search (Iter + Recursive) — รวม code midterm",
+    cat: "Search",
+    problem: "ค้นหา target ใน sorted array โดยประมาณตำแหน่งจากค่า — ดีกว่า binary เมื่อข้อมูลกระจายสม่ำเสมอ",
+    approach: "pos = low + ((high-low)·(target-A[low]))/(A[high]-A[low])",
+    code: `#include <iostream>
+#include <vector>
+using namespace std;
+
+int interpolationSearch(const vector<int>& a, int target) {
+  int low = 0, high = a.size() - 1;
+  while (low <= high && target >= a[low] && target <= a[high]) {
+    if (low == high) {
+      if (a[low] == target) return low;
+      return -1;
+    }
+    int pos = low + ((double)(high - low) / (a[high] - a[low])) * (target - a[low]);
+    if (a[pos] == target) return pos;
+    if (a[pos] < target) low = pos + 1;
+    else high = pos - 1;
+  }
+  return -1;
+}
+
+int interpolationSearchRec(const vector<int>& a, int low, int high, int target) {
+  if (low <= high && target >= a[low] && target <= a[high]) {
+    if (low == high) return (a[low] == target) ? low : -1;
+    int pos = low + ((double)(high - low) / (a[high] - a[low])) * (target - a[low]);
+    if (a[pos] == target) return pos;
+    if (a[pos] < target) return interpolationSearchRec(a, pos+1, high, target);
+    return interpolationSearchRec(a, low, pos-1, target);
+  }
+  return -1;
+}
+
+int main() {
+  vector<int> a = {10, 12, 13, 16, 18, 19, 20, 21, 22, 23, 24, 33};
+  cout << interpolationSearch(a, 22) << "\\n";
+  return 0;
+}`,
+    complexity: "O(log log n) เมื่อข้อมูลกระจายสม่ำเสมอ, O(n) worst"
+  },
+  {
+    id: "find-min-max-dac-midterm",
+    title: "Find Min/Max — Iter + Recursive + DAC (รวม code midterm)",
+    cat: "D&C",
+    problem: "หาค่าน้อยสุด/มากสุดใน array 3 แบบ: linear, recursive (linear), DAC",
+    approach: "linear: O(n). recursive linear: T(n) = T(n-1) + c → O(n). DAC: T(n) = 2T(n/2) + c → O(n)",
+    code: `#include <iostream>
+#include <vector>
+#include <algorithm>
+using namespace std;
+
+// linear iterative
+int findMin(const vector<int>& a) {
+  int m = a[0];
+  for (int x : a) if (x < m) m = x;
+  return m;
+}
+
+// recursive (linear)
+int findMinRec(const vector<int>& a, int n) {
+  if (n == 1) return a[0];
+  int rest = findMinRec(a, n - 1);
+  return min(rest, a[n-1]);
+}
+
+// DAC
+int findMinDAC(const vector<int>& a, int l, int r) {
+  if (l == r) return a[l];
+  int mid = l + (r - l) / 2;
+  int lm = findMinDAC(a, l, mid);
+  int rm = findMinDAC(a, mid + 1, r);
+  return min(lm, rm);
+}
+
+int main() {
+  vector<int> a = {7, 3, 9, 1, 5, 8};
+  cout << findMin(a) << " "
+       << findMinRec(a, a.size()) << " "
+       << findMinDAC(a, 0, a.size()-1) << "\\n";
+  return 0;
+}`,
+    complexity: "ทั้งหมด O(n) — comparisons เท่ากัน แต่ DAC tree-shaped recursion"
+  },
+  {
+    id: "merge-sort-trace-midterm",
+    title: "Merge Sort พร้อม trace (รวม code midterm)",
+    cat: "Sort",
+    problem: "Merge Sort + พิมพ์ split/merge step ทุกชั้น (ตามชีท)",
+    approach: "Divide → recurse → merge. trace by print before/after each merge",
+    code: `#include <iostream>
+#include <vector>
+using namespace std;
+
+void merge(vector<int>& a, int l, int m, int r) {
+  int n1 = m - l + 1, n2 = r - m;
+  vector<int> L(n1), R(n2);
+  for (int i = 0; i < n1; i++) L[i] = a[l + i];
+  for (int j = 0; j < n2; j++) R[j] = a[m + 1 + j];
+
+  cout << "Merging [";
+  for (int x : L) cout << x << " ";
+  cout << "] + [";
+  for (int x : R) cout << x << " ";
+  cout << "]\\n";
+
+  int i = 0, j = 0, k = l;
+  while (i < n1 && j < n2)
+    a[k++] = (L[i] <= R[j]) ? L[i++] : R[j++];
+  while (i < n1) a[k++] = L[i++];
+  while (j < n2) a[k++] = R[j++];
+
+  cout << "  → ";
+  for (int p = l; p <= r; p++) cout << a[p] << " ";
+  cout << "\\n";
+}
+
+void mergeSort(vector<int>& a, int l, int r) {
+  if (l >= r) return;
+  int m = l + (r - l) / 2;
+  mergeSort(a, l, m);
+  mergeSort(a, m + 1, r);
+  merge(a, l, m, r);
+}
+
+int main() {
+  vector<int> a = {16, 25, 2, 54, 36, 9, 12, 66};
+  mergeSort(a, 0, a.size() - 1);
+  cout << "Sorted: ";
+  for (int x : a) cout << x << " ";
+  return 0;
+}`,
+    complexity: "O(n log n) — comparison-based, stable"
+  },
 ];
 
 Lessons10["code-solutions"] = function () {

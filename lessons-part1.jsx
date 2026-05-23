@@ -1,7 +1,7 @@
 /* Lesson content — Thai explanations with embedded visualizers */
 /* Each lesson exports a React component as window.Lessons[id] */
 
-const { useState: useStateLC } = React;
+const { useState: useStateLC, useMemo: useMemoLC, useEffect: useEffectLC } = React;
 const { SortLessonViz, SearchLessonViz, Quiz, DragOrder } = window.LessonComponents;
 const { StackViz, QueueViz, LinkedListViz, HashViz, TreeViz, TraversalViz, GraphViz, FibDPViz } = window.DSVisualizers;
 
@@ -306,6 +306,113 @@ Lessons["selection-sort"] = sortLessonTemplate("selection", (
   </React.Fragment>
 ));
 
+// ============ Shell Sort (gap sequences) ============
+function ShellGapSeqDemo() {
+  const [n, setN] = useStateLC(8);
+  const seqs = {
+    shell: {
+      name: "Shell's original (n/2 ÷ 2)",
+      compute: (N) => { const a = []; for (let g = Math.floor(N / 2); g >= 1; g = Math.floor(g / 2)) a.push(g); return a; },
+      note: "n/2, n/4, ..., 1 — ง่ายสุด แต่ไม่เร็วสุด — Big-O แย่สุด O(n²)"
+    },
+    knuth: {
+      name: "Knuth (3·k + 1)",
+      compute: (N) => { const a = []; let k = 1; while (k < N) { a.push(k); k = 3 * k + 1; } return a.reverse(); },
+      note: "1, 4, 13, 40, 121, ... — เลือก k ใหญ่สุด ≤ n — Big-O เฉลี่ย O(n^1.5)"
+    },
+    hibbard: {
+      name: "Hibbard (2^i − 1)",
+      compute: (N) => { const a = []; for (let i = 1; (1 << i) - 1 < N; i++) a.push((1 << i) - 1); return a.reverse(); },
+      note: "1, 3, 7, 15, 31, ... — Big-O O(n^1.5) worst case (พิสูจน์ได้)"
+    },
+    sedgewick: {
+      name: "Sedgewick (primes)",
+      compute: (N) => {
+        const primes = [1, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47];
+        return primes.filter(p => p < N).reverse();
+      },
+      note: "1, 3, 5, 7, 11, 13, ... — KMUTNB sheet ใช้แบบนี้ใน LAB2"
+    },
+  };
+  return (
+    <div className="dsv">
+      <div className="ctrls">
+        <label>n = <input type="number" min="2" max="50" value={n} onChange={e => setN(+e.target.value || 2)} style={{ width: 60 }} /></label>
+      </div>
+      <table className="tbl" style={{ marginTop: 10 }}>
+        <thead><tr><th>ลำดับ</th><th>ค่า gap สำหรับ n={n}</th><th>หมายเหตุ</th></tr></thead>
+        <tbody>
+          {Object.entries(seqs).map(([k, s]) => (
+            <tr key={k}>
+              <td>{s.name}</td>
+              <td className="mono">{s.compute(n).join(', ')}</td>
+              <td style={{ fontSize: 12, color: 'var(--text-2)' }}>{s.note}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+Lessons["shell-sort"] = sortLessonTemplate("shell", (
+  <React.Fragment>
+    <h3>หลักการ — Insertion Sort + gap</h3>
+    <p>
+      ปรับปรุง Insertion Sort โดย <b>ไม่เลื่อนทีละ 1 ตำแหน่ง</b> แต่เลื่อนทีละ <code>gap</code> ก่อน
+      (เปรียบเทียบ a[i] กับ a[i−gap]) ค่อยๆ ลด gap จนเหลือ 1 → รอบสุดท้ายเหมือน Insertion Sort
+      แต่ข้อมูลถูก "เกือบเรียง" ไว้แล้ว → เร็วกว่ามาก
+    </p>
+    <ol style={{ color: 'var(--text-1)' }}>
+      <li>เลือกลำดับของ gap (เช่น <code>n/2, n/4, ..., 1</code>)</li>
+      <li>สำหรับแต่ละ gap ทำ Insertion Sort แบบกระโดด — เปรียบเทียบ a[j] กับ a[j−gap]</li>
+      <li>เมื่อ gap = 1 → Insertion Sort เต็มรูปแบบ แต่ตอนนี้ array เกือบเรียงแล้ว → O(n)</li>
+    </ol>
+    <h3>ลำดับ gap (gap sequences)</h3>
+    <ShellGapSeqDemo />
+    <p style={{ color: 'var(--text-1)' }}>
+      <b>การเลือกลำดับสำคัญมาก</b> — ลำดับที่ดีให้ <code>O(n^1.3) − O(n^1.5)</code> ขณะที่ Shell's original อาจช้าถึง <code>O(n²)</code> ใน worst case
+    </p>
+  </React.Fragment>
+), (
+  <React.Fragment>
+    <h3>ตัวอย่าง KMUTNB LAB 2 (Sedgewick: gap = {`{5, 3, 2, 1}`})</h3>
+    <pre className="code">{`Input:  16 25 2 54 36 9 12 66      // (n = 8)
+
+gap=5 → groups: (0,5)(1,6)(2,7)(3)(4)
+       sort each: (16,9)→9,16  (25,12)→12,25  (2,66)→ok
+       → 9 12 2 54 36 16 25 66
+
+gap=3 → groups: (0,3,6)(1,4,7)(2,5)
+       sort each: (9,54,25)→9,25,54  (12,36,66)→ok  (2,16)→ok
+       → 9 12 2 25 36 16 54 66
+
+gap=2 → groups: (0,2,4,6)(1,3,5,7)
+       sort each: (9,2,36,54)→2,9,36,54  (12,25,16,66)→12,16,25,66
+       → 2 12 9 16 36 25 54 66
+
+gap=1 → standard insertion sort (array เกือบเรียงแล้ว → O(n))
+       → 2 9 12 16 25 36 54 66   ✓ sorted`}</pre>
+    <Quiz
+      q="ทำไม Shell Sort เร็วกว่า Insertion Sort?"
+      options={[
+        "เพราะใช้ recursion",
+        "เพราะกระโดดเปรียบเทียบทีละ gap → ค่าที่อยู่ผิดที่ไกล ๆ ถูกย้ายเร็วขึ้น",
+        "เพราะใช้ partition แบบ Quick Sort",
+        "เพราะใช้หน่วยความจำเพิ่ม"
+      ]}
+      answer={1}
+      explain="Insertion Sort ปกติเลื่อนทีละ 1 → ค่าผิดที่ไกลใช้เวลานาน. Shell Sort กระโดดทีละ gap → ลดจำนวน shift ได้มาก"
+    />
+    <Quiz
+      q="ใน LAB 2 ใช้ Sedgewick {1,3,5,7,...} กับ n=8 → gap แรกที่ทำให้เกิดการเปลี่ยนแปลงคือ?"
+      options={["7", "5", "3", "1"]}
+      answer={1}
+      explain="gap=7: เปรียบเทียบแค่ (a[0],a[7]) = (16,66) — เรียงแล้ว ไม่เกิดการเปลี่ยน. gap=5: เกิดการสลับครั้งแรก"
+    />
+  </React.Fragment>
+));
+
 Lessons["insertion-sort"] = sortLessonTemplate("insertion", (
   <React.Fragment>
     <h3>หลักการ — เหมือนเรียงไพ่ในมือ</h3>
@@ -341,6 +448,137 @@ Lessons["merge-sort"] = sortLessonTemplate("merge", (
   />
 ));
 
+// ============ Median-of-Three Pivot Viz ============
+// Source: week_2 p.40-41, LAB3 ข้อ 1, รวม code midterm.pdf
+function MedianOfThreeViz() {
+  const PRESETS = {
+    'lab3': [16, 25, 2, 54, 36, 9, 12, 66],
+    'mid-large': [25, 16, 2, 9, 36, 54, 12, 66],
+    'sorted-3': [5, 9, 12, 18, 22, 30, 41, 50],
+    'reversed': [80, 70, 60, 50, 40, 30, 20, 10],
+  };
+  const [preset, setPreset] = useStateLC('mid-large');
+  const [step, setStep] = useStateLC(0);
+  const arr0 = PRESETS[preset];
+
+  // Pre-compute step-by-step transformations
+  const trace = useMemoLC(() => {
+    const n = arr0.length;
+    const low = 0, high = n - 1;
+    const mid = low + Math.floor((high - low) / 2);
+    const log = [];
+    let a = [...arr0];
+
+    log.push({ arr: [...a], msg: `เริ่มต้น — low=${low}, mid=${mid}, high=${high}`, marks: { [low]: 'l', [mid]: 'm', [high]: 'h' }, action: null });
+
+    // step 1: if a[low] > a[mid] swap
+    if (a[low] > a[mid]) {
+      log.push({ arr: [...a], msg: `เปรียบเทียบ a[low]=${a[low]} > a[mid]=${a[mid]} → swap`, marks: { [low]: 'cmp-l', [mid]: 'cmp-m' }, action: 'compare-LM' });
+      [a[low], a[mid]] = [a[mid], a[low]];
+      log.push({ arr: [...a], msg: `หลัง swap (low, mid)`, marks: { [low]: 'l', [mid]: 'm', [high]: 'h' }, action: 'swap-LM' });
+    } else {
+      log.push({ arr: [...a], msg: `เปรียบเทียบ a[low]=${a[low]} ≤ a[mid]=${a[mid]} → no swap`, marks: { [low]: 'cmp-l', [mid]: 'cmp-m' }, action: 'compare-LM-ok' });
+    }
+
+    // step 2: if a[low] > a[high] swap
+    if (a[low] > a[high]) {
+      log.push({ arr: [...a], msg: `เปรียบเทียบ a[low]=${a[low]} > a[high]=${a[high]} → swap`, marks: { [low]: 'cmp-l', [high]: 'cmp-h' }, action: 'compare-LH' });
+      [a[low], a[high]] = [a[high], a[low]];
+      log.push({ arr: [...a], msg: `หลัง swap (low, high)`, marks: { [low]: 'l', [mid]: 'm', [high]: 'h' }, action: 'swap-LH' });
+    } else {
+      log.push({ arr: [...a], msg: `เปรียบเทียบ a[low]=${a[low]} ≤ a[high]=${a[high]} → no swap`, marks: { [low]: 'cmp-l', [high]: 'cmp-h' }, action: 'compare-LH-ok' });
+    }
+
+    // step 3: if a[mid] > a[high] swap
+    if (a[mid] > a[high]) {
+      log.push({ arr: [...a], msg: `เปรียบเทียบ a[mid]=${a[mid]} > a[high]=${a[high]} → swap`, marks: { [mid]: 'cmp-m', [high]: 'cmp-h' }, action: 'compare-MH' });
+      [a[mid], a[high]] = [a[high], a[mid]];
+      log.push({ arr: [...a], msg: `หลัง swap (mid, high)`, marks: { [low]: 'l', [mid]: 'm', [high]: 'h' }, action: 'swap-MH' });
+    } else {
+      log.push({ arr: [...a], msg: `เปรียบเทียบ a[mid]=${a[mid]} ≤ a[high]=${a[high]} → no swap`, marks: { [mid]: 'cmp-m', [high]: 'cmp-h' }, action: 'compare-MH-ok' });
+    }
+
+    // Now a[low] ≤ a[mid] ≤ a[high]
+    log.push({ arr: [...a], msg: `✓ ตอนนี้ a[low]=${a[low]} ≤ a[mid]=${a[mid]} ≤ a[high]=${a[high]} — median = a[mid] = ${a[mid]}`, marks: { [low]: 'sorted-3', [mid]: 'median', [high]: 'sorted-3' }, action: 'verified' });
+
+    // step 4: swap a[mid] with a[high-1] to "hide" pivot
+    log.push({ arr: [...a], msg: `Swap a[mid] กับ a[high-1] (=${a[high - 1]}) — ซ่อน pivot ไว้ที่ high-1`, marks: { [mid]: 'cmp-m', [high - 1]: 'cmp-h' }, action: 'pre-hide' });
+    [a[mid], a[high - 1]] = [a[high - 1], a[mid]];
+    const pivot = a[high - 1];
+    log.push({ arr: [...a], msg: `✓ Pivot = ${pivot} อยู่ที่ a[${high - 1}] (พร้อม partition)`, marks: { [low]: 'sorted-3', [high - 1]: 'pivot', [high]: 'sorted-3' }, action: 'done' });
+
+    return { log, pivot, midIdx: mid, lowIdx: low, highIdx: high };
+  }, [preset]);
+
+  // Reset step when preset changes
+  useEffectLC(() => { setStep(0); }, [preset]);
+
+  const cur = trace.log[Math.min(step, trace.log.length - 1)];
+  const colorOf = (i) => {
+    const m = cur.marks[i];
+    if (m === 'l' || m === 'h') return 'var(--accent)';
+    if (m === 'm') return 'var(--warn)';
+    if (m === 'cmp-l' || m === 'cmp-h') return 'var(--pink)';
+    if (m === 'cmp-m') return 'var(--danger)';
+    if (m === 'sorted-3') return 'rgba(16,185,129,0.4)';
+    if (m === 'median' || m === 'pivot') return 'var(--success)';
+    return 'var(--bg-2)';
+  };
+
+  return (
+    <div className="dsv">
+      <div className="ctrls" style={{ flexWrap: 'wrap' }}>
+        <label>Preset:&nbsp;
+          <select value={preset} onChange={e => setPreset(e.target.value)}
+            style={{ padding: '4px 8px', background: 'var(--bg-1)', color: 'var(--text-0)', border: '1px solid var(--border)', borderRadius: 4 }}>
+            <option value="lab3">LAB 3: [16,25,2,54,36,9,12,66] (already sorted 3)</option>
+            <option value="mid-large">[25,16,2,9,36,54,12,66] (need 1 swap)</option>
+            <option value="sorted-3">[5,9,12,18,22,30,41,50] (perfectly sorted)</option>
+            <option value="reversed">[80,70,60,50,40,30,20,10] (reversed)</option>
+          </select>
+        </label>
+        <button onClick={() => setStep(Math.max(0, step - 1))} disabled={step === 0}>◀</button>
+        <span style={{ color: 'var(--text-2)' }}>step {Math.min(step + 1, trace.log.length)} / {trace.log.length}</span>
+        <button onClick={() => setStep(Math.min(trace.log.length - 1, step + 1))} disabled={step >= trace.log.length - 1}>▶</button>
+        <button onClick={() => setStep(0)}>↺</button>
+      </div>
+
+      <div className="callout info" style={{ marginTop: 8 }}>
+        <div className="ttl">{cur.msg}</div>
+      </div>
+
+      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 10 }}>
+        {cur.arr.map((v, i) => {
+          const m = cur.marks[i];
+          return (
+            <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <div className="cell" style={{
+                background: colorOf(i),
+                color: m === 'median' || m === 'pivot' ? '#000' : 'var(--text-0)',
+                minWidth: 38,
+                fontWeight: m === 'median' || m === 'pivot' ? 'bold' : 'normal'
+              }}>{v}</div>
+              <div style={{ fontSize: 10, marginTop: 2, color: 'var(--text-2)' }}>
+                {i === trace.lowIdx && 'low'}
+                {i === trace.midIdx && cur.marks[i] !== 'pivot' && 'mid'}
+                {i === trace.highIdx && 'high'}
+                {m === 'pivot' && '↑ pivot'}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div style={{ marginTop: 12, fontSize: 12, color: 'var(--text-2)' }}>
+        <span style={{ display: 'inline-block', width: 10, height: 10, background: 'var(--accent)', marginRight: 6, borderRadius: 2 }}></span>endpoint (low/high)
+        &nbsp; <span style={{ display: 'inline-block', width: 10, height: 10, background: 'var(--warn)', marginRight: 6, borderRadius: 2 }}></span>middle
+        &nbsp; <span style={{ display: 'inline-block', width: 10, height: 10, background: 'var(--danger)', marginRight: 6, borderRadius: 2 }}></span>กำลังเปรียบเทียบ
+        &nbsp; <span style={{ display: 'inline-block', width: 10, height: 10, background: 'var(--success)', marginRight: 6, borderRadius: 2 }}></span>median / pivot
+      </div>
+    </div>
+  );
+}
+
 Lessons["quick-sort"] = sortLessonTemplate("quick", (
   <React.Fragment>
     <h3>หลักการ — Pivot Partition</h3>
@@ -354,6 +592,93 @@ Lessons["quick-sort"] = sortLessonTemplate("quick", (
       ถ้าเลือก pivot ไม่ดี (เช่น เลือกตัวเล็กสุดหรือใหญ่สุดทุกครั้ง) จะกลายเป็น <b>O(n²)</b>!
       วิธีแก้: เลือก pivot สุ่ม หรือ median-of-three
     </div>
+  </React.Fragment>
+), (
+  <React.Fragment>
+    <h3>🎯 Median-of-Three Pivot — KMUTNB week_2 + LAB 3</h3>
+    <p style={{ color: 'var(--text-1)' }}>
+      วิธีเลือก pivot ที่ดีกว่า — แทนที่จะเลือก <code>a[low]</code> หรือ <code>a[high]</code> เฉย ๆ
+      (ซึ่ง worst-case O(n²) เมื่อข้อมูลเรียงมาแล้ว) ให้ดู 3 ตำแหน่ง <b>low, mid, high</b> แล้วเลือก
+      ค่ากลาง (median) เป็น pivot
+    </p>
+
+    <h3>ขั้นตอน (สูตรจากชีท)</h3>
+    <ol style={{ color: 'var(--text-1)' }}>
+      <li>คำนวณ <code>mid = low + (high - low) / 2</code></li>
+      <li>เรียง 3 ตำแหน่งให้ <code>a[low] ≤ a[mid] ≤ a[high]</code> ด้วยการ swap ทีละคู่:
+        <ul>
+          <li>ถ้า a[low] &gt; a[mid] → swap</li>
+          <li>ถ้า a[low] &gt; a[high] → swap</li>
+          <li>ถ้า a[mid] &gt; a[high] → swap</li>
+        </ul>
+      </li>
+      <li>ตอนนี้ <code>a[mid]</code> คือ median — swap กับ <code>a[high-1]</code> เพื่อ "ซ่อน" pivot</li>
+      <li>ทำ partition แบบปกติด้วย pivot = <code>a[high-1]</code></li>
+    </ol>
+
+    <MedianOfThreeViz />
+
+    <h3>Pseudocode (จาก รวม code midterm.pdf)</h3>
+    <pre className="code">{`int medianOfThree(vector<int>& a, int low, int high) {
+  int mid = low + (high - low) / 2;
+  if (a[low] > a[mid])  swap(a[low],  a[mid]);
+  if (a[low] > a[high]) swap(a[low],  a[high]);
+  if (a[mid] > a[high]) swap(a[mid],  a[high]);
+  // a[mid] is now median — hide pivot at high-1
+  swap(a[mid], a[high - 1]);
+  return a[high - 1];   // pivot value
+}
+
+int partitionMedian(vector<int>& a, int low, int high) {
+  int pivot = medianOfThree(a, low, high);
+  int i = low, j = high - 1;
+  while (true) {
+    while (a[++i] < pivot);
+    while (a[--j] > pivot);
+    if (i < j) swap(a[i], a[j]);
+    else break;
+  }
+  swap(a[i], a[high - 1]);   // restore pivot
+  return i;
+}`}</pre>
+
+    <h3>เหตุผลที่ดีกว่า fixed pivot</h3>
+    <table className="tbl">
+      <thead><tr><th>วิธี pivot</th><th>Worst case</th><th>Average</th><th>ดีตรงไหน</th></tr></thead>
+      <tbody>
+        <tr><td>fixed: a[low] หรือ a[high]</td><td>O(n²) เมื่อ sorted</td><td>O(n log n)</td><td>เขียนง่าย</td></tr>
+        <tr><td>random pivot</td><td>O(n²) แต่ <i>น้อยมาก</i></td><td>O(n log n)</td><td>กระจาย worst case</td></tr>
+        <tr><td><b>median-of-three</b></td><td>O(n²) ยังเป็นไปได้ทางทฤษฎี</td><td>O(n log n) ดีขึ้น</td><td>กัน sorted input + ลด constant</td></tr>
+      </tbody>
+    </table>
+
+    <div className="callout success">
+      <div className="ttl">💡 ทำไมใช้ในการสอบ Lab</div>
+      <ul style={{ margin: 0, paddingLeft: 18 }}>
+        <li><b>LAB 3 ข้อ 1</b> ของ KMUTNB ใช้ median-of-three ใน Quick Select</li>
+        <li>คำตอบใน <b>รวม code midterm.pdf</b> มี <code>partitionMedian</code> ครบ</li>
+        <li>ออกในข้อสอบ <b>วิเคราะห์ความแตกต่าง</b> ระหว่าง partition ปกติกับ median-of-three</li>
+      </ul>
+    </div>
+
+    <Quiz
+      q="ทำไมต้อง swap a[mid] กับ a[high-1] หลังจากเรียง 3 ตัวแล้ว?"
+      options={[
+        "เพื่อให้ array สวยขึ้น",
+        "เพื่อให้ pivot อยู่ใกล้ high — partition loop ไม่ต้องเช็ค bound ที่ a[high]",
+        "เพื่อให้ partition เริ่มจาก mid",
+        "เพื่อให้ median อยู่ index 0"
+      ]}
+      answer={1}
+      explain="หลังเรียง 3 ตัว a[high] เป็นค่ามากสุดอยู่แล้ว — มัน 'guard' ว่า j-- ไม่หลุดเลย high. ส่วน a[low] เป็นค่าน้อยสุด guard ว่า i++ ไม่หลุดเลย low. ดังนั้น loop ภายในไม่ต้องเช็ค bound — เร็วขึ้น"
+    />
+
+    <Quiz
+      q="LAB 3 ใช้ arr = [16,25,2,54,36,9,12,66] — หลัง medianOfThree(0, 7) ค่า pivot คือ?"
+      options={["16", "54", "66", "9"]}
+      answer={1}
+      explain="low=16, mid=A[3]=54, high=66 — 16 ≤ 54 ≤ 66 (sorted แล้ว ไม่ swap) → median = 54 — pivot ถูกซ่อนไว้ที่ A[high-1]=A[6]"
+    />
   </React.Fragment>
 ));
 

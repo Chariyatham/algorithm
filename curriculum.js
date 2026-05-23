@@ -77,6 +77,7 @@ const CURRICULUM = [
       { id: "bubble-sort", num: "06", title: "Bubble Sort", level: "basic", time: "10 นาที", desc: "อัลกอริทึมพื้นฐานที่สุด เปรียบเทียบทีละคู่" },
       { id: "selection-sort", num: "07", title: "Selection Sort", level: "basic", time: "10 นาที", desc: "หาตัวน้อยสุดแล้วสลับไปข้างหน้า" },
       { id: "insertion-sort", num: "08", title: "Insertion Sort", level: "basic", time: "10 นาที", desc: "แทรกเข้าไปในตำแหน่งที่ถูก เหมือนเรียงไพ่" },
+      { id: "shell-sort", num: "08a", title: "Shell Sort + Gap Sequences", level: "inter", time: "14 นาที", desc: "Insertion Sort + gap (Shell/Knuth/Hibbard/Sedgewick) — KMUTNB LAB 2" },
       { id: "merge-sort", num: "09", title: "Merge Sort", level: "inter", time: "15 นาที", desc: "Divide & Conquer แบ่งครึ่งแล้วรวมกลับ O(n log n)" },
       { id: "quick-sort", num: "10", title: "Quick Sort", level: "inter", time: "15 นาที", desc: "เลือก pivot แล้วแบ่ง โดยเฉลี่ย O(n log n)" },
       { id: "heap-sort", num: "11", title: "Heap Sort", level: "adv", time: "18 นาที", desc: "ใช้ Heap จัดเรียง O(n log n) ใน-place" },
@@ -136,6 +137,7 @@ const CURRICULUM = [
     title: "Divide & Conquer",
     lessons: [
       { id: "quick-select", num: "18", title: "Quick Select", level: "inter", time: "12 นาที", desc: "หาค่าน้อยสุดอันดับ k โดยไม่ต้อง sort ทั้งหมด" },
+      { id: "maxima-set", num: "18b", title: "Maxima Set (DAC)", level: "adv", time: "16 นาที", desc: "เซตจุดที่ไม่ถูก dominate — Pareto frontier — O(n log n) แทน O(n²)" },
       { id: "matrix-mult", num: "19", title: "Matrix Multiplication", level: "adv", time: "14 นาที", desc: "การคูณเมตริกซ์แบบปกติ O(n³) และแบบ DAC" },
       { id: "strassen", num: "20", title: "Strassen's Algorithm", level: "adv", time: "14 นาที", desc: "ลด multiplication จาก 8 → 7 ครั้ง O(n^2.81)" },
     ]
@@ -164,7 +166,10 @@ const CURRICULUM = [
     lessons: [
       { id: "exhaustive", num: "28", title: "Exhaustive Search", level: "inter", time: "14 นาที", desc: "Brute force สำรวจคำตอบทุกแบบ — Permutation, Subset" },
       { id: "backtracking", num: "29", title: "Backtracking", level: "adv", time: "16 นาที", desc: "N-Queens, Subset Sum, Sudoku — ตัดกิ่งคำตอบ" },
+      { id: "backtracking-problems", num: "29a", title: "🔍 Backtracking Problems Bank (7 ข้อ)", level: "adv", time: "—", desc: "Rope cut, Light bulbs, Twin gifts, Lex books, N-Queens count, BT-Knapsack, Chair adj — โจทย์ KMUTNB" },
       { id: "greedy", num: "30", title: "Greedy Algorithms", level: "adv", time: "14 นาที", desc: "Fractional Knapsack, Tape Storage, Activity selection" },
+      { id: "greedy-problems", num: "30a", title: "🪙 Greedy Problems Bank (7 ข้อ)", level: "adv", time: "—", desc: "Line cover, Sale 3+1, CPU 3 strategies, Dijkstra, MST flags, Hospital placement, Activity Selection" },
+      { id: "activity-strategies", num: "30b", title: "⚖️ Activity Selection — 4 Strategies Compare", level: "adv", time: "12 นาที", desc: "longest / shortest / least-conflict / earliest-end side-by-side — exchange argument proof" },
       { id: "dp", num: "31", title: "Dynamic Programming", level: "adv", time: "20 นาที", desc: "Fibonacci, 0/1 Knapsack, Subset Sum — ใช้ memorization" },
       { id: "game-theory", num: "129", title: "Game Theory (Nim, Grundy)", level: "adv", time: "18 นาที", desc: "Nim XOR theorem + Sprague-Grundy mex — เกม 2 ผู้เล่น perfect play" },
     ]
@@ -195,6 +200,7 @@ const CURRICULUM = [
     lessons: [
       { id: "master-calc", num: "36", title: "Master Theorem Calculator 🧮", level: "adv", time: "—", desc: "กรอก a, b, d → ได้ T(n) + step ทั้งหมด" },
       { id: "recurrence-solver", num: "37", title: "Recurrence Solver 🔁", level: "adv", time: "—", desc: "แก้ T(n) แบบ substitution — เห็นทุก step" },
+      { id: "recurrence-bank", num: "37a", title: "Recurrence Bank (24 ข้อ) 🔁", level: "adv", time: "—", desc: "Practice T(n) — Master Theorem 3 cases + backward sub + recursion tree" },
       { id: "pattern-trainer", num: "38", title: "Pattern Trainer 🎯", level: "adv", time: "—", desc: "ดูโค้ด → เดา pattern: D&C/DP/Greedy/Backtracking/..." },
       { id: "advanced-viz", num: "39", title: "Advanced Visualizers 🔬", level: "adv", time: "—", desc: "Karatsuba · Strassen M1-M7 · Floyd-Warshall · Quick Select 3-way" },
       { id: "bigo-analyzer", num: "45", title: "Big-O Analyzer 📐", level: "adv", time: "—", desc: "วิเคราะห์ code ทีละบรรทัด — เห็นว่า n+1, n², log n มาจากไหน" },
@@ -227,7 +233,9 @@ const CURRICULUM = [
     lessons: [
       { id: "bellman-ford", num: "58", title: "Bellman-Ford", level: "adv", time: "14 นาที", desc: "Shortest path กับ negative weight + ตรวจ negative cycle" },
       { id: "floyd-warshall", num: "59", title: "Floyd-Warshall", level: "adv", time: "12 นาที", desc: "All-pairs shortest path O(V³)" },
+      { id: "warshall-tc", num: "59a", title: "Warshall's Transitive Closure", level: "adv", time: "12 นาที", desc: "Boolean reachability R[i][j] — graph_explor p.46-48 (NOT Floyd-Warshall)" },
       { id: "counting-sort", num: "60", title: "Counting / Radix Sort", level: "inter", time: "14 นาที", desc: "Linear-time sort — ไม่ใช้การเปรียบเทียบ" },
+      { id: "bucket-sort", num: "60a", title: "Bucket Sort (digit-based)", level: "inter", time: "12 นาที", desc: "10 ถังต่อหลัก — KMUTNB week_2 p.50-54" },
       { id: "trie", num: "61", title: "Trie (Prefix Tree)", level: "inter", time: "12 นาที", desc: "Autocomplete / Spell check — Insert/Search O(L)" },
       { id: "union-find", num: "62", title: "Union-Find (DSU)", level: "inter", time: "14 นาที", desc: "Disjoint Set — path compression + union by rank" },
       { id: "segment-tree", num: "63", title: "Segment Tree & BIT", level: "adv", time: "16 นาที", desc: "Range query + Point update O(log n)" },
@@ -239,7 +247,9 @@ const CURRICULUM = [
     id: "proofs",
     title: "📐 Proofs & Analysis (ระดับมหาลัย)",
     lessons: [
+      { id: "limit-lhopital", num: "63a", title: "L'Hôpital + Limit Method", level: "adv", time: "18 นาที", desc: "เปรียบเทียบ order of growth ด้วย lim f/g — KMUTNB s_1.pdf p.30-33" },
       { id: "big-o-proofs", num: "64", title: "Formal Big-O / Ω / Θ Proofs", level: "adv", time: "20 นาที", desc: "พิสูจน์จากนิยาม ∃c,n₀: T(n) ≤ cf(n) — Big-O, Omega, Theta, little-o" },
+      { id: "bigo-exercises", num: "64a", title: "Big-O Exercise Bank (37 ข้อ)", level: "adv", time: "—", desc: "โจทย์จริงจาก BIGO/exercise_1/hw_1 — ครอบคลุม loop, recurrence, ranking, simplify" },
       { id: "recursion-methods", num: "65", title: "Substitution & Recursion Tree", level: "adv", time: "22 นาที", desc: "แก้ T(n) แบบไม่ใช้ Master — guess & induction + tree method" },
       { id: "loop-invariant", num: "66", title: "Loop Invariant & Correctness", level: "adv", time: "18 นาที", desc: "พิสูจน์ว่า algorithm ถูกต้อง — initialization, maintenance, termination" },
       { id: "amortized", num: "67", title: "Amortized Analysis (3 methods)", level: "adv", time: "24 นาที", desc: "Aggregate, Accounting, Potential — Dynamic Array, Stack with MultiPop" },
@@ -335,6 +345,9 @@ const CURRICULUM = [
       { id: "learning-paths", num: "102", title: "🗺️ Learning Paths — เส้นทางตามเป้าหมาย", level: "basic", time: "—", desc: "1 เดือน / 3 เดือน / Midterm / Final / Contest — เลือก path เหมาะกับเป้าหมายคุณ" },
       { id: "cpp-sandbox", num: "103", title: "💻 C++ Online Compiler Sandbox", level: "inter", time: "—", desc: "เขียน + รัน C++ ใน Wandbox/Godbolt/OnlineGDB/Coliru — 8 templates พร้อมใช้" },
       { id: "mock-exam-5", num: "104", title: "📝 Mock Exam 5 — Thai University Style", level: "adv", time: "120 นาที", desc: "ข้อสอบ style จุฬาฯ/มก./มจธ./ลาดกระบัง — เน้นพิสูจน์ + trace + analysis" },
+      { id: "mock-kmutnb-mid", num: "104a", title: "📝 Mock Mid — KMUTNB 040613206", level: "adv", time: "90 นาที", desc: "ตรง syllabus: Big-O→Backtracking + Greedy intro (week 1-8) — เน้น hand-written" },
+      { id: "mock-kmutnb-final", num: "104b", title: "📝 Mock Final — KMUTNB 040613206", level: "adv", time: "90 นาที", desc: "รวมทุกเรื่อง: D&C + Backtracking + Greedy + DP + Integration" },
+      { id: "mock-kmutnb-lab", num: "104c", title: "🧪 Mock Lab — KMUTNB 040613206", level: "adv", time: "120 นาที", desc: "8 ข้อ code-only ตาม spec input/output — Lab = 35% ของเกรด" },
     ]
   },
   {

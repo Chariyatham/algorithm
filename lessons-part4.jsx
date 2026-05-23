@@ -483,6 +483,358 @@ Lessons4["recurrence-solver"] = function () {
 };
 
 /* ============================================================
+   37a — RECURRENCE EXERCISE BANK (24 ข้อ — practice mode)
+   ที่มา: hw_1_tnrecursive (7) + เฉลย big o (3) + Master Theorem applications
+============================================================ */
+const RECURRENCE_BANK = [
+  { id: 1, technique: 'sub-back', src: 'เฉลย big o Q13',
+    q: 'T(n) = T(n−1) + c,  T(0) = 0',
+    a: 'O(n)',
+    steps: [
+      'T(n) = T(n-1) + c',
+      'T(n-1) = T(n-2) + c → T(n) = T(n-2) + 2c',
+      'T(n-2) = T(n-3) + c → T(n) = T(n-3) + 3c',
+      'Pattern: T(n) = T(n-k) + k·c',
+      'หยุดเมื่อ n - k = 0 → k = n',
+      'T(n) = T(0) + n·c = n·c → O(n)'
+    ] },
+  { id: 2, technique: 'sub-back', src: 'hw_1_tn Q1 / แบบฝึก 3 Q1',
+    q: 'T(n) = T(n−1) + n,  T(0) = 1',
+    a: 'O(n²)',
+    steps: [
+      'T(n) = T(n-1) + n',
+      'T(n) = [T(n-2) + (n-1)] + n = T(n-2) + (n-1) + n',
+      'T(n) = T(n-3) + (n-2) + (n-1) + n',
+      'Pattern: T(n) = T(n-k) + Σ_{i=n-k+1}^{n} i',
+      'k = n: T(n) = T(0) + (1 + 2 + ... + n) = 1 + n(n+1)/2',
+      'T(n) = O(n²)'
+    ] },
+  { id: 3, technique: 'sub-back', src: 'hw_1_tn Q2',
+    q: 'T(n) = 2T(n−1) + n,  T(0) = 1',
+    a: 'O(2ⁿ)',
+    steps: [
+      'T(n) = 2T(n-1) + n',
+      'T(n) = 2[2T(n-2) + (n-1)] + n = 4T(n-2) + 2(n-1) + n',
+      'T(n) = 8T(n-3) + 4(n-2) + 2(n-1) + n',
+      'Pattern: T(n) = 2^k · T(n-k) + Σ_{i=0}^{k-1} 2^i · (n - i)',
+      'k = n: T(n) = 2^n · T(0) + polynomial term ≤ 2^n · (n+1)',
+      'พจน์ 2^n ครอบงำ → T(n) = O(2ⁿ)'
+    ] },
+  { id: 4, technique: 'sub-back', src: 'เพิ่มเติม',
+    q: 'T(n) = T(n−2) + 1,  T(0) = T(1) = 1',
+    a: 'O(n)',
+    steps: [
+      'T(n) = T(n-2) + 1 = T(n-4) + 2 = T(n-6) + 3 = ...',
+      'Pattern: T(n) = T(n - 2k) + k',
+      'หยุดเมื่อ n - 2k = 0 (หรือ 1) → k = n/2',
+      'T(n) = T(0) + n/2 ≈ n/2 → O(n)'
+    ] },
+  { id: 5, technique: 'sub-half', src: 'เฉลย big o Q14',
+    q: 'T(n) = T(n/2) + c,  T(1) = 1',
+    a: 'O(log n)',
+    steps: [
+      'T(n) = T(n/2) + c',
+      'T(n) = T(n/4) + 2c = T(n/8) + 3c',
+      'Pattern: T(n) = T(n/2^k) + k·c',
+      'หยุดเมื่อ n/2^k = 1 → 2^k = n → k = log₂n',
+      'T(n) = T(1) + c·log n = 1 + c·log n → O(log n)'
+    ] },
+  { id: 6, technique: 'sub-half', src: 'hw_1_tn Q3 / เฉลย big o Q15',
+    q: 'T(n) = 2T(n/2) + c,  T(1) = 1',
+    a: 'O(n)',
+    steps: [
+      'T(n) = 2T(n/2) + c',
+      'T(n) = 2[2T(n/4) + c] + c = 4T(n/4) + 2c + c',
+      'T(n) = 8T(n/8) + 4c + 2c + c',
+      'Pattern: T(n) = 2^k · T(n/2^k) + c·(2^k - 1)',
+      'k = log n → 2^k = n',
+      'T(n) = n·T(1) + c·(n-1) = (1+c)n - c → O(n)'
+    ] },
+  { id: 7, technique: 'sub-half', src: 'hw_1_tn Q4 (Merge Sort)',
+    q: 'T(n) = 2T(n/2) + n,  T(1) = 1',
+    a: 'O(n log n)',
+    steps: [
+      'T(n) = 2T(n/2) + n',
+      'T(n) = 2[2T(n/4) + n/2] + n = 4T(n/4) + n + n',
+      'T(n) = 8T(n/8) + n + n + n',
+      'Pattern: T(n) = 2^k · T(n/2^k) + k·n',
+      'k = log n: T(n) = n·T(1) + n·log n → O(n log n)',
+      '📌 นี่คือ Merge Sort recurrence'
+    ] },
+  { id: 8, technique: 'sub-half', src: 'hw_1_tn Q5',
+    q: 'T(n) = 2T(n/2) + n²,  T(1) = 1',
+    a: 'O(n²)',
+    steps: [
+      'T(n) = 2T(n/2) + n²',
+      'T(n) = 2[2T(n/4) + n²/4] + n² = 4T(n/4) + n²/2 + n²',
+      'T(n) = 8T(n/8) + n²/4 + n²/2 + n²',
+      'Pattern: T(n) = 2^k · T(n/2^k) + n² · Σ (1/2)^i (geometric)',
+      'Geometric sum ≤ 2 → T(n) ≤ 2n² + n·T(1) → O(n²)'
+    ] },
+  { id: 9, technique: 'sub-half', src: 'hw_1_tn Q6',
+    q: 'T(n) = 27T(n/3) + n,  T(1) = 1',
+    a: 'O(n³)',
+    steps: [
+      'T(n) = 27T(n/3) + n',
+      'T(n) = 27[27T(n/9) + n/3] + n = 27² · T(n/9) + 9n + n',
+      'Pattern: T(n) = 27^k · T(n/3^k) + n · Σ 9^i',
+      'k = log₃n → 3^k = n → 27^k = n³',
+      'T(n) = n³ · T(1) + n·(9^k - 1)/(9-1) ≈ n·9^k/8 = n · n^log₃9 /8 = n · n² /8 = n³/8',
+      'T(n) = O(n³) — เพราะ n³·T(1) ครอบงำ'
+    ] },
+  { id: 10, technique: 'master-1', src: 'เพิ่มเติม (Master Case 1)',
+    q: 'T(n) = 4T(n/2) + n',
+    a: 'O(n²)',
+    steps: [
+      'a = 4, b = 2, d = 1',
+      'log_b(a) = log₂4 = 2 > d = 1 → Case 1',
+      'T(n) = O(n^log_b a) = O(n²)'
+    ] },
+  { id: 11, technique: 'master-2', src: 'Merge Sort (Master Case 2)',
+    q: 'T(n) = 2T(n/2) + n  (Merge Sort)',
+    a: 'O(n log n)',
+    steps: [
+      'a = 2, b = 2, d = 1',
+      'log_b(a) = 1 = d → Case 2',
+      'T(n) = O(n^d · log n) = O(n log n)'
+    ] },
+  { id: 12, technique: 'master-3', src: 'Master Case 3',
+    q: 'T(n) = 2T(n/2) + n²',
+    a: 'O(n²)',
+    steps: [
+      'a = 2, b = 2, d = 2',
+      'log_b(a) = 1 < d = 2 → Case 3',
+      'T(n) = O(n^d) = O(n²) — work dominated by combining step',
+      'verify regularity: a·f(n/b) = 2·(n/2)² = n²/2 ≤ c·f(n) ✓ for c = 1/2'
+    ] },
+  { id: 13, technique: 'master-3', src: 'Strassen',
+    q: 'T(n) = 7T(n/2) + n²  (Strassen)',
+    a: 'O(n^log₂7) ≈ O(n^2.807)',
+    steps: [
+      'a = 7, b = 2, d = 2',
+      'log_b(a) = log₂7 ≈ 2.807 > d = 2 → Case 1',
+      'T(n) = O(n^log_b a) = O(n^log₂7) ≈ O(n^2.807)',
+      '📌 ดีกว่า matrix multiplication ธรรมดา O(n³)'
+    ] },
+  { id: 14, technique: 'master-3', src: 'Matrix Mult DAC',
+    q: 'T(n) = 8T(n/2) + n²  (Matrix Mult DAC ปกติ)',
+    a: 'O(n³)',
+    steps: [
+      'a = 8, b = 2, d = 2',
+      'log_b(a) = log₂8 = 3 > d = 2 → Case 1',
+      'T(n) = O(n^log_b a) = O(n³)',
+      '📌 ทำไม Matrix Mult DAC ปกติไม่ดีกว่า O(n³) — เพราะ a=8 ไม่ใช่ 7 (Strassen)'
+    ] },
+  { id: 15, technique: 'master-2', src: 'Master Case 2 with log',
+    q: 'T(n) = 2T(n/2) + n log n',
+    a: 'O(n log²n)',
+    steps: [
+      'f(n) = n log n = Θ(n · log^1 n)',
+      'log_b(a) = 1, แต่ f(n) มี log factor → ต้องใช้ Master Generalized',
+      'Case 2 with f(n) = Θ(n · log^k n) → T(n) = Θ(n · log^(k+1) n)',
+      'ดังนั้น T(n) = Θ(n log² n)'
+    ] },
+  { id: 16, technique: 'tricky', src: 'เพิ่มเติม (tricky)',
+    q: 'T(n) = T(√n) + 1,  T(2) = 1',
+    a: 'O(log log n)',
+    steps: [
+      'Substitute n = 2^m → T(2^m) = T(2^(m/2)) + 1',
+      'Let S(m) = T(2^m) → S(m) = S(m/2) + 1',
+      'แก้ได้ S(m) = O(log m) (จาก case T(n/2) + 1)',
+      'แทนกลับ m = log₂n → T(n) = O(log m) = O(log log n)'
+    ] },
+  { id: 17, technique: 'tricky', src: 'CLRS (asymmetric split)',
+    q: 'T(n) = T(n/3) + T(2n/3) + n',
+    a: 'O(n log n)',
+    steps: [
+      'Recursion tree: ทุก level ทำงานรวม n (เพราะ n/3 + 2n/3 = n)',
+      'Tree height: ทาง deeper path คือ (2/3)^h·n = 1 → h = log_{3/2} n ≈ log n',
+      'Total = n · log n = O(n log n)',
+      '📌 มักออกใน CLRS — ไม่อยู่ใน Master Theorem ตรง ๆ'
+    ] },
+  { id: 18, technique: 'tricky', src: 'Fibonacci recursion',
+    q: 'T(n) = T(n−1) + T(n−2) + 1,  T(0) = T(1) = 1',
+    a: 'O(φⁿ) ≈ O(1.618ⁿ)',
+    steps: [
+      'Upper bound: T(n) ≤ 2T(n-1) + 1 → O(2ⁿ)',
+      'Lower bound: T(n) ≥ 2T(n-2) → O(2^(n/2)) = O((√2)ⁿ)',
+      'Exact: รากของ x² = x + 1 → φ = (1+√5)/2 ≈ 1.618',
+      'T(n) = Θ(φⁿ) — Fibonacci grows as golden ratio',
+      '📌 ทำไม Fibonacci recursive ช้า — ลด O(n) ด้วย memoization'
+    ] },
+  { id: 19, technique: 'tricky', src: 'เพิ่มเติม',
+    q: 'T(n) = 2T(n/4) + √n',
+    a: 'O(√n · log n)',
+    steps: [
+      'a = 2, b = 4, d = 1/2',
+      'log_b(a) = log₄ 2 = 1/2 = d → Case 2',
+      'T(n) = O(n^d · log n) = O(n^(1/2) · log n) = O(√n · log n)'
+    ] },
+  { id: 20, technique: 'tricky', src: 'BIGO Q15 — recompute without memo',
+    q: `Recursive code:
+long power(long x, long n) {
+  if (n == 0) return 1;
+  if (n == 1) return x;
+  if ((n%2)==0)
+    return power(x, n/2) * power(x, n/2);
+  else
+    return power(x, n/2) * power(x, n/2) * x;
+}
+หา T(n)`,
+    a: 'O(n)',
+    steps: [
+      'Recurrence: T(n) = 2T(n/2) + c (2 recursive calls ไม่ memo)',
+      'Master: a=2, b=2, d=0 → log_b a = 1 > 0 → Case 1',
+      'T(n) = O(n^log_b a) = O(n)',
+      '📌 ผิดพลาด: ถึงแม้ดูเหมือนแบ่งครึ่ง แต่ recompute 2 ครั้ง → ไม่ใช่ O(log n)',
+      'แก้: เก็บผลใน variable → ใช้ 1 recursive call → T(n) = T(n/2) + c → O(log n)'
+    ] },
+  { id: 21, technique: 'rec-tree', src: 'CLRS recursion tree',
+    q: 'T(n) = 3T(n/4) + n  — ใช้ recursion tree',
+    a: 'O(n)',
+    steps: [
+      'Recursion tree:',
+      'Level 0: 1 node, size n, work = n',
+      'Level 1: 3 nodes, size n/4, work each = n/4 → total 3n/4',
+      'Level 2: 9 nodes, size n/16, total = 9·n/16 = (9/16)·n',
+      'Level k: 3^k nodes, work each n/4^k → total = (3/4)^k · n',
+      'Sum: Σ (3/4)^k · n = n · 1/(1-3/4) = 4n  (geometric)',
+      'T(n) = O(n) — leaves contribute O(n^log₄3) ≈ O(n^0.79) < O(n)'
+    ] },
+  { id: 22, technique: 'rec-tree', src: 'Tower of Hanoi',
+    q: 'T(n) = 2T(n−1) + 1,  T(1) = 1  (Tower of Hanoi)',
+    a: 'O(2ⁿ)',
+    steps: [
+      'Backward substitution:',
+      'T(n) = 2T(n-1) + 1 = 2[2T(n-2) + 1] + 1 = 4T(n-2) + 2 + 1',
+      'T(n) = 8T(n-3) + 4 + 2 + 1',
+      'Pattern: T(n) = 2^k · T(n-k) + (2^k - 1)',
+      'k = n-1: T(n) = 2^(n-1)·T(1) + 2^(n-1) - 1 = 2^n - 1',
+      'T(n) = O(2ⁿ)'
+    ] },
+  { id: 23, technique: 'rec-tree', src: 'Quick Sort worst case',
+    q: 'T(n) = T(n−1) + n  (Quick Sort worst case — bad pivot)',
+    a: 'O(n²)',
+    steps: [
+      'Same as ID #2 — worst case ของ Quick Sort เมื่อ pivot แย่ที่สุด',
+      'T(n) = T(n-1) + n → O(n²)',
+      '📌 average case ของ Quick Sort = T(n) = 2T(n/2) + n = O(n log n)'
+    ] },
+  { id: 24, technique: 'rec-tree', src: 'BFPRT Median of Medians',
+    q: 'T(n) = T(7n/10) + T(n/5) + n  (Median of Medians)',
+    a: 'O(n)',
+    steps: [
+      'Recursion tree: work ที่ level k = (7/10 + 1/5)^k · n = (9/10)^k · n',
+      'Sum: Σ (9/10)^k · n = n · 1/(1 - 9/10) = 10n  (geometric)',
+      'T(n) = O(n)',
+      '📌 ใช้ใน worst-case O(n) selection algorithm (Quick Select with deterministic pivot)'
+    ] },
+];
+
+const RECURRENCE_TECHNIQUES = {
+  'sub-back': { label: '⬅ Backward T(n-k)', color: 'var(--accent)' },
+  'sub-half': { label: '⬇ Backward T(n/2^k)', color: 'var(--accent-2)' },
+  'master-1': { label: '🎯 Master Case 1', color: 'var(--accent-3)' },
+  'master-2': { label: '🎯 Master Case 2', color: 'var(--warn)' },
+  'master-3': { label: '🎯 Master Case 3', color: 'var(--pink)' },
+  'tricky': { label: '🧠 Tricky / non-standard', color: 'var(--danger)' },
+  'rec-tree': { label: '🌳 Recursion tree', color: 'var(--success)' },
+};
+
+Lessons4["recurrence-bank"] = function () {
+  const [tech, setTech] = useS4('all');
+  const [show, setShow] = useS4({});
+  const [score, setScore] = useS4({ right: 0, total: 0 });
+  const toggle = (id, key) => setShow(s => ({ ...s, [`${id}-${key}`]: !s[`${id}-${key}`] }));
+  const mark = (ok) => setScore(p => ({ right: p.right + (ok ? 1 : 0), total: p.total + 1 }));
+  const list = tech === 'all' ? RECURRENCE_BANK : RECURRENCE_BANK.filter(e => e.technique === tech);
+
+  return (
+    <React.Fragment>
+      <div className="callout info">
+        <div className="ttl">🔁 Recurrence Bank — {RECURRENCE_BANK.length} ข้อ practice</div>
+        ครอบคลุม: backward substitution (T(n-k), T(n/2^k)), <b>Master Theorem 3 cases</b>, recursion tree, tricky non-standard
+        <br/>ที่มา: hw_1_tnrecursive (7), เฉลย big o (3), Master Theorem applications, CLRS classics
+      </div>
+
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', margin: '14px 0' }}>
+        <button onClick={() => setTech('all')}
+          style={{ background: tech === 'all' ? 'var(--accent)' : 'var(--bg-3)', color: tech === 'all' ? '#000' : 'var(--text-1)', border: 'none', padding: '6px 12px', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>
+          🗂 ทั้งหมด ({RECURRENCE_BANK.length})
+        </button>
+        {Object.entries(RECURRENCE_TECHNIQUES).map(([k, v]) => {
+          const count = RECURRENCE_BANK.filter(e => e.technique === k).length;
+          return (
+            <button key={k} onClick={() => setTech(k)}
+              style={{ background: tech === k ? v.color : 'var(--bg-3)', color: tech === k ? '#000' : 'var(--text-1)', border: 'none', padding: '6px 12px', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>
+              {v.label} ({count})
+            </button>
+          );
+        })}
+      </div>
+
+      <div style={{ background: 'var(--bg-2)', padding: 10, borderRadius: 8, marginBottom: 14, fontSize: 13 }}>
+        <b>คะแนน:</b> {score.right} / {score.total}
+        {score.total > 0 && <span style={{ color: 'var(--text-2)', marginLeft: 8 }}>({Math.round(100 * score.right / score.total)}%)</span>}
+        <button onClick={() => setScore({ right: 0, total: 0 })} style={{ marginLeft: 12, background: 'var(--bg-3)', color: 'var(--text-1)', border: 'none', padding: '4px 10px', borderRadius: 4, cursor: 'pointer', fontSize: 11 }}>↺ Reset</button>
+      </div>
+
+      {list.map(e => {
+        const t = RECURRENCE_TECHNIQUES[e.technique];
+        return (
+          <div key={e.id} style={{ background: 'var(--bg-2)', padding: 14, borderRadius: 10, marginBottom: 10 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
+              <span style={{ fontWeight: 600 }}>Q{e.id}.</span>
+              <span style={{ fontSize: 11, padding: '2px 8px', background: t.color, color: '#000', borderRadius: 999 }}>{t.label}</span>
+              <span style={{ fontSize: 11, color: 'var(--text-2)' }}>📄 {e.src}</span>
+            </div>
+            <pre className="code" style={{ background: '#0a0e14', padding: 10, borderRadius: 4, fontSize: 13, marginBottom: 8, whiteSpace: 'pre-wrap' }}>{e.q}</pre>
+            <div style={{ display: 'flex', gap: 6, marginBottom: 6, flexWrap: 'wrap' }}>
+              <button onClick={() => toggle(e.id, 'a')}
+                style={{ background: 'rgba(16,185,129,0.15)', color: '#10b981', border: '1px solid #10b981', padding: '4px 10px', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}>
+                ✓ {show[`${e.id}-a`] ? 'Hide' : 'Show'} Answer + Steps
+              </button>
+              <button onClick={() => mark(true)}
+                style={{ background: 'rgba(34,197,94,0.15)', color: '#22c55e', border: '1px solid #22c55e', padding: '4px 10px', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}>
+                ✅ ฉันตอบถูก
+              </button>
+              <button onClick={() => mark(false)}
+                style={{ background: 'rgba(248,113,113,0.15)', color: '#f87171', border: '1px solid #f87171', padding: '4px 10px', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}>
+                ❌ ตอบผิด
+              </button>
+            </div>
+            {show[`${e.id}-a`] && (
+              <div style={{ padding: 10, background: 'rgba(16,185,129,0.06)', borderLeft: '3px solid #10b981', borderRadius: 4, fontSize: 13, lineHeight: 1.7 }}>
+                <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--accent-2)', marginBottom: 6 }}>T(n) = {e.a}</div>
+                {e.steps.map((s, i) => (
+                  <div key={i} style={{ padding: '4px 8px', marginBottom: 3, fontFamily: 'monospace', fontSize: 12, background: 'var(--bg-1)', borderRadius: 4 }}>
+                    <span style={{ color: 'var(--text-2)', marginRight: 6 }}>{i + 1}.</span>
+                    {s}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })}
+
+      <div style={{ marginTop: 20, padding: 14, background: 'var(--bg-2)', borderRadius: 10, fontSize: 13 }}>
+        <b style={{ color: 'var(--accent)' }}>💡 Decision Tree ในการเลือกเทคนิค</b>
+        <pre style={{ marginTop: 6, fontSize: 12, color: 'var(--text-1)', lineHeight: 1.6 }}>{`Recurrence รูป ?
+├── T(n) = aT(n/b) + n^d  → ใช้ Master Theorem
+│     ├── log_b(a) > d  → O(n^log_b a)        [Case 1]
+│     ├── log_b(a) = d  → O(n^d · log n)      [Case 2]
+│     └── log_b(a) < d  → O(n^d)              [Case 3]
+├── T(n) = T(n-k) + f(n)  → Backward sub ⟹ Σf(n)
+├── T(n) = T(√n) + c     → substitute m = log n
+├── T(n) = T(αn) + T(βn) + n  (α+β < 1)  → recursion tree
+└── ไม่เข้ารูปใดเลย         → ใช้ recursion tree / forward sub`}</pre>
+      </div>
+    </React.Fragment>
+  );
+};
+
+/* ============================================================
    41 — GLOSSARY
 ============================================================ */
 const GLOSSARY = [

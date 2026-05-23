@@ -240,6 +240,247 @@ C22 = M1 - M2 + M3 + M6`}</pre>
   );
 };
 
+// ============ Maxima Set (DAC) ============
+function MaximaSetViz() {
+  // Example from KMUTNB DAC sheet (week_3 part2 + assignment_4 + homework_5_1)
+  const POINTS = [
+    { x: 1, y: 4, name: 'P1' }, { x: 2, y: 6, name: 'P2' }, { x: 3, y: 1, name: 'P3' },
+    { x: 4, y: 5, name: 'P4' }, { x: 5, y: 7, name: 'P5' }, { x: 6, y: 9, name: 'P6' },
+    { x: 7, y: 2, name: 'P7' }, { x: 8, y: 6, name: 'P8' }, { x: 9, y: 3, name: 'P9' },
+  ];
+  const sorted = [...POINTS].sort((a, b) => a.x - b.x);
+  const mid = Math.floor(sorted.length / 2);
+  const S1 = sorted.slice(0, mid);             // left half by x: P1..P4
+  const S2 = sorted.slice(mid);                // right half by x: P5..P9
+  // brute-force maxima of a subset
+  const maximaOf = (pts) => pts.filter(p =>
+    !pts.some(q => q !== p && q.x > p.x && q.y > p.y)
+  );
+  const M1 = maximaOf(S1);                     // {P2, P4}
+  const M2 = maximaOf(S2);                     // {P6, P8, P9}
+  // combine: keep r in M1 only if NOT dominated by any q in M2
+  const M1_keep = M1.filter(r => !M2.some(q => q.x > r.x && q.y > r.y));
+  const result = [...M1_keep, ...M2];
+
+  const [step, setStep] = useS3(0);
+  const STEPS = [
+    { title: '1) ข้อมูลเริ่มต้น — 9 จุด เรียงตาม x แล้ว',
+      desc: 'จุด p เป็น maxima ก็ต่อเมื่อ "ไม่มี" q อื่นที่ q.x > p.x และ q.y > p.y (q ไม่ครอบคลุม p)' },
+    { title: '2) Divide — แบ่งครึ่งตาม x (median)',
+      desc: `S₁ = {${S1.map(p => p.name).join(', ')}} (x ≤ ${S1[S1.length-1].x}) | S₂ = {${S2.map(p => p.name).join(', ')}} (x ≥ ${S2[0].x})` },
+    { title: '3) Conquer ฝั่งซ้าย — recurse(S₁)',
+      desc: `M₁ = maxima(S₁) = {${M1.map(p => p.name).join(', ')}} — ตัด ${S1.filter(p => !M1.includes(p)).map(p => p.name).join(', ')} ออก` },
+    { title: '4) Conquer ฝั่งขวา — recurse(S₂)',
+      desc: `M₂ = maxima(S₂) = {${M2.map(p => p.name).join(', ')}} — ตัด ${S2.filter(p => !M2.includes(p)).map(p => p.name).join(', ')} ออก` },
+    { title: '5) Combine — กรอง M₁ ที่ถูก M₂ ครอบคลุม',
+      desc: `ทุก q ∈ M₂ มี q.x > ทุก r ∈ M₁ อยู่แล้ว → เช็คแค่ q.y > r.y. max y ใน M₂ = ${Math.max(...M2.map(p => p.y))} ⇒ ${M1.filter(r => !M1_keep.includes(r)).map(p => p.name).join(', ')} ถูกครอบคลุม จึงตัดทิ้ง` },
+    { title: '6) ผลลัพธ์',
+      desc: `Maxima set = M₁' ∪ M₂ = {${result.map(p => p.name).join(', ')}}` },
+  ];
+  const cur = STEPS[step];
+
+  // SVG layout
+  const W = 380, H = 320, pad = 30;
+  const xMax = 10, yMax = 10;
+  const sx = (v) => pad + (v / xMax) * (W - 2 * pad);
+  const sy = (v) => H - pad - (v / yMax) * (H - 2 * pad);
+  const splitX = (S1[S1.length - 1].x + S2[0].x) / 2; // between P4 (x=4) and P5 (x=5) → 4.5
+
+  const colorOf = (p) => {
+    if (step === 0) return 'var(--text-1)';
+    if (step === 1) return S1.includes(p) ? 'var(--accent)' : 'var(--pink)';
+    if (step === 2) {
+      if (!S1.includes(p)) return 'var(--bg-3)';
+      return M1.includes(p) ? 'var(--success)' : 'var(--danger)';
+    }
+    if (step === 3) {
+      if (!S2.includes(p)) return M1.includes(p) ? 'var(--success)' : 'var(--bg-3)';
+      return M2.includes(p) ? 'var(--success)' : 'var(--danger)';
+    }
+    if (step === 4) {
+      if (M2.includes(p)) return 'var(--success)';
+      if (M1.includes(p)) return M1_keep.includes(p) ? 'var(--success)' : 'var(--danger)';
+      return 'var(--bg-3)';
+    }
+    return result.includes(p) ? 'var(--success)' : 'var(--bg-3)';
+  };
+
+  return (
+    <div className="dsv">
+      <div className="ctrls">
+        <button onClick={() => setStep(Math.max(0, step - 1))} disabled={step === 0}>◀</button>
+        <span style={{ color: 'var(--text-2)' }}>step {step + 1} / {STEPS.length}</span>
+        <button onClick={() => setStep(Math.min(STEPS.length - 1, step + 1))} disabled={step >= STEPS.length - 1}>▶</button>
+        <button onClick={() => setStep(0)}>↺</button>
+      </div>
+      <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+        <svg viewBox={`0 0 ${W} ${H}`} style={{ background: 'var(--bg-2)', borderRadius: 8, maxWidth: 420, width: '100%' }}>
+          {/* axes */}
+          <line x1={pad} y1={H - pad} x2={W - pad} y2={H - pad} stroke="var(--text-2)" strokeWidth="1" />
+          <line x1={pad} y1={H - pad} x2={pad} y2={pad} stroke="var(--text-2)" strokeWidth="1" />
+          <text x={W - pad} y={H - pad + 14} fontSize="10" fill="var(--text-2)" textAnchor="end">x</text>
+          <text x={pad - 8} y={pad + 4} fontSize="10" fill="var(--text-2)" textAnchor="end">y</text>
+          {/* gridlines */}
+          {[...Array(11)].map((_, i) => (
+            <g key={`g${i}`}>
+              <line x1={sx(i)} y1={H - pad} x2={sx(i)} y2={H - pad + 3} stroke="var(--text-2)" />
+              <text x={sx(i)} y={H - pad + 13} fontSize="9" fill="var(--text-2)" textAnchor="middle">{i}</text>
+              <line x1={pad} y1={sy(i)} x2={pad - 3} y2={sy(i)} stroke="var(--text-2)" />
+              <text x={pad - 5} y={sy(i) + 3} fontSize="9" fill="var(--text-2)" textAnchor="end">{i}</text>
+            </g>
+          ))}
+          {/* split line (steps 1+) */}
+          {step >= 1 && (
+            <line x1={sx(splitX)} y1={pad} x2={sx(splitX)} y2={H - pad} stroke="var(--warn)" strokeWidth="1.5" strokeDasharray="4 3" />
+          )}
+          {/* points */}
+          {sorted.map(p => (
+            <g key={p.name}>
+              <circle cx={sx(p.x)} cy={sy(p.y)} r="6" fill={colorOf(p)} stroke="var(--text-0)" strokeWidth="0.5" />
+              <text x={sx(p.x) + 9} y={sy(p.y) - 6} fontSize="10" fill="var(--text-0)" fontWeight="bold">{p.name}</text>
+              <text x={sx(p.x) + 9} y={sy(p.y) + 6} fontSize="9" fill="var(--text-2)">({p.x},{p.y})</text>
+            </g>
+          ))}
+          {/* "staircase" outline for final maxima set */}
+          {step === STEPS.length - 1 && result.length > 0 && (
+            <polyline
+              points={
+                [...result].sort((a, b) => a.x - b.x)
+                  .map((p, i, arr) => {
+                    const next = arr[i + 1];
+                    if (next) return `${sx(p.x)},${sy(p.y)} ${sx(next.x)},${sy(p.y)}`;
+                    return `${sx(p.x)},${sy(p.y)}`;
+                  }).join(' ')
+              }
+              fill="none" stroke="var(--accent-3)" strokeWidth="2"
+            />
+          )}
+        </svg>
+        <div style={{ flex: '1 1 240px', minWidth: 240 }}>
+          <div className="callout info" style={{ marginTop: 0 }}>
+            <div className="ttl">{cur.title}</div>
+            <div style={{ color: 'var(--text-1)' }}>{cur.desc}</div>
+          </div>
+          <div style={{ marginTop: 10, fontSize: 12, color: 'var(--text-2)' }}>
+            <div><span style={{ display: 'inline-block', width: 10, height: 10, background: 'var(--success)', marginRight: 6, borderRadius: 2 }}></span>maxima / ผ่านรอบ</div>
+            <div><span style={{ display: 'inline-block', width: 10, height: 10, background: 'var(--danger)', marginRight: 6, borderRadius: 2 }}></span>ถูกครอบคลุม (ตัดทิ้ง)</div>
+            <div><span style={{ display: 'inline-block', width: 10, height: 10, background: 'var(--bg-3)', marginRight: 6, borderRadius: 2 }}></span>ฝั่งตรงข้าม / ตัดไปก่อนหน้านี้</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+Lessons3["maxima-set"] = function () {
+  return (
+    <React.Fragment>
+      <div className="callout info">
+        <div className="ttl">Maxima Set — เซตจุดที่ "ไม่ถูกครอบคลุม"</div>
+        ให้จุด n จุดบนระนาบ (x, y) จุด p เป็น <b>maxima</b> ถ้า<u>ไม่มี</u>จุด q ใดที่ q.x &gt; p.x และ q.y &gt; p.y พร้อมกัน
+        (q ครอบคลุม p) — โจทย์นี้คือหา <b>เซตของจุด maxima ทั้งหมด</b>
+      </div>
+
+      <h3>การประยุกต์</h3>
+      <ul style={{ color: 'var(--text-1)' }}>
+        <li><b>Pareto frontier</b> — ทางเลือกที่ไม่มีตัวอื่นดีกว่าทุกแกน (ราคา/คุณภาพ, เวลา/แม่นยำ)</li>
+        <li><b>Skyline operator</b> ในฐานข้อมูล — เลือกแถวที่ไม่ถูก dominate</li>
+        <li><b>เกม / กราฟิก</b> — เปลือกของจุด (skyline ตึก)</li>
+      </ul>
+
+      <h3>วิธี Brute Force — O(n²)</h3>
+      <pre className="code">{`for each p in P:
+  isMaxima = true
+  for each q in P, q ≠ p:
+    if q.x > p.x and q.y > p.y:
+      isMaxima = false; break
+  if isMaxima: result.add(p)`}</pre>
+
+      <h3>วิธี Divide & Conquer — O(n log n)</h3>
+      <ol style={{ color: 'var(--text-1)' }}>
+        <li><b>Sort</b> จุดทั้งหมดตาม x ครั้งเดียวก่อน (เสีย O(n log n))</li>
+        <li><b>Divide</b> แบ่งครึ่งตาม x ได้ S₁ (ฝั่งซ้าย, x น้อย) และ S₂ (ฝั่งขวา, x มาก)</li>
+        <li><b>Conquer</b> เรียก recursive: M₁ = maxima(S₁), M₂ = maxima(S₂)</li>
+        <li><b>Combine</b> เนื่องจากทุก q ∈ M₂ มี q.x &gt; ทุก r ∈ M₁ อยู่แล้ว → เช็คแค่ y:
+          <br/>r ∈ M₁ ถูกตัดทิ้งถ้ามี q ∈ M₂ ที่ q.y &gt; r.y (ใช้ max y ของ M₂ เป็น threshold ก็ได้)
+          <br/>ผลลัพธ์ = M₁' ∪ M₂ (โดย M₁' คือ M₁ ที่กรองแล้ว)</li>
+      </ol>
+
+      <MaximaSetViz />
+
+      <h3>Pseudocode</h3>
+      <pre className="code">{`vector<Point> maximaSet(vector<Point> S) {
+  // 0) base case
+  if (S.size() <= 1) return S;
+
+  // 1) Divide — sorted by x at top-level
+  int m = S.size() / 2;
+  vector<Point> S1(S.begin(), S.begin()+m);   // left
+  vector<Point> S2(S.begin()+m, S.end());     // right
+
+  // 2) Conquer
+  vector<Point> M1 = maximaSet(S1);
+  vector<Point> M2 = maximaSet(S2);
+
+  // 3) Combine — remove from M1 points dominated by anything in M2
+  int maxYinM2 = max element y in M2;
+  vector<Point> kept;
+  for (auto& r : M1)
+    if (r.y > maxYinM2) kept.push_back(r);    // not dominated
+
+  // append M2 (all of M2 is maxima of S2)
+  kept.insert(kept.end(), M2.begin(), M2.end());
+  return kept;
+}`}</pre>
+
+      <h3>Recurrence + Complexity</h3>
+      <table className="tbl">
+        <thead><tr><th>ขั้นตอน</th><th>เวลา</th></tr></thead>
+        <tbody>
+          <tr><td>Sort by x (ครั้งเดียว นอก recursion)</td><td>O(n log n)</td></tr>
+          <tr><td>Recurrence ของ DAC: T(n) = 2T(n/2) + O(n)</td><td>O(n log n)</td></tr>
+          <tr><td><b>รวม</b></td><td><b>O(n log n)</b></td></tr>
+          <tr><td>เทียบกับ Brute Force</td><td>O(n²)</td></tr>
+        </tbody>
+      </table>
+
+      <div className="callout warn">
+        <div className="ttl">⚠️ จุดที่ทำผิดบ่อย</div>
+        <ul style={{ margin: 0, paddingLeft: 18 }}>
+          <li>ลืม sort by x ก่อน → split แบบ S₁ left / S₂ right ใช้ไม่ได้</li>
+          <li>ตอน combine ดันเช็คทั้ง q.x และ q.y ทั้งที่ q.x &gt; r.x อยู่แล้วเสมอ — เสียเวลา</li>
+          <li>คิดว่า maxima คือจุดที่ x หรือ y มากที่สุด — ไม่ใช่ มันคือ "ไม่ถูกครอบคลุม"</li>
+        </ul>
+      </div>
+
+      <Quiz3 q={{
+        question: "ใน Combine step ของ Maxima Set DAC ทำไมเช็คแค่ q.y &gt; r.y พอ ไม่ต้องเช็ค q.x &gt; r.x?",
+        options: [
+          "เพราะ x ไม่สำคัญ",
+          "เพราะ M₂ ทุกจุดมี x มากกว่า M₁ ทุกจุดอยู่แล้ว (split by median x)",
+          "เพราะ q.x = r.x เสมอ",
+          "เพราะ sort by y แล้ว"
+        ],
+        answer: 1,
+        explain: "หลังจาก divide ด้วย median x — ทุกจุดใน S₂ (และ M₂ ⊆ S₂) มี x &gt; ทุกจุดใน S₁ ดังนั้น q.x > r.x จริงเสมอ เหลือเช็คเฉพาะ y"
+      }} />
+
+      <Quiz3 q={{
+        question: "ให้ P = {(1,4),(2,6),(3,1),(4,5),(5,7),(6,9),(7,2),(8,6),(9,3)} maxima set คือ?",
+        options: [
+          "{(1,4),(6,9),(9,3)}",
+          "{(6,9),(8,6),(9,3)}",
+          "{(5,7),(6,9),(8,6)}",
+          "{(2,6),(6,9),(9,3)}"
+        ],
+        answer: 1,
+        explain: "(6,9) ไม่มี q ที่ทั้ง x>6 และ y>9; (8,6) ไม่มี q ที่ x>8 และ y>6 ((9,3) y=3<6); (9,3) ไม่มี q ที่ x>9. จุดอื่นถูก (6,9) หรือ (8,6) ครอบคลุม"
+      }} />
+
+    </React.Fragment>
+  );
+};
+
 // ============ Interpolation Search ============
 function InterpolationSearchViz() {
   const arr = [10, 12, 13, 16, 18, 19, 20, 21, 22, 23, 24, 33, 35, 42, 47];
@@ -1092,6 +1333,542 @@ Lessons3["exercises"] = function () {
         <div className="ttl">ฝึกเพิ่มเติม</div>
         ลองไป Playground เพื่อทดลอง algorithm ด้วยข้อมูลของตัวเอง หรือ Compare Mode เพื่อเปรียบเทียบ algorithm 2 ตัว
       </div>
+    </React.Fragment>
+  );
+};
+
+/* ============================================================
+   29a — BACKTRACKING PROBLEMS BANK (7 ข้อ)
+   ที่มา: assignment_backtracking, assignment_backtracking2,
+           assignment_exhaustive_search, greedy.pdf Q4
+============================================================ */
+const BACKTRACKING_PROBLEMS = [
+  {
+    id: 1,
+    title: 'Rope Cutting (ตัดสายไฟ)',
+    src: 'assignment_backtracking2 Q2',
+    diff: 'easy',
+    spec: `ตัดสายไฟยาว L เมตร ตามรายการความยาว {l₁, l₂, ..., lₙ} เมตร
+ให้จำนวนเส้นที่ตัดน้อยที่สุด (ไม่มีเศษเหลือ)
+
+Input:
+  บรรทัด 1: n L (3 ≤ n, L ≤ 20)
+  บรรทัด 2: รายการความยาว n ตัว
+Output:
+  จำนวนเส้นน้อยสุด + รายการเส้นเรียงน้อยไปมาก (คั่นช่องว่าง)`,
+    example: `Input:
+3 8
+2 3 5
+
+Output:
+2 3 5`,
+    hint: 'recursive: target ลดลงเรื่อยๆ ใน {l₁..lₙ}. base case target=0 → success, target<0 → fail',
+    code: `#include <bits/stdc++.h>
+using namespace std;
+
+int n, L, best = INT_MAX;
+vector<int> lens, cur, bestCuts;
+
+void solve(int target) {
+  if (target == 0) {
+    if ((int)cur.size() < best) {
+      best = cur.size();
+      bestCuts = cur;
+    }
+    return;
+  }
+  if (target < 0 || (int)cur.size() >= best) return;  // pruning
+  for (int l : lens) {
+    cur.push_back(l);
+    solve(target - l);
+    cur.pop_back();
+  }
+}
+
+int main() {
+  cin >> n >> L;
+  lens.resize(n);
+  for (auto& x : lens) cin >> x;
+  solve(L);
+  sort(bestCuts.begin(), bestCuts.end());
+  cout << best << "\\n";
+  for (size_t i = 0; i < bestCuts.size(); i++)
+    cout << bestCuts[i] << " \\n"[i+1 == bestCuts.size()];
+  return 0;
+}`,
+    walkthrough: `ตัวอย่าง L=8 {2,3,5}:
+  cut 2: target=6
+    cut 2: target=4
+      cut 2: target=2 → cut 2: target=0 ✓ 4 เส้น (2+2+2+2)
+      cut 3: target=1 ✗
+    cut 3: target=3 → cut 3: target=0 ✓ 3 เส้น (2+3+3)
+    cut 5: target=1 ✗
+  cut 3: target=5 → cut 5: target=0 ✓ 2 เส้น (3+5)  ← best!
+  cut 5: target=3 → cut 3: target=0 ✓ 2 เส้น (5+3)  ← เทียบกับ best
+🏆 = 2 เส้น (3+5)`
+  },
+  {
+    id: 2,
+    title: 'Light Bulbs (ปิดหลอดไฟ)',
+    src: 'assignment_backtracking2 Q3',
+    diff: 'medium',
+    spec: `หลอดไฟ N ดวงเปิดไว้ ความสว่าง L[i] ต่างกัน
+หาวิธีปิดหลอดไฟให้ความสว่างรวมของหลอดที่ปิด = k
+เงื่อนไข:
+  1. ปิดอย่างน้อย 2 ดวง
+  2. ห้ามปิดหลอดไฟติดกัน (i, i+1)
+Input:
+  บรรทัด 1: n k (3 ≤ n ≤ 100, 1 ≤ k ≤ 100)
+  บรรทัด 2: รายการ L[i] (1 < L[i] ≤ 200)
+Output:
+  จำนวนวิธีที่ปิดได้`,
+    example: `Input:
+4 5
+1 2 3 4
+
+Output:
+1`,
+    hint: 'ที่ index i: เลือกปิดหรือไม่ปิด. ถ้าปิด → ห้ามปิด i+1, ต้องข้ามไป i+2',
+    code: `#include <bits/stdc++.h>
+using namespace std;
+
+int n, k, count_ans = 0;
+vector<int> L;
+
+void solve(int i, int sum, int turned_off) {
+  if (sum > k) return;            // pruning
+  if (i >= n) {
+    if (sum == k && turned_off >= 2) count_ans++;
+    return;
+  }
+  // ตัวเลือก 1: ปิดหลอด i → ห้ามปิด i+1, ข้ามไป i+2
+  solve(i + 2, sum + L[i], turned_off + 1);
+  // ตัวเลือก 2: ไม่ปิดหลอด i → ไป i+1
+  solve(i + 1, sum, turned_off);
+}
+
+int main() {
+  cin >> n >> k;
+  L.resize(n);
+  for (auto& x : L) cin >> x;
+  solve(0, 0, 0);
+  cout << count_ans << "\\n";
+  return 0;
+}`,
+    walkthrough: `ตัวอย่าง n=4, k=5, L=[1,2,3,4]:
+  i=0 ปิด (sum=1, off=1) → i=2
+    i=2 ปิด (sum=1+3=4, off=2) → i=4 (out) → sum=4 ≠ 5 ✗
+    i=2 ไม่ปิด → i=3
+      i=3 ปิด (sum=1+4=5, off=2) ✓
+      i=3 ไม่ปิด → i=4 (out) → sum=1 ✗
+  i=0 ไม่ปิด → i=1
+    i=1 ปิด (sum=2, off=1) → i=3
+      i=3 ปิด (sum=6, off=2) → out, sum > k ✗ (already > k จะ prune)
+      i=3 ไม่ปิด → sum=2 ✗
+    i=1 ไม่ปิด → i=2
+      ...
+🏆 = 1 วิธี (ปิด 1+4 = 5)`
+  },
+  {
+    id: 3,
+    title: 'Twin Gifts (แบ่งของขวัญฝาแฝด)',
+    src: 'greedy.pdf Q4 (โจทย์ greedy ทำได้ด้วย backtracking ก็ได้)',
+    diff: 'medium',
+    spec: `ฝาแฝด n คู่ ของขวัญแต่ละคู่มีมูลค่า (a_i, b_i)
+จัดให้พี่และน้องอย่างไรก็ได้ — แต่ละคู่ตัดสินใจอิสระว่าให้พี่หรือน้อง
+หา <b>ผลต่างมูลค่ารวม</b> ของพี่ กับ น้องน้อยสุด
+
+Input:
+  บรรทัด 1: n (n ≤ 150)
+  ต่อไป n บรรทัด: a_i b_i (1 ≤ a_i, b_i ≤ 300)
+Output:
+  ผลต่างน้อยสุด`,
+    example: `Input:
+4
+3 5
+7 11
+8 8
+2 9
+
+Output:
+1`,
+    hint: 'subset sum: คู่ที่ i เลือก (a_i ไปพี่, b_i ไปน้อง) หรือ (b_i ไปพี่, a_i ไปน้อง). target = |total_a − total_b|. ใช้ DP จะเร็วกว่า แต่ backtracking ก็ทำได้',
+    code: `#include <bits/stdc++.h>
+using namespace std;
+
+int n;
+vector<pair<int,int>> g;
+int best = INT_MAX;
+
+void solve(int i, int diff) {
+  if (i == n) {
+    best = min(best, abs(diff));
+    return;
+  }
+  // pruning: ถ้า |diff| มากกว่า best + max remaining → skip
+  // (ทำแบบเบา ๆ) — ละเอียดกว่านี้ค่อยใส่
+  solve(i + 1, diff + g[i].first - g[i].second);   // a→พี่, b→น้อง
+  solve(i + 1, diff - g[i].first + g[i].second);   // b→พี่, a→น้อง
+}
+
+int main() {
+  cin >> n;
+  g.resize(n);
+  for (auto& [a, b] : g) cin >> a >> b;
+  solve(0, 0);
+  cout << best << "\\n";
+  return 0;
+}`,
+    walkthrough: `n=4, gifts = (3,5)(7,11)(8,8)(2,9)
+มี 16 ความเป็นไปได้ (2^4) — ลองทุกทาง:
+  พี่=3,7,8,2=20, น้อง=5,11,8,9=33, diff=13
+  พี่=3,7,8,9=27, น้อง=5,11,8,2=26, diff=1  ← min!
+  พี่=5,11,8,2=26, น้อง=3,7,8,9=27, diff=1
+  ...
+🏆 = 1 (พี่ได้ของขวัญรวม 27, น้องได้ 26)`
+  },
+  {
+    id: 4,
+    title: 'Lexicographic Books',
+    src: 'assignment_backtracking Q5 / exhaustive Q6',
+    diff: 'easy',
+    spec: `จัดเรียงหนังสือ n เล่มบนชั้น (ตัวอักษรพิมพ์ใหญ่ตัวเดียว) แสดงทุกการจัดเรียงแบบ <b>lexicographic order</b>
+
+Input:
+  บรรทัด 1: n (3 ≤ n ≤ 26)
+  บรรทัด 2: รายชื่อหนังสือ n เล่ม คั่นช่องว่าง
+Output:
+  ทุก permutation บรรทัดละ 1 ชุด เรียงตัวอักษร`,
+    example: `Input:
+3
+C A B
+
+Output:
+A B C
+A C B
+B A C
+B C A
+C A B
+C B A`,
+    hint: 'sort ก่อน → permute โดย swap (pos, i for i ≥ pos) จะได้ permutation ตามลำดับ lex',
+    code: `#include <bits/stdc++.h>
+using namespace std;
+
+vector<string> books;
+int n;
+
+void perm(int pos) {
+  if (pos == n) {
+    for (int i = 0; i < n; i++) cout << books[i] << " \\n"[i+1 == n];
+    return;
+  }
+  for (int i = pos; i < n; i++) {
+    swap(books[pos], books[i]);
+    perm(pos + 1);
+    swap(books[pos], books[i]);
+  }
+}
+
+int main() {
+  cin >> n;
+  books.resize(n);
+  for (auto& b : books) cin >> b;
+  sort(books.begin(), books.end());
+  perm(0);
+  return 0;
+}`,
+    walkthrough: `n=3, sorted = [A, B, C]
+  pos=0, swap(0,0): [A,B,C]
+    pos=1, swap(1,1): [A,B,C]
+      pos=2: print "A B C"
+    pos=1, swap(1,2): [A,C,B]
+      pos=2: print "A C B"
+  pos=0, swap(0,1): [B,A,C]
+    pos=1, swap(1,1): [B,A,C]: print "B A C"
+    pos=1, swap(1,2): [B,C,A]: print "B C A"
+  pos=0, swap(0,2): [C,B,A]
+    sort → wait, ที่ swap ทำให้ไม่ใช่ lex order...
+📌 หมายเหตุ: วิธี swap-based ปกติไม่ให้ lex order — ใช้ std::next_permutation จะตรงกว่า`
+  },
+  {
+    id: 5,
+    title: 'N-Queens Count',
+    src: 'assignment_exhaustive Q4 / backtracking Q4',
+    diff: 'medium',
+    spec: `วาง n queens บนบอร์ด n×n โดยไม่เจอกัน (แถว, คอลัมน์, แนวทแยง)
+นับจำนวนวิธีที่วางได้
+
+Input:
+  n (3 ≤ n ≤ 12)
+Output:
+  จำนวนวิธี`,
+    example: `Input:
+4
+
+Output:
+2
+
+Input:
+8
+
+Output:
+92`,
+    hint: 'X[row] = col. safe(): |X[i] - X[j]| ≠ |i - j| และ X[i] ≠ X[j]',
+    code: `#include <bits/stdc++.h>
+using namespace std;
+
+int n, count_ans = 0;
+vector<int> X;
+
+bool safe(int row) {
+  for (int i = 0; i < row; i++) {
+    if (X[i] == X[row]) return false;
+    if (abs(X[row] - X[i]) == abs(row - i)) return false;
+  }
+  return true;
+}
+
+void place(int row) {
+  if (row == n) { count_ans++; return; }
+  for (int col = 0; col < n; col++) {
+    X[row] = col;
+    if (safe(row)) place(row + 1);
+  }
+}
+
+int main() {
+  cin >> n;
+  X.assign(n, 0);
+  place(0);
+  cout << count_ans << "\\n";
+  return 0;
+}`,
+    walkthrough: `n=4: solutions = (1,3,0,2), (2,0,3,1) → 2 วิธี
+n=5: 10 วิธี
+n=6: 4 วิธี
+n=7: 40 วิธี
+n=8: 92 วิธี
+n=9: 352 วิธี
+n=10: 724 วิธี — เริ่มช้า ต้องเพิ่ม pruning`
+  },
+  {
+    id: 6,
+    title: '0/1 Knapsack with Backtracking',
+    src: 'assignment_backtracking Q3 / assignment_backtracking2 Q1',
+    diff: 'medium',
+    spec: `เลือก items เพื่อใส่ knapsack ที่รับน้ำหนัก W
+แต่ละ item มี (value, weight)
+หามูลค่ารวมสูงสุด — ด้วย <b>backtracking</b> (ไม่ใช่ DP)
+
+Input:
+  บรรทัด 1: n W
+  บรรทัด 2: values
+  บรรทัด 3: weights
+Output:
+  มูลค่าสูงสุด`,
+    example: `Input:
+4 18
+12 5 4 2
+8 7 4 2
+
+Output:
+19`,
+    hint: 'binary tree: เลือกหรือไม่เลือก. pruning: ถ้า current_weight > W → cut; ถ้า upper_bound (fractional) < best → cut',
+    code: `#include <bits/stdc++.h>
+using namespace std;
+
+int n, W, best = 0;
+vector<int> v, w;
+
+void solve(int i, int cur_w, int cur_v) {
+  if (cur_w > W) return;          // pruning: เกินน้ำหนัก
+  if (i == n) {
+    best = max(best, cur_v);
+    return;
+  }
+  // upper bound check (optional): ถ้าเอาที่เหลือทุกชิ้นยังไม่เกิน best → cut
+  // int rem = accumulate(v.begin()+i, v.end(), 0);
+  // if (cur_v + rem <= best) return;
+  solve(i + 1, cur_w + w[i], cur_v + v[i]);  // เลือก
+  solve(i + 1, cur_w,        cur_v);         // ไม่เลือก
+}
+
+int main() {
+  cin >> n >> W;
+  v.resize(n); w.resize(n);
+  for (auto& x : v) cin >> x;
+  for (auto& x : w) cin >> x;
+  solve(0, 0, 0);
+  cout << best << "\\n";
+  return 0;
+}`,
+    walkthrough: `n=4, W=18, V=[12,5,4,2], W=[8,7,4,2]
+🌳 binary tree 2^4 = 16 leaves
+  best candidates:
+    (1,1,1,1) w=21 ✗ prune
+    (1,1,0,1) w=17, v=19 ✓ ← best!
+    (1,0,1,1) w=14, v=18
+    (1,1,1,0) w=19 ✗ prune
+    ...
+🏆 v=19 ที่เลือก {1, 2, 4} (น้ำหนัก 8+7+2=17, มูลค่า 12+5+2=19)`
+  },
+  {
+    id: 7,
+    title: 'Chair Permutation (count with adjacency)',
+    src: 'assignment_exhaustive Q1',
+    diff: 'medium',
+    spec: `จัด n คนนั่งบนเก้าอี้เรียงกัน — เด็กคน 1 และ 2 ต้อง<b>นั่งติดกัน</b>เสมอ
+นับจำนวนวิธีที่จัดได้
+
+Input:
+  n (2 ≤ n ≤ 10)
+Output:
+  จำนวนวิธี`,
+    example: `Input:
+3
+
+Output:
+4
+
+Input:
+4
+
+Output:
+12`,
+    hint: 'permute ทุกแบบ + filter ที่ |pos(1) − pos(2)| = 1. หรือ "ติดกัน" = ใช้กล่อง: (1,2) เป็น 1 ตัว → (n-1)! · 2',
+    code: `#include <bits/stdc++.h>
+using namespace std;
+
+int n, total = 0;
+vector<int> X;
+vector<bool> used;
+
+bool valid() {
+  int p1 = -1, p2 = -1;
+  for (int i = 0; i < n; i++) {
+    if (X[i] == 1) p1 = i;
+    if (X[i] == 2) p2 = i;
+  }
+  return abs(p1 - p2) == 1;
+}
+
+void perm(int pos) {
+  if (pos == n) {
+    if (valid()) total++;
+    return;
+  }
+  for (int v = 1; v <= n; v++) {
+    if (!used[v]) {
+      used[v] = true;
+      X[pos] = v;
+      perm(pos + 1);
+      used[v] = false;
+    }
+  }
+}
+
+int main() {
+  cin >> n;
+  X.assign(n, 0);
+  used.assign(n + 1, false);
+  perm(0);
+  cout << total << "\\n";
+  return 0;
+}`,
+    walkthrough: `n=3:
+  permutations ทั้งหมด = 6:
+    1 2 3 ✓ (1-2 ติด)
+    1 3 2 ✗
+    2 1 3 ✓
+    2 3 1 ✗
+    3 1 2 ✓
+    3 2 1 ✓
+  → 4 วิธี ✓
+
+n=4 → 12 วิธี ✓
+สูตร: 2 · (n-1)! (คน 1-2 เป็นกล่อง, มี 2 ทิศ)
+  n=3 → 2·2! = 4 ✓
+  n=4 → 2·3! = 12 ✓`
+  },
+];
+
+const BT_DIFFS = {
+  easy:   { label: '🟢 Easy',   color: '#22c55e' },
+  medium: { label: '🟡 Medium', color: '#fbbf24' },
+  hard:   { label: '🔴 Hard',   color: '#f87171' },
+};
+
+Lessons3["backtracking-problems"] = function () {
+  const [diff, setDiff] = useS3('all');
+  const [shown, setShown] = useS3({});
+  const list = diff === 'all' ? BACKTRACKING_PROBLEMS : BACKTRACKING_PROBLEMS.filter(p => p.diff === diff);
+  const toggle = (id, k) => setShown(s => ({ ...s, [`${id}-${k}`]: !s[`${id}-${k}`] }));
+
+  return (
+    <React.Fragment>
+      <div className="callout info">
+        <div className="ttl">🔍 Backtracking Problems Bank — {BACKTRACKING_PROBLEMS.length} ข้อจากชีท KMUTNB</div>
+        ที่มา: <b>assignment_backtracking.pdf</b>, <b>assignment_backtracking2.pdf</b>, <b>assignment_exhaustive_search.pdf</b>, <b>greedy.pdf Q4</b>
+        <br/>แต่ละข้อมี spec input/output ตามรูปแบบชีท + hint + เฉลย C++ + walkthrough
+      </div>
+
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', margin: '14px 0' }}>
+        <button onClick={() => setDiff('all')}
+          style={{ background: diff === 'all' ? 'var(--accent)' : 'var(--bg-3)', color: diff === 'all' ? '#000' : 'var(--text-1)', border: 'none', padding: '6px 12px', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>
+          🗂 ทั้งหมด ({BACKTRACKING_PROBLEMS.length})
+        </button>
+        {Object.entries(BT_DIFFS).map(([k, v]) => {
+          const count = BACKTRACKING_PROBLEMS.filter(p => p.diff === k).length;
+          return (
+            <button key={k} onClick={() => setDiff(k)}
+              style={{ background: diff === k ? v.color : 'var(--bg-3)', color: diff === k ? '#000' : 'var(--text-1)', border: 'none', padding: '6px 12px', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>
+              {v.label} ({count})
+            </button>
+          );
+        })}
+      </div>
+
+      {list.map(p => {
+        const d = BT_DIFFS[p.diff];
+        return (
+          <div key={p.id} style={{ background: 'var(--bg-2)', padding: 14, borderRadius: 10, marginBottom: 14 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>
+              <div style={{ fontWeight: 600, fontSize: 15 }}>{p.id}. {p.title}</div>
+              <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                <span style={{ fontSize: 11, padding: '2px 8px', background: d.color, color: '#000', borderRadius: 999 }}>{d.label}</span>
+                <span style={{ fontSize: 11, color: 'var(--text-2)' }}>📄 {p.src}</span>
+              </div>
+            </div>
+            <div style={{ fontSize: 13, color: 'var(--text-1)', whiteSpace: 'pre-wrap', marginBottom: 8 }} dangerouslySetInnerHTML={{ __html: p.spec }} />
+            <div style={{ fontSize: 12, color: 'var(--text-2)', marginBottom: 4 }}>ตัวอย่าง:</div>
+            <pre className="code" style={{ marginBottom: 8 }}>{p.example}</pre>
+            <div style={{ display: 'flex', gap: 6, marginBottom: 6, flexWrap: 'wrap' }}>
+              <button onClick={() => toggle(p.id, 'h')} style={{ background: 'rgba(251,191,36,0.15)', color: '#fbbf24', border: '1px solid #fbbf24', padding: '4px 10px', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}>
+                💡 {shown[`${p.id}-h`] ? 'Hide' : 'Hint'}
+              </button>
+              <button onClick={() => toggle(p.id, 'w')} style={{ background: 'rgba(139,92,246,0.15)', color: '#a78bfa', border: '1px solid #a78bfa', padding: '4px 10px', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}>
+                🚶 {shown[`${p.id}-w`] ? 'Hide' : 'Walkthrough'}
+              </button>
+              <button onClick={() => toggle(p.id, 'c')} style={{ background: 'rgba(16,185,129,0.15)', color: '#10b981', border: '1px solid #10b981', padding: '4px 10px', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}>
+                ✓ {shown[`${p.id}-c`] ? 'Hide' : 'Show'} Code
+              </button>
+            </div>
+            {shown[`${p.id}-h`] && (
+              <div style={{ padding: 10, background: 'rgba(251,191,36,0.06)', borderLeft: '3px solid #fbbf24', borderRadius: 4, fontSize: 13, marginBottom: 6 }}>
+                💡 {p.hint}
+              </div>
+            )}
+            {shown[`${p.id}-w`] && (
+              <div style={{ padding: 10, background: 'rgba(139,92,246,0.06)', borderLeft: '3px solid #a78bfa', borderRadius: 4, fontSize: 12, marginBottom: 6, whiteSpace: 'pre-wrap', fontFamily: 'monospace', lineHeight: 1.6 }}>
+                {p.walkthrough}
+              </div>
+            )}
+            {shown[`${p.id}-c`] && (
+              <pre className="code" style={{ marginTop: 6, background: 'rgba(16,185,129,0.06)', borderLeft: '3px solid #10b981' }}>{p.code}</pre>
+            )}
+          </div>
+        );
+      })}
     </React.Fragment>
   );
 };

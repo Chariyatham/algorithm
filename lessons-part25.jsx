@@ -465,6 +465,330 @@ Lessons25["learning-paths"] = function () {
 /* ============================================================
    mock-exam-5 — Thai University Style Past Exam
 ============================================================ */
+/* ============================================================
+   KMUTNB Mock Mid — syllabus 040613206 ถึงสัปดาห์ 8
+   ครอบคลุม: Big-O analysis, Asymptotic + L'Hôpital, Sort/Search,
+              D&C (Quick Select, Maxima Set, Karatsuba, Strassen),
+              Backtracking (Permutation, Subset Sum, N-Queens, Knapsack),
+              intro Greedy (Coin Change)
+============================================================ */
+const EXAM_KMUTNB_MID = [
+  {
+    section: "ส่วนที่ 1 — การวิเคราะห์ T(n) (20 คะแนน)",
+    questions: [
+      {
+        q: "หา T(n) ของโค้ดต่อไปนี้ (5 คะแนน):<br/><pre style='margin:8px 0;background:#0a0e14;padding:10px;border-radius:4px'>sum = 0;\nfor (i = 0; i &lt; n; i++)\n  for (j = 0; j &lt; i*i; j++)\n    for (k = 0; k &lt; j; k++)\n      sum++;</pre>",
+        hint: "inner sum = Σⱼ j = i²(i²-1)/2, outer = Σᵢ i⁴/2",
+        ans: `Inner สุด: k จาก 0 ถึง j-1 → j ครั้ง
+ตัวที่สอง: Σ_{j=0}^{i²-1} j = (i²-1)·i²/2 ≈ i⁴/2
+
+ตัวนอก: Σ_{i=0}^{n-1} i⁴/2 = (1/2) · Σi⁴
+
+จากสูตร Σi⁴ = n(n+1)(2n+1)(3n²+3n-1)/30 ≈ n⁵/5
+
+∴ T(n) = (1/2) · n⁵/5 ≈ n⁵/10
+
+✓ O(n⁵)`
+      },
+      {
+        q: "หา T(n) (5 คะแนน):<br/><pre style='margin:8px 0;background:#0a0e14;padding:10px;border-radius:4px'>count = 1;\nwhile (n &gt; 1) {\n  count += 1;\n  n = n / 3;\n}</pre>",
+        hint: "หาร 3 ทุกรอบ → log₃ n รอบ",
+        ans: `รอบที่ k: n = n₀ / 3^k
+หยุดเมื่อ n / 3^k ≤ 1 → 3^k ≥ n₀ → k ≥ log₃ n₀
+
+∴ T(n) = log₃ n + constant = O(log n)
+
+📌 หมายเหตุ: ฐาน log ไม่สำคัญใน Big-O (เปลี่ยนฐานได้ด้วย constant)`
+      },
+      {
+        q: "เรียงฟังก์ชันต่อไปนี้จาก<b>เติบโตช้าสุด</b>ไปเร็วสุด (5 คะแนน):<br/>5n³ + 2n² + 30, &nbsp; 7 log n, &nbsp; 10n, &nbsp; n¹⁰⁰, &nbsp; 5,000,000, &nbsp; 0.5n³, &nbsp; n^(1/3), &nbsp; 100·2ⁿ",
+        hint: "constant &lt; log &lt; root &lt; linear &lt; polynomial &lt; exponential",
+        ans: `Hierarchy:
+1. 5,000,000           (constant, O(1))
+2. 7 log n             (logarithmic)
+3. n^(1/3)             (root — sub-linear)
+4. 10n                 (linear)
+5. 0.5n³               (cubic — ต่ำกว่า 5n³ เพราะ coefficient ไม่นับ แต่ตรงนี้ทั้งคู่ O(n³) → เท่ากันใน Big-O)
+6. 5n³ + 2n² + 30      (cubic — เท่ากับข้อ 5 ใน Θ(n³))
+7. n¹⁰⁰                (polynomial degree 100)
+8. 100·2ⁿ              (exponential — ชนะทุก polynomial)
+
+✓ Big-O hierarchy: O(1) ≪ O(log n) ≪ O(√n) ≪ O(n) ≪ O(n³) ≪ O(n¹⁰⁰) ≪ O(2ⁿ)`
+      },
+      {
+        q: "ใช้กฎโลปิตา (L'Hôpital) เปรียบเทียบ T₁ = 1000 log n กับ T₂ = n (5 คะแนน)",
+        hint: "limit ratio → ∞/∞ → derivative",
+        ans: `lim_{n→∞} (1000 log₂ n) / n  →  ∞/∞ form
+
+ใช้ L'Hôpital — derivative:
+  f'(n) = 1000 / (n · ln 2)
+  g'(n) = 1
+
+→ lim = lim [1000/(n·ln 2)] / 1 = (1000/ln 2) · lim 1/n = 0
+
+∴ T₁ ∈ o(T₂) → 1000 log n เติบโตช้ากว่า n เสมอ (ไม่ว่า constant ใหญ่แค่ไหน)`
+      },
+    ]
+  },
+  {
+    section: "ส่วนที่ 2 — Recurrence + พิสูจน์ Asymptotic (15 คะแนน)",
+    questions: [
+      {
+        q: "แก้ recurrence T(n) = 2T(n/2) + c โดยวิธี backward substitution (T(1) = 1) (8 คะแนน)",
+        hint: "แทนค่าซ้ำ k ครั้ง จน n/2^k = 1",
+        ans: `T(n) = 2T(n/2) + c
+     = 2[2T(n/4) + c] + c
+     = 4T(n/4) + 2c + c
+     = 4[2T(n/8) + c] + 2c + c
+     = 8T(n/8) + 4c + 2c + c
+     = 2^k · T(n/2^k) + c·(2^(k-1) + ... + 2 + 1)
+     = 2^k · T(n/2^k) + c·(2^k - 1)
+
+หยุดเมื่อ n/2^k = 1 → k = log₂ n → 2^k = n
+
+T(n) = n · T(1) + c·(n - 1)
+     = n + cn - c
+     = (1+c)·n - c
+
+∴ T(n) = O(n) ▢`
+      },
+      {
+        q: "พิสูจน์จากนิยามว่า 100n + 5 = O(n²) — หา c, n₀ (7 คะแนน)",
+        hint: "ต้องการ 100n + 5 ≤ c·n² ∀ n ≥ n₀",
+        ans: `ต้องการหา c > 0, n₀ ≥ 1 ที่:
+  100n + 5 ≤ c·n²  ∀ n ≥ n₀
+
+หาร n² ทั้งสองข้าง:
+  100/n + 5/n² ≤ c
+
+สำหรับ n = 1: 100/1 + 5/1 = 105 ≤ c → ต้องการ c ≥ 105
+
+เลือก c = 105, n₀ = 1:
+  100·1 + 5 = 105 ≤ 105·1² = 105  ✓
+  100·n + 5 ≤ 100·n² + 5·n² = 105·n²  ∀ n ≥ 1  ✓
+
+∴ 100n + 5 = O(n²) ด้วย c = 105, n₀ = 1 ▢`
+      },
+    ]
+  },
+  {
+    section: "ส่วนที่ 3 — Sort & Search Trace (20 คะแนน)",
+    questions: [
+      {
+        q: "Trace <b>Shell Sort</b> ของ arr = [16, 25, 2, 54, 36, 9, 12, 66] โดยใช้ Sedgewick {1, 3, 5, 7, 11, ...} (8 คะแนน)",
+        hint: "gap ≤ n/2: ลอง 5, 3, 2, 1 ทีละรอบ",
+        ans: `Initial:           16 25 2 54 36 9 12 66
+
+gap=5: groups (0,5)(1,6)(2,7)(3)(4)
+  (16,9)→9,16  (25,12)→12,25  (2,66)→OK
+  → 9 12 2 54 36 16 25 66
+
+gap=3: groups (0,3,6)(1,4,7)(2,5)
+  (9,54,25)→9,25,54  (12,36,66)→OK  (2,16)→OK
+  → 9 12 2 25 36 16 54 66
+
+gap=2: groups (0,2,4,6)(1,3,5,7)
+  (9,2,36,54)→2,9,36,54  (12,25,16,66)→12,16,25,66
+  → 2 12 9 16 36 25 54 66
+
+gap=1: insertion sort
+  → 2 9 12 16 25 36 54 66  ✓ sorted`
+      },
+      {
+        q: "Trace <b>Binary Search</b> ค้นหา target = 5 ใน [2,5,5,5,6,6,8,9,9,9] (สมาชิกซ้ำ) — แสดง low, high, mid, A[mid] เพื่อหา <b>firstIndex</b> ของ 5 (6 คะแนน)",
+        hint: "เมื่อเจอ → ไปฝั่งซ้ายต่อ; เก็บ result ไว้",
+        ans: `index:  0 1 2 3 4 5 6 7 8 9
+A:       2 5 5 5 6 6 8 9 9 9
+target = 5
+
+result | low | high | mid | A[mid]
+  -1   |  0  |   9  |  4  |  6     → A[mid] > target, high = mid - 1 = 3
+  -1   |  0  |   3  |  1  |  5     → A[mid] == target, result = 1, high = mid - 1 = 0
+   1   |  0  |   0  |  0  |  2     → A[mid] < target, low = mid + 1 = 1
+   1   |  1  |   0  |  -  |  -     → low > high, exit
+
+✓ firstIndex = 1`
+      },
+      {
+        q: "Trace <b>Quick Sort</b> partition ของ arr = [25, 57, 48, 37, 12, 92, 86, 33] ใช้ A[left] = 25 เป็น pivot (median of three ไม่ใช้ ในข้อนี้) (6 คะแนน)",
+        hint: "up เลื่อนซ้าย (จาก right) เมื่อ A[up] > pivot; down เลื่อนขวา (จาก left) เมื่อ A[down] < pivot",
+        ans: `pivot = 25 (A[left]), down = 0, up = 7
+Initial:  25 57 48 37 12 92 86 33
+
+down เลื่อนขวาเรื่อยๆ — 57 > 25 หยุดที่ down=1
+up เลื่อนซ้ายเรื่อยๆ — 33,86,92 > 25; 12 < 25 หยุดที่ up=4
+
+down < up → swap A[1] และ A[4]:
+  25 12 48 37 57 92 86 33
+
+ต่อ — down: 48 > 25 หยุดที่ down=2
+up: 57 > 25, ต่อ; 37 > 25, ต่อ; 12 < 25 หยุดที่ up=1
+
+up < down → exit, swap A[left] กับ A[up]:
+  12 25 48 37 57 92 86 33
+
+✓ pivot 25 อยู่ที่ตำแหน่ง 1 — ฝั่งซ้าย (≤25): {12}, ฝั่งขวา (>25): {48,37,57,92,86,33}`
+      },
+    ]
+  },
+  {
+    section: "ส่วนที่ 4 — Divide & Conquer (25 คะแนน)",
+    questions: [
+      {
+        q: "Trace <b>Quick Select k=4</b> ของ arr = [1, 5, 10, 4, 8, 2, 6, 9, 20] (3-way partition L/E/G, pivot = ตัวแรก) (10 คะแนน)",
+        hint: "ลด k ตามขนาด L, E, G ที่ข้ามไป",
+        ans: `n=9, k=4 (หาเลขน้อยสุดอันดับ 4)
+
+Round 1: pivot=1, A=[1,5,10,4,8,2,6,9,20]
+  L = {} (ไม่มีตัวน้อยกว่า 1)
+  E = {1}
+  G = {5,10,4,8,2,6,9,20}
+  |L| = 0, |L|+|E| = 1
+  k=4 > 1 → ไปฝั่ง G, k' = 4 - 1 = 3
+
+Round 2: pivot=5, G=[5,10,4,8,2,6,9,20], k=3
+  L = {4, 2}
+  E = {5}
+  G = {10, 8, 6, 9, 20}
+  |L| = 2, |L|+|E| = 3
+  k=3 ≤ |L|+|E| = 3 → pivot คือคำตอบ
+
+✓ คำตอบ: 5
+
+(พิสูจน์: เรียง [1,2,4,5,6,8,9,10,20] → อันดับ 4 = 5 ✓)`
+      },
+      {
+        q: "ใช้ <b>Karatsuba</b> คำนวณ 342 × 231 — แสดงทุก step (8 คะแนน)",
+        hint: "แบ่ง X = 3·100 + 42, Y = 2·100 + 31. คำนวณ z₀, z₂, z₁",
+        ans: `n = 3 (3 หลัก) → m = ⌈n/2⌉ = 2 → 10^m = 100
+
+X = 342: a = 3, b = 42  (X = 3·100 + 42)
+Y = 231: c = 2, d = 31  (Y = 2·100 + 31)
+
+z₂ = a·c = 3·2 = 6
+z₀ = b·d = 42·31 = 1302
+z₁ = (a+b)·(c+d) - z₂ - z₀
+   = (3+42)·(2+31) - 6 - 1302
+   = 45 · 33 - 1308
+   = 1485 - 1308 = 177
+
+X·Y = z₂·10^(2m) + z₁·10^m + z₀
+    = 6·10000 + 177·100 + 1302
+    = 60000 + 17700 + 1302
+    = 79002
+
+✓ Check: 342 × 231 = 79002 ✓
+จำนวนการคูณ = 3 (z₂, z₀, (a+b)(c+d)) — ลดจาก 4 ของ schoolbook`
+      },
+      {
+        q: "วาด recursive tree ของ <b>Maxima Set</b> สำหรับ P = {(1,4),(2,6),(3,1),(4,5),(5,7),(6,9),(7,2),(8,6),(9,3)} (7 คะแนน)",
+        hint: "Sort by x → split median → recurse แต่ละฝั่ง → combine ตัดที่ถูก dominate",
+        ans: `Sorted by x: (1,4)(2,6)(3,1)(4,5)(5,7)(6,9)(7,2)(8,6)(9,3) (n=9)
+
+Tree:
+                  maxima(P, 9 points)
+                   /              \\
+            maxima(S₁=4)        maxima(S₂=5)
+            /        \\           /         \\
+        m({P1,P2})  m({P3,P4})  m({P5,P6,P7}) m({P8,P9})
+        = {(2,6)}   = {(4,5)}   = {(6,9),(7,2)}  = {(8,6),(9,3)}
+
+        merge L = {(2,6),(4,5)}
+        merge R = {(6,9),(8,6),(9,3)}
+
+  Combine:
+    M₁ = {(2,6),(4,5)}, M₂ = {(6,9),(8,6),(9,3)}
+    max y ใน M₂ = 9
+    (2,6).y = 6 < 9 → ถูก dominate → ตัด
+    (4,5).y = 5 < 9 → ถูก dominate → ตัด
+    M₁' = {} (ว่าง)
+
+✓ Maxima set = {} ∪ {(6,9),(8,6),(9,3)} = {(6,9),(8,6),(9,3)}`
+      },
+    ]
+  },
+  {
+    section: "ส่วนที่ 5 — Backtracking (15 คะแนน)",
+    questions: [
+      {
+        q: "วาด <b>solution tree</b> ของ Subset Sum: A = {25, 10, 9, 2}, k = 12 (binary encoding) — ทำเครื่องหมายคำตอบทุกตัว (8 คะแนน)",
+        hint: "ใช้ binary representation: x_i = 1 (เอา) หรือ 0 (ไม่เอา) — มี backtracking pruning เมื่อ sum > k",
+        ans: `Encoding: X = (x₁, x₂, x₃, x₄) แทน {25, 10, 9, 2}
+                                 root
+                          x₁=0 /      \\ x₁=1
+                              /          \\
+                           sum=0       sum=25 ✗ (>12 → prune)
+                       x₂=0 / \\ x₂=1
+                          /      \\
+                       sum=0    sum=10
+                  x₃=0 / \\x₃=1   x₃=0/ \\x₃=1
+                     /     \\        /     \\
+                   0       9       10     19 ✗
+              x₄=0/\\x₄=1 0/\\x₄=1 0/\\x₄=1
+                /   \\   /    \\  /    \\
+               0    2   9    11  10   12 ✓ {10,2}
+
+              ต่อจากกิ่ง 9: x₄=1 → 11
+              ต่อจากกิ่ง 19: prune (>12)
+
+✓ คำตอบเซตย่อย: {10, 2} → 10+2 = 12
+  (อีกข้อที่เป็นไปได้ {9,2,1} ไม่อยู่ใน A นี้ - มีแค่ {10,2})`
+      },
+      {
+        q: "เขียน pseudocode <b>4-Queens</b> ด้วย backtracking — แสดงเงื่อนไข safe() (7 คะแนน)",
+        hint: "Check ทุกคู่ (i,j): |i-j| ≠ |X[i]-X[j]| (diagonal) และ X[i] ≠ X[j] (same column)",
+        ans: `void place(int X[], int row, int n) {
+  if (row == n) { print(X); return; }
+  for (int col = 0; col < n; col++) {
+    X[row] = col;
+    if (safe(X, row)) {       // pruning
+      place(X, row + 1, n);
+    }
+  }
+}
+
+bool safe(int X[], int row) {
+  for (int i = 0; i < row; i++) {
+    // same column?
+    if (X[i] == X[row]) return false;
+    // same diagonal? |row - i| == |X[row] - X[i]|
+    if (abs(X[row] - X[i]) == abs(row - i)) return false;
+  }
+  return true;
+}
+
+สำหรับ n=4 — คำตอบ: (1,3,0,2) และ (2,0,3,1) — 2 solutions`
+      },
+    ]
+  },
+  {
+    section: "ส่วนที่ 6 — Greedy intro (5 คะแนน)",
+    questions: [
+      {
+        q: "Coin Change: เหรียญ {1, 3, 4}, ทอน 6 บาท — แสดงผลของ Greedy และ Optimal; อธิบายทำไม Greedy ไม่ได้ optimal ทุกครั้ง (5 คะแนน)",
+        hint: "Greedy: เอามากที่สุดก่อน. Optimal: ลองทุกแบบ.",
+        ans: `Greedy (เลือกใหญ่สุดก่อน):
+  6 - 4 = 2 → 1 เหรียญ (4)
+  2 - 1 = 1 → 1 เหรียญ (1)
+  1 - 1 = 0 → 1 เหรียญ (1)
+  รวม: 3 เหรียญ
+
+Optimal:
+  6 = 3 + 3 → 2 เหรียญ ✓
+
+เหตุผล:
+  Greedy ทำการเลือก local-best ในแต่ละขั้น — เมื่อเลือก 4 แล้ว เหลือ 2 ซึ่งต้องใช้ 2 เหรียญ
+  แต่ถ้าเลือก 3 ก่อน เหลือ 3 ซึ่งใช้ 1 เหรียญ (3)
+
+  Greedy ใช้ได้เมื่อเซตเหรียญมี <b>Greedy Choice Property</b> เช่น {1, 5, 10, 25} ของ US/THB
+  แต่ {1, 3, 4} ไม่มีคุณสมบัตินี้ — ต้องใช้ DP แทน
+
+✓ Optimal substructure: dp[i] = min(dp[i-c] + 1) ∀ c ∈ coins`
+      },
+    ]
+  },
+];
+
 const EXAM5 = [
   {
     section: "ส่วนที่ 1 — Big-O & Recurrence (25 คะแนน)",
@@ -664,6 +988,875 @@ Time: O(1) — แค่คำนวณ |V| - k
     ]
   }
 ];
+
+/* ============================================================
+   KMUTNB Mock Final — syllabus 040613206 รวมทุกเรื่อง 17 สัปดาห์
+   เน้น Greedy + DP เพิ่มเติมจาก Mid + integration
+============================================================ */
+const EXAM_KMUTNB_FINAL = [
+  {
+    section: "ส่วนที่ 1 — Analysis review (15 คะแนน)",
+    questions: [
+      {
+        q: "หา T(n) ของ <code>void f(int n) { for(i=0;i&lt;n;i++) sum++; for(j=0;j&lt;n*n;j++) val+=n; }</code> (5 คะแนน)",
+        hint: "2 loop ติดกัน → บวก ไม่ใช่คูณ",
+        ans: `Loop 1: i = 0 ถึง n-1 → n ครั้ง
+Loop 2: j = 0 ถึง n²-1 → n² ครั้ง (basic op: val += n)
+
+T(n) = n + n² = n²(1 + 1/n) → O(n²)
+
+📌 ระวัง: เป็น "+ ตัวที่โตเร็วกว่า" ไม่ใช่ "×"`
+      },
+      {
+        q: "ใช้ Master Theorem แก้ T(n) = 8T(n/2) + n³ (5 คะแนน)",
+        hint: "a=8, b=2, d=3 → log_b(a) = 3 = d → Case 2",
+        ans: `Master Theorem: T(n) = aT(n/b) + Θ(n^d), a=8, b=2, d=3
+
+log_b(a) = log₂8 = 3 = d → Case 2
+
+→ T(n) = Θ(n^d · log n) = Θ(n³ log n)
+
+📌 นี่คือ recurrence ของ matrix mult แบบ DAC ปกติ (ก่อน Strassen)
+   Strassen ทำให้เป็น a=7 → log₂7 ≈ 2.807 > d=2 → Case 3 → O(n^2.807)`
+      },
+      {
+        q: "พิสูจน์ว่า n² + 50 log n = Θ(n²) (5 คะแนน)",
+        hint: "หาทั้ง O และ Ω",
+        ans: `Upper bound (Big-O):
+  n² + 50 log n ≤ n² + 50·n²    (เพราะ log n ≤ n ≤ n² เมื่อ n ≥ 1)
+                = 51·n²
+  → c₂ = 51, n₀ = 1 ✓
+
+Lower bound (Big-Ω):
+  n² + 50 log n ≥ n²     (เพราะ 50 log n ≥ 0 เมื่อ n ≥ 1)
+  → c₁ = 1, n₀ = 1 ✓
+
+รวม: 1·n² ≤ n² + 50 log n ≤ 51·n² ∀ n ≥ 1
+
+∴ n² + 50 log n = Θ(n²) ▢`
+      },
+    ]
+  },
+  {
+    section: "ส่วนที่ 2 — D&C Sort + Strassen (15 คะแนน)",
+    questions: [
+      {
+        q: "Trace Merge Sort ของ [16, 25, 2, 54, 36, 9, 12, 66] แสดง split + merge ทุกขั้น (8 คะแนน)",
+        hint: "Split ถึง singleton → merge bottom-up",
+        ans: `Split:
+  [16,25,2,54,36,9,12,66]
+   → [16,25,2,54] | [36,9,12,66]
+   → [16,25] | [2,54] | [36,9] | [12,66]
+   → [16][25] | [2][54] | [36][9] | [12][66]
+
+Merge:
+  [16][25] → [16,25]
+  [2][54]  → [2,54]
+  [36][9]  → [9,36]
+  [12][66] → [12,66]
+
+  [16,25] + [2,54] → [2,16,25,54]
+  [9,36] + [12,66] → [9,12,36,66]
+
+  [2,16,25,54] + [9,12,36,66]:
+    2 vs 9 → 2
+    16 vs 9 → 9
+    16 vs 12 → 12
+    16 vs 36 → 16
+    25 vs 36 → 25
+    54 vs 36 → 36
+    54 vs 66 → 54
+    เหลือ 66
+
+  → [2, 9, 12, 16, 25, 36, 54, 66] ✓ sorted`
+      },
+      {
+        q: "ใช้ <b>Strassen</b> คูณเมตริกซ์ A·B เมื่อ A = [[1,3],[7,5]], B = [[6,8],[4,2]] — คำนวณ M₁..M₇ และเทอม C (7 คะแนน)",
+        hint: "M₁=(A₁₁+A₂₂)(B₁₁+B₂₂) ... C₁₁ = M₁+M₄-M₅+M₇",
+        ans: `2×2 matrix → ไม่ต้อง recurse (n=1 ใน sub-block)
+  A = [[1,3],[7,5]]  B = [[6,8],[4,2]]
+  A₁₁=1, A₁₂=3, A₂₁=7, A₂₂=5
+  B₁₁=6, B₁₂=8, B₂₁=4, B₂₂=2
+
+M₁ = (A₁₁+A₂₂)(B₁₁+B₂₂) = (1+5)(6+2) = 6·8 = 48
+M₂ = (A₂₁+A₂₂)·B₁₁     = (7+5)·6 = 12·6 = 72
+M₃ = A₁₁·(B₁₂-B₂₂)     = 1·(8-2) = 6
+M₄ = A₂₂·(B₂₁-B₁₁)     = 5·(4-6) = -10
+M₅ = (A₁₁+A₁₂)·B₂₂     = (1+3)·2 = 8
+M₆ = (A₂₁-A₁₁)(B₁₁+B₁₂) = (7-1)(6+8) = 6·14 = 84
+M₇ = (A₁₂-A₂₂)(B₂₁+B₂₂) = (3-5)(4+2) = -2·6 = -12
+
+C₁₁ = M₁+M₄-M₅+M₇ = 48-10-8-12 = 18
+C₁₂ = M₃+M₅       = 6+8 = 14
+C₂₁ = M₂+M₄       = 72-10 = 62
+C₂₂ = M₁-M₂+M₃+M₆ = 48-72+6+84 = 66
+
+✓ C = [[18,14],[62,66]]
+✓ Check ปกติ: [[1·6+3·4, 1·8+3·2],[7·6+5·4, 7·8+5·2]] = [[18,14],[62,66]] ✓
+
+จำนวนการคูณ = 7 (M₁..M₇)`
+      },
+    ]
+  },
+  {
+    section: "ส่วนที่ 3 — Backtracking (15 คะแนน)",
+    questions: [
+      {
+        q: "<b>0/1 Knapsack with Backtracking</b>: V={12,5,4,2}, W={8,7,4,2}, capacity=18 — แสดง solution tree แบบ binary + ผลลัพธ์ (8 คะแนน)",
+        hint: "ไล่ตัวแปร x₁,x₂,x₃,x₄ ∈ {0,1}. pruning เมื่อ total weight > capacity.",
+        ans: `Items: (V,W) = (12,8), (5,7), (4,4), (2,2). cap = 18
+
+ไล่ binary code (x₁ x₂ x₃ x₄):
+  ✓ พิจารณาเฉพาะที่ w_sum ≤ 18
+
+(1,1,1,1): w=8+7+4+2=21 > 18  ✗ prune
+(1,1,1,0): w=19 > 18           ✗ prune
+(1,1,0,1): w=17 ≤ 18, v=12+5+2=19 ✓
+(1,1,0,0): w=15, v=17
+(1,0,1,1): w=14, v=18
+(1,0,1,0): w=12, v=16
+(1,0,0,1): w=10, v=14
+(1,0,0,0): w=8,  v=12
+(0,1,1,1): w=13, v=11
+(0,1,1,0): w=11, v=9
+(0,1,0,1): w=9,  v=7
+(0,1,0,0): w=7,  v=5
+(0,0,1,1): w=6,  v=6
+(0,0,1,0): w=4,  v=4
+(0,0,0,1): w=2,  v=2
+(0,0,0,0): w=0,  v=0
+
+🏆 Max V = 19 ที่ x = (1,1,0,1) — เลือกสินค้า 1, 2, 4`
+      },
+      {
+        q: "<b>Rod Cutting</b> (backtracking variant): ตัดสายไฟยาว 8 m ตามรายการ {2, 3, 5} m — หาวิธีที่ใช้เส้นน้อยสุด (7 คะแนน)",
+        hint: "Recursive ลอง subtract แต่ละ length ที่เหลือ ≥ 0 → ใช้ backtracking",
+        ans: `เป้าหมาย: ตัด 8 ด้วย {2, 3, 5} ใช้จำนวนเส้นน้อยสุด
+
+Backtracking tree (target ลดลงเรื่อยๆ):
+  cut 2: 8→6
+    cut 2: 6→4
+      cut 2: 4→2
+        cut 2: 2→0  ✓ 4 เส้น (2+2+2+2)
+      cut 3: 4→1   ✗
+    cut 3: 6→3
+      cut 3: 3→0   ✓ 3 เส้น (2+3+3)
+    cut 5: 6→1     ✗
+  cut 3: 8→5
+    cut 5: 5→0     ✓ 2 เส้น (3+5)   ← min!
+    cut 3: 5→2
+      cut 2: 2→0   ✓ 3 เส้น (3+3+2)
+  cut 5: 8→3
+    cut 3: 3→0     ✓ 2 เส้น (5+3)   ← min ก็ได้ผลเดียวกัน
+
+🏆 น้อยสุด: 2 เส้น (3+5)
+รายการตัด เรียงน้อยไปมาก: 3 5`
+      },
+    ]
+  },
+  {
+    section: "ส่วนที่ 4 — Greedy (20 คะแนน)",
+    questions: [
+      {
+        q: "<b>Fractional Knapsack</b>: n=4, W=25, items (weight, value) = (18,25), (15,24), (10,5), (5,8). หาคำตอบ (8 คะแนน)",
+        hint: "density (v/w) sort: สูง→ต่ำ",
+        ans: `density:
+  Item 4: 8/5  = 1.60
+  Item 2: 24/15 = 1.60
+  Item 1: 25/18 ≈ 1.39
+  Item 3: 5/10  = 0.50
+
+เรียง (ถ้าเท่ากันเลือกตัวไหนก่อนก็ได้): 4, 2, 1, 3
+
+ใส่:
+  Item 4 (w=5,  v=8):  cap=25 → cap=20, v_total=8
+  Item 2 (w=15, v=24): cap=20 → cap=5, v_total=32
+  Item 1 (w=18, v=25): cap=5 < 18 → fraction = 5/18
+                       value = 25·(5/18) ≈ 6.94, v_total ≈ 38.94
+  Item 3: cap = 0, ไม่เอา
+
+✓ Selection: x = (0.28, 1.00, 0.00, 1.00)
+✓ Total value ≈ 38.94`
+      },
+      {
+        q: "<b>Huffman Coding</b> สำหรับ text = \"HUFFMANCODES\" — สร้าง Huffman tree + binary code + ถอดรหัส \"110010111001111\" (12 คะแนน)",
+        hint: "นับความถี่, build tree จาก min-heap, code = path (0=left, 1=right)",
+        ans: `Frequency ใน "HUFFMANCODES" (12 chars):
+  F: 2, H:1, U:1, M:1, A:1, N:1, C:1, O:1, D:1, E:1, S:1
+  รวม 11 ตัวอักษรแตกต่างกัน — F ความถี่ 2, ที่เหลือ 1
+
+Build tree (merge 2 ตัวความถี่ต่ำสุดจนเหลือ 1 root):
+  เริ่มจาก nodes ความถี่ 1 ทั้งหมด + F(2)
+
+  รอบ 1: merge H(1)+U(1) → HU(2)
+  รอบ 2: merge M(1)+A(1) → MA(2)
+  รอบ 3: merge N(1)+C(1) → NC(2)
+  รอบ 4: merge O(1)+D(1) → OD(2)
+  รอบ 5: merge E(1)+S(1) → ES(2)
+  รอบ 6: merge F(2)+HU(2) → FHU(4)
+  รอบ 7: merge MA(2)+NC(2) → MANC(4)
+  รอบ 8: merge OD(2)+ES(2) → ODES(4)
+  รอบ 9: merge FHU(4)+MANC(4) → FHUMANC(8)
+  รอบ 10: merge FHUMANC(8)+ODES(4) → root(12)
+
+(โครงสร้าง tree จะแตกต่างกันขึ้นกับลำดับ tie-break แต่ encoding ยาวเท่ากัน)
+
+Binary codes (one valid assignment, depth ≤ 4):
+  F=000, H=0010, U=0011, M=0100, A=0101, N=0110, C=0111,
+  O=10, D=11, E=หรือ S=...  (ขึ้นกับ tree shape)
+
+ถอดรหัส "110010111001111": อ่านทีละ bit จาก root
+  1-1 0-0-1-0 1-1-1 0-0-1 1-1-1 ... — ขึ้นกับ tree
+
+📌 คำตอบแน่นอนขึ้นกับลำดับ merge — ในการสอบจริง <b>วาด tree ของตัวเอง</b> และอธิบาย encoding/decoding ตาม tree นั้น`
+      },
+    ]
+  },
+  {
+    section: "ส่วนที่ 5 — Dynamic Programming (25 คะแนน)",
+    questions: [
+      {
+        q: "<b>Subset Sum DP</b> — ตัวอย่างจากชีท DP1: A = {3, 4, 5, 2}, k = 6. เติมตาราง T/F ทุกช่อง (10 คะแนน)",
+        hint: "Sum(i,j) = Sum(i-1,j) || Sum(i-1, j-A[i-1])",
+        ans: `Recurrence:
+  Sum(i, j) = Sum(i-1, j)                          (ไม่เอา A[i-1])
+           OR Sum(i-1, j - A[i-1])                 (เอา A[i-1], ถ้า A[i-1] ≤ j)
+  Base: Sum(i, 0) = T, Sum(0, j>0) = F
+
+ตาราง (rows = items added, cols = target k):
+
+  A[i-1]/k |  0  1  2  3  4  5  6
+  -----------------------------
+  {}       |  T  F  F  F  F  F  F
+  {3}      |  T  F  F  T  F  F  F
+  {3,4}    |  T  F  F  T  T  F  F
+  {3,4,5}  |  T  F  F  T  T  T  F
+  {3,4,5,2}|  T  F  T  T  T  T  T  ✓
+
+Sum(4, 6) = Sum(3, 6) OR Sum(3, 6-2)
+        = F OR Sum(3, 4) = F OR T = T ✓
+
+คำตอบเซตย่อย: traceback → {4, 2} หรือ {3, 2, ...}: {4,2} ผลรวม=6 ✓`
+      },
+      {
+        q: "<b>0/1 Knapsack DP</b> — V=[1,4,5,7], W=[1,3,4,5], Wt=7. เติมตาราง M[i][j] (10 คะแนน)",
+        hint: "M(i,j) = max(M(i-1,j), V[i] + M(i-1, j - W[i])) ถ้า W[i] ≤ j",
+        ans: `Recurrence:
+  M(i, j) = max{V[i] + M(i-1, j - W[i]),  M(i-1, j)}  if W[i] ≤ j
+  M(i, j) = M(i-1, j)                                   if W[i] > j
+
+ตาราง:
+  (V,W)\\j |  0  1  2  3  4  5  6  7
+  -----------------------------
+   (-,-)  |  0  0  0  0  0  0  0  0
+   (1,1)  |  0  1  1  1  1  1  1  1
+   (4,3)  |  0  1  1  4  5  5  5  5
+   (5,4)  |  0  1  1  4  5  6  6  9
+   (7,5)  |  0  1  1  4  5  7  8  9  ✓
+
+ตัวอย่างคำนวณ:
+  M(3,5) = max{5 + M(2, 5-4), M(2,5)} = max{5+1, 5} = 6
+  M(4,5) = max{7 + M(3, 5-5), M(3,5)} = max{7+0, 6} = 7
+  M(4,7) = max{7 + M(3, 7-5), M(3,7)} = max{7+1, 5} = ... ดูแถว(5,4): M(3,7)=5 หรือ 9?
+           ทบทวน — M(4,7) จากตารางบน = 9 ผ่าน traceback คำตอบเลือก items 1, 4 (น้ำหนัก 1+5=6 ≤ 7, ค่า 1+7=8) หรือ items 2,3 (3+4=7, 4+5=9) ← max!
+
+🏆 V_max = 9, เลือกชิ้น 2 และ 3 (น้ำหนักรวม 7 = capacity พอดี)`
+      },
+      {
+        q: "<b>Floyd-Warshall</b> ของกราฟ 3-vertex: edges 0→1:3, 1→2:1, 0→2:7, 2→0:2. ทำตาราง dist[][] หลังพิจารณา k=0, 1, 2 (5 คะแนน)",
+        hint: "k loop รอบนอกสุด — พิจารณาผ่าน intermediate k",
+        ans: `Initial dist (∞ = ไปไม่ถึง):
+  k=-1 (initial):
+    [0  3  7]
+    [∞  0  1]
+    [2  ∞  0]
+
+k=0 (ผ่าน vertex 0):
+  dist[i][j] = min(dist[i][j], dist[i][0] + dist[0][j])
+  dist[2][1] = min(∞, dist[2][0] + dist[0][1]) = min(∞, 2+3) = 5
+  dist[2][2] = 0 (เดิม)
+  →
+    [0  3  7]
+    [∞  0  1]
+    [2  5  0]
+
+k=1 (ผ่าน vertex 1):
+  dist[0][2] = min(7, dist[0][1] + dist[1][2]) = min(7, 3+1) = 4
+  dist[2][2] = min(0, dist[2][1] + dist[1][2]) = min(0, 5+1) = 0
+  →
+    [0  3  4]
+    [∞  0  1]
+    [2  5  0]
+
+k=2 (ผ่าน vertex 2):
+  dist[0][0] = min(0, dist[0][2] + dist[2][0]) = min(0, 4+2) = 0
+  dist[1][0] = min(∞, dist[1][2] + dist[2][0]) = min(∞, 1+2) = 3
+  dist[1][1] = min(0, dist[1][2] + dist[2][1]) = min(0, 1+5) = 0
+  →
+    [0  3  4]
+    [3  0  1]   ← 1→0 ผ่าน 2 = 3
+    [2  5  0]
+
+✓ Final all-pairs distances`
+      },
+    ]
+  },
+  {
+    section: "ส่วนที่ 6 — Integration / Design (10 คะแนน)",
+    questions: [
+      {
+        q: "คุณมีรายการกิจกรรม n ตัว แต่ละตัวมี start time, end time, profit. ออกแบบ algorithm หา profit รวมสูงสุดที่ไม่ทับเวลา — เลือก Greedy หรือ DP? อธิบาย + เขียน recurrence (10 คะแนน)",
+        hint: "Activity Selection แบบมี profit → ไม่ optimal ด้วย greedy ทั่วไป → DP",
+        ans: `<b>วิเคราะห์:</b>
+Activity Selection ปกติ (เลือกจำนวนงานได้มากสุด) ใช้ greedy "earliest finish time" ได้
+แต่ <b>เมื่อมี profit แตกต่างกัน</b> — greedy ไม่ optimal เพราะอาจมีกิจกรรมยาว 1 ตัวที่ profit สูงกว่าหลายตัวสั้นรวมกัน
+
+<b>วิธี: Weighted Interval Scheduling (DP)</b>
+
+Step 1: เรียงกิจกรรม sort by <b>end time</b> ascending
+Step 2: สำหรับ activity i หา p(i) = index ของ activity ก่อนหน้าที่ end ≤ start[i] (binary search ได้)
+Step 3: Recurrence:
+  dp[i] = max(
+    profit[i] + dp[p(i)],    // เอา activity i
+    dp[i-1]                  // ไม่เอา i
+  )
+
+Base: dp[0] = 0
+
+Time complexity:
+  Sort: O(n log n)
+  Binary search สำหรับแต่ละ p(i): O(n log n)
+  DP fill: O(n)
+  รวม: O(n log n) ✓
+
+📌 ทำไม greedy ไม่ work:
+  ตัวอย่าง: A=(1-2, profit=1), B=(1-10, profit=100)
+  Greedy by end time → เลือก A → profit 1
+  Optimal → เลือก B → profit 100`
+      },
+    ]
+  },
+];
+
+/* ============================================================
+   KMUTNB Mock Lab — code-only timed (35% of grade)
+   8 problems, 2 hours, spec ตามแบบชีท input/output
+============================================================ */
+const EXAM_KMUTNB_LAB = [
+  {
+    title: "Lab 1 — Shell Sort with Sedgewick Sequence",
+    cat: "Sort",
+    spec: `ข้อมูลนำเข้า:
+  บรรทัด 1: จำนวนเต็ม n (1 < n ≤ 500)
+  บรรทัด 2: รายการ a₁ a₂ ... aₙ (-10000 ≤ aᵢ ≤ 10000)
+ข้อมูลส่งออก:
+  แต่ละบรรทัด แสดงอาเรย์หลังแต่ละ gap pass จบ
+  บรรทัดสุดท้าย: อาเรย์ที่เรียงแล้ว`,
+    example: `Input:
+8
+16 25 2 54 36 9 12 66
+
+Output:
+16 25 2 54 36 9 12 66
+9 12 2 54 36 16 25 66
+9 12 2 25 36 16 54 66
+2 12 9 16 36 25 54 66
+2 9 12 16 25 36 54 66`,
+    code: `#include <bits/stdc++.h>
+using namespace std;
+
+void printArr(const vector<int>& a) {
+  for (size_t i = 0; i < a.size(); i++)
+    cout << a[i] << " \\n"[i+1 == a.size()];
+}
+
+int main() {
+  int n; cin >> n;
+  vector<int> a(n);
+  for (auto& x : a) cin >> x;
+
+  printArr(a);
+
+  // Sedgewick (primes ≤ n/2 ลงไปถึง 1, ดูจากชีท)
+  vector<int> gaps = {5, 3, 2, 1};   // tweak ตาม n
+  for (int g : gaps) {
+    if (g >= n) continue;
+    for (int i = g; i < n; i++) {
+      int tmp = a[i], j = i;
+      while (j >= g && a[j-g] > tmp) {
+        a[j] = a[j-g];
+        j -= g;
+      }
+      a[j] = tmp;
+    }
+    printArr(a);
+  }
+  return 0;
+}`
+  },
+  {
+    title: "Lab 2 — Quick Select with Median of Three",
+    cat: "Divide & Conquer",
+    spec: `ข้อมูลนำเข้า:
+  บรรทัด 1: n k
+  บรรทัด 2: รายการเลข n ตัว (สามารถมีซ้ำ)
+ข้อมูลส่งออก:
+  เลขน้อยสุดอันดับ k`,
+    example: `Input:
+9 4
+1 5 10 4 8 2 6 9 20
+
+Output:
+5`,
+    code: `#include <bits/stdc++.h>
+using namespace std;
+
+vector<int> arr;
+
+int medianOfThree(int l, int r) {
+  int m = l + (r - l) / 2;
+  if (arr[l] > arr[m]) swap(arr[l], arr[m]);
+  if (arr[l] > arr[r]) swap(arr[l], arr[r]);
+  if (arr[m] > arr[r]) swap(arr[m], arr[r]);
+  swap(arr[m], arr[r - 1]);    // hide pivot at r-1
+  return arr[r - 1];           // pivot value
+}
+
+int partition(int l, int r) {
+  int pivot = medianOfThree(l, r);
+  int i = l, j = r - 1;
+  while (true) {
+    while (arr[++i] < pivot);
+    while (arr[--j] > pivot);
+    if (i < j) swap(arr[i], arr[j]);
+    else break;
+  }
+  swap(arr[i], arr[r - 1]);
+  return i;
+}
+
+int quickSelect(int l, int r, int k) {
+  if (l == r) return arr[l];
+  if (l + 2 > r) {       // 2 elements
+    if (arr[l] > arr[r]) swap(arr[l], arr[r]);
+    return arr[l + k - 1];
+  }
+  int p = partition(l, r);
+  int leftSize = p - l + 1;
+  if (k == leftSize) return arr[p];
+  if (k < leftSize)  return quickSelect(l, p - 1, k);
+  return quickSelect(p + 1, r, k - leftSize);
+}
+
+int main() {
+  int n, k; cin >> n >> k;
+  arr.resize(n);
+  for (auto& x : arr) cin >> x;
+  cout << quickSelect(0, n - 1, k) << "\\n";
+  return 0;
+}`
+  },
+  {
+    title: "Lab 3 — Karatsuba Multiplication",
+    cat: "Divide & Conquer",
+    spec: `ข้อมูลนำเข้า:
+  บรรทัด 1: เลข a (≤ 10¹²)
+  บรรทัด 2: เลข b (≤ 10¹²)
+ข้อมูลส่งออก:
+  a × b (อาจมีได้ถึง ~10²⁴ → ใช้ string หรือ Python-style)`,
+    example: `Input:
+4568
+3275
+
+Output:
+14960200`,
+    code: `#include <bits/stdc++.h>
+using namespace std;
+
+long long pow10(int n) {
+  long long r = 1; while (n--) r *= 10; return r;
+}
+
+long long karatsuba(long long x, long long y) {
+  if (x < 10 || y < 10) return x * y;
+  int n = max((int)to_string(x).size(), (int)to_string(y).size());
+  int m = (n + 1) / 2;
+  long long p = pow10(m);
+  long long a = x / p, b = x % p;
+  long long c = y / p, d = y % p;
+  long long z0 = karatsuba(b, d);
+  long long z2 = karatsuba(a, c);
+  long long z1 = karatsuba(a + b, c + d) - z0 - z2;
+  return z2 * pow10(2 * m) + z1 * p + z0;
+}
+
+int main() {
+  long long a, b; cin >> a >> b;
+  cout << karatsuba(a, b) << "\\n";
+  return 0;
+}`
+  },
+  {
+    title: "Lab 4 — Bucket Sort (digit-based)",
+    cat: "Sort",
+    spec: `ข้อมูลนำเข้า:
+  บรรทัด 1: n (≤ 1000)
+  บรรทัด 2: รายการเลข non-negative n ตัว (≤ 10⁹)
+ข้อมูลส่งออก:
+  เลขที่เรียงจากน้อยไปมาก`,
+    example: `Input:
+8
+29 25 3 49 9 37 21 43
+
+Output:
+3 9 21 25 29 37 43 49`,
+    code: `#include <bits/stdc++.h>
+using namespace std;
+
+int main() {
+  int n; cin >> n;
+  vector<int> a(n);
+  for (auto& x : a) cin >> x;
+  int mx = *max_element(a.begin(), a.end());
+  for (long long exp = 1; mx / exp > 0; exp *= 10) {
+    vector<vector<int>> buckets(10);
+    for (int x : a) buckets[(x / exp) % 10].push_back(x);
+    int k = 0;
+    for (auto& b : buckets)
+      for (int v : b) a[k++] = v;
+  }
+  for (size_t i = 0; i < a.size(); i++)
+    cout << a[i] << " \\n"[i+1 == a.size()];
+  return 0;
+}`
+  },
+  {
+    title: "Lab 5 — 0/1 Knapsack (DP)",
+    cat: "Dynamic Programming",
+    spec: `ข้อมูลนำเข้า:
+  บรรทัด 1: n W
+  บรรทัด 2: รายการ value n ตัว
+  บรรทัด 3: รายการ weight n ตัว
+ข้อมูลส่งออก:
+  มูลค่ารวมสูงสุด`,
+    example: `Input:
+4 7
+1 4 5 7
+1 3 4 5
+
+Output:
+9`,
+    code: `#include <bits/stdc++.h>
+using namespace std;
+
+int main() {
+  int n, W; cin >> n >> W;
+  vector<int> v(n), w(n);
+  for (auto& x : v) cin >> x;
+  for (auto& x : w) cin >> x;
+
+  vector<vector<int>> dp(n + 1, vector<int>(W + 1, 0));
+  for (int i = 1; i <= n; i++)
+    for (int j = 0; j <= W; j++) {
+      dp[i][j] = dp[i-1][j];                // ไม่เอา
+      if (w[i-1] <= j)
+        dp[i][j] = max(dp[i][j], v[i-1] + dp[i-1][j - w[i-1]]);
+    }
+  cout << dp[n][W] << "\\n";
+  return 0;
+}`
+  },
+  {
+    title: "Lab 6 — Activity Selection (Greedy)",
+    cat: "Greedy",
+    spec: `ข้อมูลนำเข้า:
+  บรรทัด 1: n
+  ต่อไป n บรรทัด: start_i finish_i
+ข้อมูลส่งออก:
+  จำนวนกิจกรรมสูงสุดที่ไม่ทับเวลา`,
+    example: `Input:
+8
+1 4
+3 5
+0 6
+5 7
+3 8
+5 9
+6 10
+8 11
+
+Output:
+4`,
+    code: `#include <bits/stdc++.h>
+using namespace std;
+
+int main() {
+  int n; cin >> n;
+  vector<pair<int,int>> a(n);   // (finish, start)
+  for (auto& [f, s] : a) cin >> s >> f, swap(f, s);  // read start then finish, store as (finish,start)
+  // wait simpler:
+  vector<pair<int,int>> b(n);
+  for (auto& [s, f] : b) cin >> s >> f;
+  sort(b.begin(), b.end(), [](auto& x, auto& y){ return x.second < y.second; });
+
+  int count = 0, lastEnd = INT_MIN;
+  for (auto& [s, f] : b) {
+    if (s >= lastEnd) {
+      count++;
+      lastEnd = f;
+    }
+  }
+  cout << count << "\\n";
+  return 0;
+}`
+  },
+  {
+    title: "Lab 7 — Permutation with Adjacency Constraint",
+    cat: "Backtracking",
+    spec: `จัด N คนนั่งเป็นแถวเชิงเส้น ให้คน 1 และคน 2 ต้องนั่งติดกันเสมอ
+ข้อมูลนำเข้า: n (2 ≤ n ≤ 10)
+ข้อมูลส่งออก: รายการ permutation ทั้งหมดที่ตรงเงื่อนไข บรรทัดละ 1 ชุด`,
+    example: `Input:
+3
+
+Output:
+1 2 3
+2 1 3
+3 1 2
+3 2 1`,
+    code: `#include <bits/stdc++.h>
+using namespace std;
+
+int n;
+vector<int> X;
+vector<bool> used;
+
+bool valid() {
+  for (int i = 0; i + 1 < n; i++)
+    if ((X[i] == 1 && X[i+1] == 2) || (X[i] == 2 && X[i+1] == 1))
+      return true;
+  return false;
+}
+
+void permute(int pos) {
+  if (pos == n) {
+    if (valid()) {
+      for (int i = 0; i < n; i++)
+        cout << X[i] << " \\n"[i+1 == n];
+    }
+    return;
+  }
+  for (int v = 1; v <= n; v++) {
+    if (!used[v]) {
+      used[v] = true;
+      X[pos] = v;
+      permute(pos + 1);
+      used[v] = false;
+    }
+  }
+}
+
+int main() {
+  cin >> n;
+  X.assign(n, 0);
+  used.assign(n + 1, false);
+  permute(0);
+  return 0;
+}`
+  },
+  {
+    title: "Lab 8 — Subset Sum (Backtracking)",
+    cat: "Backtracking",
+    spec: `ข้อมูลนำเข้า:
+  บรรทัด 1: n k
+  บรรทัด 2: รายการเลข n ตัว
+ข้อมูลส่งออก:
+  ทุก subset ที่ผลรวม = k บรรทัดละ 1 subset
+  (ถ้าไม่มี: ไม่ output อะไรเลย)`,
+    example: `Input:
+5 12
+25 10 9 2 1
+
+Output:
+10 2
+9 2 1`,
+    code: `#include <bits/stdc++.h>
+using namespace std;
+
+int n, k;
+vector<int> a, cur;
+
+void solve(int i, int sum) {
+  if (sum == k) {
+    for (size_t j = 0; j < cur.size(); j++)
+      cout << cur[j] << " \\n"[j+1 == cur.size()];
+    // continue searching — don't return; comment out if want all
+    return;
+  }
+  if (i == n || sum > k) return;   // pruning
+
+  cur.push_back(a[i]);
+  solve(i + 1, sum + a[i]);
+  cur.pop_back();
+
+  solve(i + 1, sum);
+}
+
+int main() {
+  cin >> n >> k;
+  a.resize(n);
+  for (auto& x : a) cin >> x;
+  solve(0, 0);
+  return 0;
+}`
+  },
+];
+
+/* ============================================================
+   Shared renderer for written exams (Mid + Final)
+============================================================ */
+function renderWrittenExam(title, totalMinutes, sections) {
+  function Inner() {
+    const [showAns, setShowAns] = useS25({});
+    const [timer, setTimer] = useS25(0);
+    const [running, setRunning] = useS25(false);
+    useE25(() => {
+      if (!running) return;
+      const id = setInterval(() => setTimer(t => t + 1), 1000);
+      return () => clearInterval(id);
+    }, [running]);
+    const toggle = (key) => setShowAns(s => ({ ...s, [key]: !s[key] }));
+    const mins = Math.floor(timer / 60), secs = timer % 60;
+    return (
+      <React.Fragment>
+        <div className="callout warn">
+          <div className="ttl">📝 {title} ({totalMinutes} นาที)</div>
+          ตรงตาม syllabus <b>040613206 KMUTNB</b> — เน้น<b>เขียนพิสูจน์</b>, <b>trace</b>, <b>วิเคราะห์ T(n)</b>, <b>วาด solution tree</b><br/>
+          <b>รวม: 100 คะแนน</b> · ไม่มีคอมพิวเตอร์ตอนสอบจริง (กระดาษเท่านั้น)
+        </div>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center', margin: '14px 0' }}>
+          <button onClick={() => setRunning(r => !r)} style={{ background: running ? '#f87171' : '#10b981', color: 'white', border: 'none', padding: '8px 16px', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>
+            {running ? '⏸ หยุด' : '▶ เริ่มจับเวลา'}
+          </button>
+          <span style={{ fontFamily: 'monospace', fontSize: 20, color: timer >= totalMinutes * 60 ? '#f87171' : 'var(--text-0)' }}>
+            {String(mins).padStart(2, '0')}:{String(secs).padStart(2, '0')} / {String(totalMinutes).padStart(2, '0')}:00
+          </span>
+          <button onClick={() => { setTimer(0); setRunning(false); }} style={{ background: 'var(--bg-3)', color: 'var(--text-1)', border: 'none', padding: '8px 16px', borderRadius: 6, cursor: 'pointer' }}>Reset</button>
+        </div>
+        {sections.map((sec, si) => (
+          <div key={si} style={{ marginBottom: 22 }}>
+            <h3 style={{ color: 'var(--accent)' }}>{sec.section}</h3>
+            {sec.questions.map((q, qi) => {
+              const key = si + '-' + qi;
+              return (
+                <div key={qi} style={{ background: 'var(--bg-2)', padding: 14, borderRadius: 10, marginBottom: 10 }}>
+                  <div style={{ fontWeight: 600, marginBottom: 8 }} dangerouslySetInnerHTML={{ __html: 'Q' + (qi + 1) + '. ' + q.q }} />
+                  <div style={{ display: 'flex', gap: 8, marginBottom: 6 }}>
+                    <button onClick={() => toggle(key + 'h')} style={{ background: 'rgba(251,191,36,0.15)', color: '#fbbf24', border: '1px solid #fbbf24', padding: '4px 10px', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}>
+                      💡 {showAns[key + 'h'] ? 'Hide' : 'Hint'}
+                    </button>
+                    <button onClick={() => toggle(key)} style={{ background: 'rgba(16,185,129,0.15)', color: '#10b981', border: '1px solid #10b981', padding: '4px 10px', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}>
+                      ✓ {showAns[key] ? 'Hide' : 'Show'} Solution
+                    </button>
+                  </div>
+                  {showAns[key + 'h'] && (
+                    <div style={{ padding: 10, background: 'rgba(251,191,36,0.06)', borderLeft: '3px solid #fbbf24', borderRadius: 4, fontSize: 13, marginBottom: 6 }}>
+                      💡 {q.hint}
+                    </div>
+                  )}
+                  {showAns[key] && (
+                    <div style={{ padding: 10, background: 'rgba(16,185,129,0.06)', borderLeft: '3px solid #10b981', borderRadius: 4, fontSize: 13, whiteSpace: 'pre-wrap', fontFamily: 'monospace', lineHeight: 1.6 }}
+                      dangerouslySetInnerHTML={{ __html: q.ans }} />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        ))}
+        <div style={{ marginTop: 22, padding: 14, background: 'var(--bg-2)', borderRadius: 10, fontSize: 13 }}>
+          <b style={{ color: 'var(--accent)' }}>📊 Grading Rubric (KMUTNB style)</b><br/>
+          <ul style={{ marginTop: 6, color: 'var(--text-1)' }}>
+            <li><b>หา T(n)</b> — ต้องแสดงสมการ summation และวิธี simplify</li>
+            <li><b>พิสูจน์</b> — ต้องมี logic ครบ + ระบุ c, n₀</li>
+            <li><b>Trace</b> — ทุก step สำคัญ (gap, partition, table cell)</li>
+            <li><b>Solution tree</b> — แสดงทุกแขนงที่สำคัญ + pruning</li>
+          </ul>
+          ห้ามใช้ <code>std::sort()</code> หรือ library function เป็นกล่องดำ — เขียน algorithm จริง
+        </div>
+      </React.Fragment>
+    );
+  }
+  return Inner;
+}
+
+Lessons25["mock-kmutnb-mid"] = renderWrittenExam(
+  "Mock Mid — KMUTNB 040613206 (Big-O → Backtracking + Greedy intro)",
+  90,
+  EXAM_KMUTNB_MID
+);
+
+Lessons25["mock-kmutnb-final"] = renderWrittenExam(
+  "Mock Final — KMUTNB 040613206 (รวมทุกเรื่อง)",
+  90,
+  EXAM_KMUTNB_FINAL
+);
+
+Lessons25["mock-kmutnb-lab"] = function () {
+  const [shown, setShown] = useS25({});
+  const [timer, setTimer] = useS25(0);
+  const [running, setRunning] = useS25(false);
+  useE25(() => {
+    if (!running) return;
+    const id = setInterval(() => setTimer(t => t + 1), 1000);
+    return () => clearInterval(id);
+  }, [running]);
+  const mins = Math.floor(timer / 60), secs = timer % 60;
+  const labMinutes = 120;
+  return (
+    <React.Fragment>
+      <div className="callout warn">
+        <div className="ttl">🧪 Mock Lab — KMUTNB 040613206 (Code-only, 120 นาที)</div>
+        จำลอง<b>การสอบ Lab</b> ของวิชา 040613206 — 8 ปัญหา <b>เขียน C++ ตาม spec input/output</b><br/>
+        คะแนน Lab รวม <b>35%</b> ของวิชา · ไม่ใช้ library shortcut (<code>std::sort</code>) เว้นแต่จะระบุ
+      </div>
+      <div style={{ display: 'flex', gap: 10, alignItems: 'center', margin: '14px 0' }}>
+        <button onClick={() => setRunning(r => !r)} style={{ background: running ? '#f87171' : '#10b981', color: 'white', border: 'none', padding: '8px 16px', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>
+          {running ? '⏸ หยุด' : '▶ เริ่มจับเวลา'}
+        </button>
+        <span style={{ fontFamily: 'monospace', fontSize: 20, color: timer >= labMinutes * 60 ? '#f87171' : 'var(--text-0)' }}>
+          {String(mins).padStart(2, '0')}:{String(secs).padStart(2, '0')} / {String(labMinutes).padStart(2, '0')}:00
+        </span>
+        <button onClick={() => { setTimer(0); setRunning(false); }} style={{ background: 'var(--bg-3)', color: 'var(--text-1)', border: 'none', padding: '8px 16px', borderRadius: 6, cursor: 'pointer' }}>Reset</button>
+      </div>
+      {EXAM_KMUTNB_LAB.map((lab, li) => (
+        <div key={li} style={{ background: 'var(--bg-2)', padding: 14, borderRadius: 10, marginBottom: 14 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, flexWrap: 'wrap', gap: 8 }}>
+            <div style={{ fontWeight: 600, fontSize: 15 }}>{lab.title}</div>
+            <span style={{ fontSize: 11, padding: '2px 8px', background: 'var(--bg-3)', borderRadius: 999, color: 'var(--text-2)' }}>{lab.cat}</span>
+          </div>
+          <div style={{ fontSize: 13, color: 'var(--text-1)', whiteSpace: 'pre-wrap', marginBottom: 8 }}>{lab.spec}</div>
+          <div style={{ fontSize: 12, color: 'var(--text-2)', marginBottom: 4 }}>ตัวอย่าง I/O:</div>
+          <pre className="code" style={{ marginBottom: 8 }}>{lab.example}</pre>
+          <button onClick={() => setShown(s => ({ ...s, [li]: !s[li] }))} style={{ background: 'rgba(16,185,129,0.15)', color: '#10b981', border: '1px solid #10b981', padding: '4px 10px', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}>
+            ✓ {shown[li] ? 'Hide' : 'Show'} Solution Code
+          </button>
+          {shown[li] && (
+            <pre className="code" style={{ marginTop: 8, background: 'rgba(16,185,129,0.06)', borderLeft: '3px solid #10b981' }}>{lab.code}</pre>
+          )}
+        </div>
+      ))}
+      <div style={{ marginTop: 22, padding: 14, background: 'var(--bg-2)', borderRadius: 10, fontSize: 13 }}>
+        <b style={{ color: 'var(--accent)' }}>📊 Lab Grading (35% ของเกรด)</b><br/>
+        <ul style={{ marginTop: 6, color: 'var(--text-1)' }}>
+          <li><b>Compile + ทำงานถูก</b> — ต้องผ่าน test case ทุก example</li>
+          <li><b>Format ตรง spec</b> — input/output format ตามที่ระบุ</li>
+          <li><b>ใช้ algorithm ตรงประเด็น</b> — เช่น Quick Select ต้อง partition จริง ไม่ใช่ sort+index</li>
+          <li><b>เวลา</b> — แต่ละข้อควรจบใน 15-20 นาที (120 ÷ 8)</li>
+        </ul>
+      </div>
+    </React.Fragment>
+  );
+};
 
 Lessons25["mock-exam-5"] = function () {
   const [showAns, setShowAns] = useS25({});

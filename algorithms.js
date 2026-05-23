@@ -143,6 +143,66 @@ const insertionCode = [
   "}",
 ];
 
+// ============ Shell Sort ============
+// Default sequence: Shell's original (n/2, n/4, ..., 1) — what the KMUTNB sheet calls "Knuth's"
+function genShellSort(input) {
+  const a = [...input];
+  const frames = [];
+  const n = a.length;
+  let comparisons = 0, shifts = 0;
+  const gaps = [];
+  for (let g = Math.floor(n / 2); g >= 1; g = Math.floor(g / 2)) gaps.push(g);
+  frames.push({ line: 0, arr: [...a], marks: {}, vars: { n, gaps: gaps.join(','), comparisons, shifts } });
+  for (const gap of gaps) {
+    // Highlight all elements that belong to the same group (one color = one group)
+    // We use 'pivot' to mark the "anchor" of each group at start of pass
+    const groupMarks = {};
+    for (let s = 0; s < gap; s++) groupMarks[s] = 'pivot';
+    frames.push({ line: 1, arr: [...a], marks: groupMarks, vars: { gap, msg: `เริ่ม gap = ${gap}`, comparisons, shifts } });
+    for (let i = gap; i < n; i++) {
+      const temp = a[i];
+      let j = i;
+      const mStart = {};
+      mStart[i] = 'cursor';
+      if (i - gap >= 0) mStart[i - gap] = 'compare';
+      frames.push({ line: 2, arr: [...a], marks: mStart, vars: { gap, i, key: temp, comparisons, shifts } });
+      while (j >= gap && a[j - gap] > temp) {
+        comparisons++;
+        const m = {};
+        m[j] = 'swap';
+        m[j - gap] = 'swap';
+        a[j] = a[j - gap];
+        shifts++;
+        frames.push({ line: 5, arr: [...a], marks: m, vars: { gap, i, j, jPrev: j - gap, key: temp, comparisons, shifts } });
+        j -= gap;
+      }
+      a[j] = temp;
+      const mPlace = {};
+      mPlace[j] = 'sorted';
+      frames.push({ line: 8, arr: [...a], marks: mPlace, vars: { gap, i, j, key: temp, comparisons, shifts } });
+    }
+    frames.push({ line: 10, arr: [...a], marks: {}, vars: { gap, msg: `จบรอบ gap = ${gap}`, comparisons, shifts } });
+  }
+  const fm = {}; for (let k = 0; k < n; k++) fm[k] = 'sorted';
+  frames.push({ line: 11, arr: [...a], marks: fm, vars: { comparisons, shifts } });
+  return frames;
+}
+const shellCode = [
+  "void shellSort(int a[], int n) {",
+  "  for (int gap = n/2; gap > 0; gap /= 2) {",
+  "    for (int i = gap; i < n; i++) {",
+  "      int temp = a[i];",
+  "      int j = i;",
+  "      while (j >= gap && a[j-gap] > temp) {",
+  "        a[j] = a[j - gap];",
+  "        j -= gap;",
+  "      }",
+  "      a[j] = temp;",
+  "    }",
+  "  }  // gap loop",
+  "}",
+];
+
 // ============ Merge Sort ============
 function genMergeSort(input) {
   const a = [...input];
@@ -386,6 +446,7 @@ const binaryCode = [
 
 window.AlgorithmGenerators = {
   bubble: { gen: genBubbleSort, code: bubbleCode, name: "Bubble Sort", complexity: { time: "O(n²)", space: "O(1)" } },
+  shell: { gen: genShellSort, code: shellCode, name: "Shell Sort", complexity: { time: "O(n^1.3) – O(n²)", space: "O(1)" } },
   selection: { gen: genSelectionSort, code: selectionCode, name: "Selection Sort", complexity: { time: "O(n²)", space: "O(1)" } },
   insertion: { gen: genInsertionSort, code: insertionCode, name: "Insertion Sort", complexity: { time: "O(n²)", space: "O(1)" } },
   merge: { gen: genMergeSort, code: mergeCode, name: "Merge Sort", complexity: { time: "O(n log n)", space: "O(n)" } },

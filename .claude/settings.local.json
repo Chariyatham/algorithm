@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(node *)"
+      "Bash(node *)",
+      "Read(//tmp/sheet_text/**)",
+      "Bash(git add *)"
     ]
   }
 }
