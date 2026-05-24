@@ -3,8 +3,330 @@
 const { useState: useS8, useMemo: useM8, useEffect: useE8 } = React;
 const { Quiz: Quiz8 } = window.LessonComponents;
 const { WorkedExample: WE8, CheatSheet: CS8, Pitfalls: PF8 } = window.LearningKit;
+const CodeViewToggle8 = window.CodeViewToggle;
 
 const Lessons8 = {};
+
+/* ============================================================
+   CODE: AVL Tree (Full + Short)
+============================================================ */
+const AVL_CODE_FULL = [
+  "struct Node {",                                                  // 0
+  "  int val, height;",                                             // 1
+  "  Node *l, *r;",                                                 // 2
+  "  Node(int v) : val(v), height(1), l(nullptr), r(nullptr) {}",   // 3
+  "};",                                                             // 4
+  "",                                                               // 5
+  "int height(Node* n) { return n ? n->height : 0; }",              // 6
+  "void updateHeight(Node* n) {",                                   // 7
+  "  n->height = 1 + max(height(n->l), height(n->r));",             // 8
+  "}",                                                              // 9
+  "int getBalance(Node* n) {",                                      // 10
+  "  return n ? height(n->l) - height(n->r) : 0;",                  // 11
+  "}",                                                              // 12
+  "",                                                               // 13
+  "Node* rotateRight(Node* y) {",                                   // 14
+  "  Node* x = y->l;",                                              // 15
+  "  Node* T = x->r;",                                              // 16
+  "  x->r = y;",                                                    // 17
+  "  y->l = T;",                                                    // 18
+  "  updateHeight(y);",                                             // 19
+  "  updateHeight(x);",                                             // 20
+  "  return x;",                                                    // 21
+  "}",                                                              // 22
+  "Node* rotateLeft(Node* x) {",                                    // 23
+  "  Node* y = x->r;",                                              // 24
+  "  Node* T = y->l;",                                              // 25
+  "  y->l = x;",                                                    // 26
+  "  x->r = T;",                                                    // 27
+  "  updateHeight(x);",                                             // 28
+  "  updateHeight(y);",                                             // 29
+  "  return y;",                                                    // 30
+  "}",                                                              // 31
+  "",                                                               // 32
+  "Node* insert(Node* node, int v) {",                              // 33
+  "  if (!node) return new Node(v);",                               // 34
+  "  if (v < node->val) node->l = insert(node->l, v);",             // 35
+  "  else if (v > node->val) node->r = insert(node->r, v);",        // 36
+  "  else return node;     // duplicate ไม่แทรก",                     // 37
+  "",                                                               // 38
+  "  updateHeight(node);",                                          // 39
+  "  int bf = getBalance(node);",                                   // 40
+  "  // 4 imbalance cases",                                         // 41
+  "  if (bf > 1 && v < node->l->val) return rotateRight(node); // LL", // 42
+  "  if (bf < -1 && v > node->r->val) return rotateLeft(node); // RR", // 43
+  "  if (bf > 1 && v > node->l->val) {                       // LR", // 44
+  "    node->l = rotateLeft(node->l);",                             // 45
+  "    return rotateRight(node);",                                  // 46
+  "  }",                                                            // 47
+  "  if (bf < -1 && v < node->r->val) {                       // RL", // 48
+  "    node->r = rotateRight(node->r);",                            // 49
+  "    return rotateLeft(node);",                                   // 50
+  "  }",                                                            // 51
+  "  return node;",                                                 // 52
+  "}",                                                              // 53
+];
+const AVL_CODE_SHORT = [
+  "Node* insert(Node* node, int v) {",                              // 0
+  "  if (!node) return new Node(v);",                               // 1
+  "  if (v < node->val) node->l = insert(node->l, v);",             // 2
+  "  else if (v > node->val) node->r = insert(node->r, v);",        // 3
+  "  else return node;",                                            // 4
+  "",                                                               // 5
+  "  updateHeight(node);              // ← helper",                  // 6
+  "  int bf = getBalance(node);       // ← helper",                  // 7
+  "  // 4 imbalance cases → rotate",                                // 8
+  "  if (bf > 1 && v < node->l->val) return rotateRight(node);  // LL", // 9
+  "  if (bf < -1 && v > node->r->val) return rotateLeft(node);  // RR", // 10
+  "  if (bf > 1 && v > node->l->val) {                        // LR", // 11
+  "    node->l = rotateLeft(node->l);",                             // 12
+  "    return rotateRight(node);",                                  // 13
+  "  }",                                                            // 14
+  "  if (bf < -1 && v < node->r->val) {                        // RL", // 15
+  "    node->r = rotateRight(node->r);",                            // 16
+  "    return rotateLeft(node);",                                   // 17
+  "  }",                                                            // 18
+  "  return node;",                                                 // 19
+  "}",                                                              // 20
+];
+
+/* ============================================================
+   CODE: Prim's MST (Full + Short)
+============================================================ */
+const PRIM_CODE_FULL = [
+  "#include <queue>",                                               // 0
+  "#include <vector>",                                              // 1
+  "using namespace std;",                                           // 2
+  "typedef pair<int,int> pii;        // (weight, vertex)",          // 3
+  "",                                                               // 4
+  "int prim(vector<vector<pii>>& adj, int start) {",                // 5
+  "  int n = adj.size();",                                          // 6
+  "  vector<bool> inMST(n, false);",                                // 7
+  "  priority_queue<pii, vector<pii>, greater<>> pq;",              // 8
+  "  int total = 0;",                                               // 9
+  "",                                                               // 10
+  "  inMST[start] = true;",                                         // 11
+  "  for (auto& [v, w] : adj[start])",                              // 12
+  "    pq.push({w, v});",                                           // 13
+  "",                                                               // 14
+  "  while (!pq.empty()) {",                                        // 15
+  "    auto [w, v] = pq.top(); pq.pop();",                          // 16
+  "    if (inMST[v]) continue;",                                    // 17
+  "",                                                               // 18
+  "    inMST[v] = true;",                                           // 19
+  "    total += w;",                                                // 20
+  "    // add edge to MST",                                         // 21
+  "    for (auto& [x, ww] : adj[v])",                               // 22
+  "      if (!inMST[x]) pq.push({ww, x});",                         // 23
+  "  }",                                                            // 24
+  "  return total;",                                                // 25
+  "}",                                                              // 26
+];
+// No "Short" — prim is already a single function
+
+/* ============================================================
+   CODE: KMP String Matching (Full + Short)
+============================================================ */
+const KMP_CODE_FULL = [
+  "// Build LPS (Longest Proper Prefix-Suffix) array",              // 0
+  "vector<int> computeLPS(const string& p) {",                      // 1
+  "  int m = p.size();",                                            // 2
+  "  vector<int> lps(m, 0);",                                       // 3
+  "  int len = 0;",                                                 // 4
+  "  for (int i = 1; i < m; ) {",                                   // 5
+  "    if (p[i] == p[len]) {",                                      // 6
+  "      lps[i++] = ++len;",                                        // 7
+  "    } else if (len > 0) {",                                      // 8
+  "      len = lps[len - 1];                // fall back",          // 9
+  "    } else {",                                                   // 10
+  "      lps[i++] = 0;",                                            // 11
+  "    }",                                                          // 12
+  "  }",                                                            // 13
+  "  return lps;",                                                  // 14
+  "}",                                                              // 15
+  "",                                                               // 16
+  "// Search pattern p in text t — returns all match positions",    // 17
+  "vector<int> KMP(const string& t, const string& p) {",            // 18
+  "  vector<int> lps = computeLPS(p);",                             // 19
+  "  vector<int> matches;",                                         // 20
+  "  int n = t.size(), m = p.size();",                              // 21
+  "  int i = 0, j = 0;",                                            // 22
+  "  while (i < n) {",                                              // 23
+  "    if (t[i] == p[j]) { i++; j++; }",                            // 24
+  "    if (j == m) {",                                              // 25
+  "      matches.push_back(i - j);",                                // 26
+  "      j = lps[j - 1];                    // continue search",    // 27
+  "    } else if (i < n && t[i] != p[j]) {",                        // 28
+  "      if (j > 0) j = lps[j - 1];         // fall back",          // 29
+  "      else i++;",                                                // 30
+  "    }",                                                          // 31
+  "  }",                                                            // 32
+  "  return matches;",                                              // 33
+  "}",                                                              // 34
+];
+const KMP_CODE_SHORT = [
+  "vector<int> KMP(const string& t, const string& p) {",            // 0
+  "  vector<int> lps = computeLPS(p);     // ← helper",              // 1
+  "  vector<int> matches;",                                         // 2
+  "  int n = t.size(), m = p.size();",                              // 3
+  "  int i = 0, j = 0;",                                            // 4
+  "  while (i < n) {",                                              // 5
+  "    if (t[i] == p[j]) { i++; j++; }",                            // 6
+  "    if (j == m) {                       // found match",         // 7
+  "      matches.push_back(i - j);",                                // 8
+  "      j = lps[j - 1];                   // continue",            // 9
+  "    } else if (i < n && t[i] != p[j]) { // mismatch",            // 10
+  "      if (j > 0) j = lps[j - 1];        // fall back",           // 11
+  "      else i++;",                                                // 12
+  "    }",                                                          // 13
+  "  }",                                                            // 14
+  "  return matches;",                                              // 15
+  "}",                                                              // 16
+];
+
+/* ============================================================
+   CODE: Hash Table — Chaining + Probing
+============================================================ */
+const CHAIN_CODE_FULL = [
+  "#include <list>",                                                // 0
+  "#include <vector>",                                              // 1
+  "using namespace std;",                                           // 2
+  "",                                                               // 3
+  "struct HashChain {",                                             // 4
+  "  static const int SIZE = 11;",                                  // 5
+  "  vector<list<pair<int,int>>> table;  // bucket = list of (key,val)", // 6
+  "  HashChain() : table(SIZE) {}",                                 // 7
+  "",                                                               // 8
+  "  int hash(int key) { return key % SIZE; }",                     // 9
+  "",                                                               // 10
+  "  void insert(int key, int val) {",                              // 11
+  "    int h = hash(key);",                                         // 12
+  "    for (auto& kv : table[h])",                                  // 13
+  "      if (kv.first == key) { kv.second = val; return; }",        // 14
+  "    table[h].push_back({key, val});",                            // 15
+  "  }",                                                            // 16
+  "",                                                               // 17
+  "  bool find(int key, int& out) {",                               // 18
+  "    int h = hash(key);",                                         // 19
+  "    for (auto& kv : table[h])",                                  // 20
+  "      if (kv.first == key) { out = kv.second; return true; }",   // 21
+  "    return false;",                                              // 22
+  "  }",                                                            // 23
+  "};",                                                             // 24
+];
+const CHAIN_CODE_SHORT = [
+  "struct HashChain {",                                             // 0
+  "  vector<list<pair<int,int>>> table;",                           // 1
+  "  int hash(int key);                  // ← helper",               // 2
+  "",                                                               // 3
+  "  void insert(int key, int val) {",                              // 4
+  "    auto& bucket = table[hash(key)];",                           // 5
+  "    // update ถ้ามี key อยู่แล้ว, else push_back",                  // 6
+  "    bucket.push_back({key, val});",                              // 7
+  "  }",                                                            // 8
+  "",                                                               // 9
+  "  bool find(int key, int& out) {",                               // 10
+  "    auto& bucket = table[hash(key)];",                           // 11
+  "    // linear scan ใน bucket",                                    // 12
+  "    return false;",                                              // 13
+  "  }",                                                            // 14
+  "};",                                                             // 15
+];
+const PROBE_CODE_FULL = [
+  "struct HashProbe {",                                             // 0
+  "  static const int SIZE = 11;",                                  // 1
+  "  vector<int> keys, vals;",                                      // 2
+  "  vector<bool> occupied;",                                       // 3
+  "  HashProbe() : keys(SIZE, 0), vals(SIZE, 0), occupied(SIZE, false) {}", // 4
+  "",                                                               // 5
+  "  int hash(int key) { return key % SIZE; }",                     // 6
+  "",                                                               // 7
+  "  // Linear probing: ถ้า slot เต็ม → ลอง slot ถัดไป",              // 8
+  "  void insert(int key, int val) {",                              // 9
+  "    int h = hash(key);",                                         // 10
+  "    while (occupied[h] && keys[h] != key)",                      // 11
+  "      h = (h + 1) % SIZE;             // ← probe",               // 12
+  "    keys[h] = key; vals[h] = val; occupied[h] = true;",          // 13
+  "  }",                                                            // 14
+  "",                                                               // 15
+  "  bool find(int key, int& out) {",                               // 16
+  "    int h = hash(key);",                                         // 17
+  "    while (occupied[h]) {",                                      // 18
+  "      if (keys[h] == key) { out = vals[h]; return true; }",      // 19
+  "      h = (h + 1) % SIZE;",                                      // 20
+  "    }",                                                          // 21
+  "    return false;",                                              // 22
+  "  }",                                                            // 23
+  "};",                                                             // 24
+];
+const PROBE_CODE_SHORT = [
+  "struct HashProbe {",                                             // 0
+  "  vector<int> keys, vals;",                                      // 1
+  "  vector<bool> occupied;",                                       // 2
+  "  int hash(int key);                   // ← helper",              // 3
+  "",                                                               // 4
+  "  void insert(int key, int val) {",                              // 5
+  "    int h = hash(key);",                                         // 6
+  "    while (occupied[h] && keys[h] != key)",                      // 7
+  "      h = (h + 1) % SIZE;            // linear probe",           // 8
+  "    keys[h] = key; vals[h] = val; occupied[h] = true;",          // 9
+  "  }",                                                            // 10
+  "};",                                                             // 11
+];
+
+/* ============================================================
+   CODE: Huffman Coding (Full + Short)
+============================================================ */
+const HUFFMAN_CODE_FULL = [
+  "#include <queue>",                                               // 0
+  "struct HNode {",                                                 // 1
+  "  char ch; int freq;",                                           // 2
+  "  HNode *l, *r;",                                                // 3
+  "  HNode(char c, int f) : ch(c), freq(f), l(nullptr), r(nullptr) {}", // 4
+  "};",                                                             // 5
+  "",                                                               // 6
+  "struct Cmp { bool operator()(HNode* a, HNode* b) { return a->freq > b->freq; } };", // 7
+  "",                                                               // 8
+  "HNode* buildTree(map<char,int>& freq) {",                        // 9
+  "  priority_queue<HNode*, vector<HNode*>, Cmp> pq;",              // 10
+  "  for (auto& [c, f] : freq) pq.push(new HNode(c, f));",          // 11
+  "  while (pq.size() > 1) {",                                      // 12
+  "    HNode* a = pq.top(); pq.pop();",                             // 13
+  "    HNode* b = pq.top(); pq.pop();",                             // 14
+  "    HNode* parent = new HNode(0, a->freq + b->freq);",           // 15
+  "    parent->l = a; parent->r = b;",                              // 16
+  "    pq.push(parent);",                                           // 17
+  "  }",                                                            // 18
+  "  return pq.top();",                                             // 19
+  "}",                                                              // 20
+  "",                                                               // 21
+  "void getCodes(HNode* root, string code, map<char,string>& out) {", // 22
+  "  if (!root) return;",                                           // 23
+  "  if (!root->l && !root->r) {",                                  // 24
+  "    out[root->ch] = code;",                                      // 25
+  "    return;",                                                    // 26
+  "  }",                                                            // 27
+  "  getCodes(root->l, code + \"0\", out);",                        // 28
+  "  getCodes(root->r, code + \"1\", out);",                        // 29
+  "}",                                                              // 30
+  "",                                                               // 31
+  "map<char,string> huffmanCoding(map<char,int>& freq) {",          // 32
+  "  HNode* root = buildTree(freq);",                               // 33
+  "  map<char,string> codes;",                                      // 34
+  "  getCodes(root, \"\", codes);",                                 // 35
+  "  return codes;",                                                // 36
+  "}",                                                              // 37
+];
+const HUFFMAN_CODE_SHORT = [
+  "map<char,string> huffmanCoding(map<char,int>& freq) {",          // 0
+  "  HNode* root = buildTree(freq);    // ← helper: min-heap merge", // 1
+  "  map<char,string> codes;",                                      // 2
+  "  getCodes(root, \"\", codes);      // ← helper: DFS traverse",  // 3
+  "  return codes;                     // {ch → bit string}",       // 4
+  "}",                                                              // 5
+];
+
+
 
 /* ============================================================
    AVL TREE
@@ -117,18 +439,12 @@ Lessons8["avl-tree"] = function () {
         takeaway="หลัง insert/delete ต้องเดินกลับขึ้นไป update height + เช็ค BF ตามทาง"
       />
 
-      <h3>โค้ด — Right Rotate</h3>
-      <pre className="code">{`Node* rotateRight(Node* y) {
-  Node* x = y->left;
-  Node* T = x->right;
-  // perform rotation
-  x->right = y;
-  y->left = T;
-  // update heights
-  y->height = 1 + max(h(y->left), h(y->right));
-  x->height = 1 + max(h(x->left), h(x->right));
-  return x;
-}`}</pre>
+      <h3>โค้ด AVL Insert + Rotations</h3>
+      <CodeViewToggle8
+        code={AVL_CODE_FULL}
+        codeShort={AVL_CODE_SHORT}
+        helperName="rotate/updateHeight/getBalance"
+      />
 
       <CS8 title="AVL Tree" sections={[
         { label: "TIME", value: "Insert/Search/Delete: O(log n) garantee", mono: true },
@@ -237,13 +553,11 @@ Lessons8["mst"] = function () {
       <h3>🌳 Prim's Algorithm — visualization</h3>
       <PrimViz />
 
-      <h3>Prim Pseudocode</h3>
-      <pre className="code">{`Prim(graph, start):
-  MST = {start}
-  while MST != V:
-    pick edge (u, v) with min weight where u ∈ MST, v ∉ MST
-    add v to MST
-    add (u, v) to MST edges`}</pre>
+      <h3>Prim's MST — C++ Code</h3>
+      <CodeViewToggle8
+        code={PRIM_CODE_FULL}
+        helperName="std::priority_queue"
+      />
 
       <h3>Kruskal Pseudocode</h3>
       <pre className="code">{`Kruskal(graph):
@@ -379,23 +693,11 @@ for i = 0..n-m:
 
       <h3>1. KMP (Knuth-Morris-Pratt) — O(n + m)</h3>
       <p>Insight: ใช้ <b>LPS array</b> (Longest Proper Prefix which is also Suffix) เพื่อหลีกเลี่ยงการเริ่มใหม่</p>
-      <pre className="code">{`// คำนวณ LPS ของ pattern
-LPS[0] = 0
-for i = 1..m-1:
-  len = LPS[i-1]
-  while len > 0 and P[i] != P[len]:
-    len = LPS[len-1]
-  if P[i] == P[len]: len++
-  LPS[i] = len
-
-// Search
-i = 0, j = 0
-while i < n:
-  if T[i] == P[j]: i++, j++
-  if j == m: found(i - j); j = LPS[j-1]
-  else if i < n and T[i] != P[j]:
-    if j > 0: j = LPS[j-1]
-    else: i++`}</pre>
+      <CodeViewToggle8
+        code={KMP_CODE_FULL}
+        codeShort={KMP_CODE_SHORT}
+        helperName="computeLPS()"
+      />
 
       <h3>🧪 KMP Animation</h3>
       <KMPViz />
@@ -561,14 +863,11 @@ Lessons8["hash-collision"] = function () {
 
       <h3>วิธี 1: Chaining</h3>
       <p>แต่ละช่องเป็น linked list — ใส่ key ที่ชนกันต่อท้าย</p>
-      <pre className="code">{`vector<list<KV>> table(SIZE);
-void insert(K k, V v) {
-  table[hash(k)].push_back({k, v});
-}
-V get(K k) {
-  for (auto& p : table[hash(k)])
-    if (p.k == k) return p.v;
-}`}</pre>
+      <CodeViewToggle8
+        code={CHAIN_CODE_FULL}
+        codeShort={CHAIN_CODE_SHORT}
+        helperName="hash()"
+      />
 
       <h4 style={{ color: 'var(--accent-2)' }}>🎬 Interactive Chaining — ลอง insert ดู bucket ยาวขึ้น</h4>
       <ChainingViz />
@@ -583,6 +882,11 @@ V get(K k) {
 
       <h3>🧪 Linear Probing Live Demo</h3>
       <p>ลอง insert: 18, 41, 22, 44, 59, 32 (size=11, hash=k%11)</p>
+      <CodeViewToggle8
+        code={PROBE_CODE_FULL}
+        codeShort={PROBE_CODE_SHORT}
+        helperName="hash() + probe loop"
+      />
       <ProbingViz />
 
       <WE8
@@ -722,6 +1026,13 @@ Lessons8["huffman"] = function () {
 
       <h3>🧪 Visualization</h3>
       <HuffmanViz />
+
+      <h3>Huffman — C++ Code</h3>
+      <CodeViewToggle8
+        code={HUFFMAN_CODE_FULL}
+        codeShort={HUFFMAN_CODE_SHORT}
+        helperName="buildTree() + getCodes()"
+      />
 
       <WE8
         title="Huffman กับ string 'BCAADDDCCACACAC' (freq: A=5, B=1, C=6, D=3)"

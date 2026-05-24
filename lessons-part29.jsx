@@ -3,6 +3,7 @@
 
 const { useState: useS29, useMemo: useM29, useEffect: useE29 } = React;
 const { Quiz: Quiz29 } = window.LessonComponents;
+const CodeViewToggle = window.CodeViewToggle;
 
 const Lessons29 = {};
 
@@ -178,7 +179,7 @@ Lessons29["bfs-anim"] = function () {
       </div>
 
       <h3 style={{ marginTop: 16 }}>โค้ด BFS (เต็ม)</h3>
-      <CodeBlock code={[
+      <CodeViewToggle code={[
         "#include <queue>",                              // 0
         "#include <vector>",                              // 1
         "using namespace std;",                           // 2
@@ -207,7 +208,7 @@ Lessons29["bfs-anim"] = function () {
         "  }",                                            // 25
         "  return parent;                   // ← จบ",     // 26
         "}",                                              // 27
-      ]} highlight={[p.frame.codeLine]} />
+      ]} line={p.frame.codeLine} />
 
       <Quiz29
         q="ทำไม BFS ใช้ Queue ไม่ใช่ Stack?"
@@ -290,7 +291,7 @@ Lessons29["dfs-anim"] = function () {
       </div>
 
       <h3 style={{ marginTop: 16 }}>โค้ด DFS (เต็ม, recursive)</h3>
-      <CodeBlock code={[
+      <CodeViewToggle code={[
         "#include <vector>",                              // 0
         "using namespace std;",                           // 1
         "",                                               // 2
@@ -315,7 +316,7 @@ Lessons29["dfs-anim"] = function () {
         "// visited.assign(n, false);",                   // 21
         "// parent.assign(n, -1);",                       // 22
         "// dfs(start);",                                 // 23
-      ]} highlight={[p.frame.codeLine]} />
+      ]} line={p.frame.codeLine} />
 
       <Quiz29
         q="DFS ใช้ memory เท่าไหร่ในกรณีแย่สุด?"
@@ -407,7 +408,7 @@ Lessons29["dijkstra-anim"] = function () {
       </table>
 
       <h3 style={{ marginTop: 16 }}>โค้ด Dijkstra (เต็ม)</h3>
-      <CodeBlock code={[
+      <CodeViewToggle code={[
         "#include <queue>",                                       // 0
         "#include <vector>",                                       // 1
         "#include <climits>",                                      // 2
@@ -438,7 +439,7 @@ Lessons29["dijkstra-anim"] = function () {
         "  }",                                                     // 27 ← จบ
         "  return dist;",                                          // 28
         "}",                                                       // 29
-      ]} highlight={[p.frame.codeLine]} />
+      ]} line={p.frame.codeLine} />
 
       <Quiz29
         q="Dijkstra ทำงานบน graph ที่มี negative edge ได้ไหม?"
@@ -516,7 +517,7 @@ Lessons29["prim-anim"] = function () {
       </div>
 
       <h3 style={{ marginTop: 16 }}>โค้ด Prim's MST (เต็ม)</h3>
-      <CodeBlock code={[
+      <CodeViewToggle code={[
         "#include <queue>",                                            // 0
         "#include <vector>",                                            // 1
         "using namespace std;",                                         // 2
@@ -548,7 +549,7 @@ Lessons29["prim-anim"] = function () {
         "  }",                                                          // 28
         "  return total;",                                              // 29
         "}",                                                            // 30
-      ]} highlight={[p.frame.codeLine]} />
+      ]} line={p.frame.codeLine} />
 
       <Quiz29
         q="Prim's vs Kruskal's MST — ต่างกันยังไง?"
@@ -641,7 +642,7 @@ Lessons29["dp-lis-anim"] = function () {
       </div>
 
       <h3 style={{ marginTop: 16 }}>โค้ด LIS — O(n²) DP (เต็ม)</h3>
-      <CodeBlock code={[
+      <CodeViewToggle code={[
         "#include <vector>",                              // 0
         "#include <algorithm>",                           // 1
         "using namespace std;",                           // 2
@@ -663,7 +664,7 @@ Lessons29["dp-lis-anim"] = function () {
         "  }",                                            // 18
         "  return *max_element(dp.begin(), dp.end()); // ← จบ", // 19
         "}",                                              // 20
-      ]} highlight={[p.frame.codeLine]} />
+      ]} line={p.frame.codeLine} />
 
       <Quiz29
         q="LIS O(n²) DP จะลดเป็น O(n log n) ได้ยังไง?"
@@ -766,7 +767,7 @@ Lessons29["dp-lcs-anim"] = function () {
       </div>
 
       <h3 style={{ marginTop: 16 }}>โค้ด LCS (เต็ม)</h3>
-      <CodeBlock code={[
+      <CodeViewToggle code={[
         "#include <vector>",                                       // 0
         "#include <string>",                                       // 1
         "#include <algorithm>",                                    // 2
@@ -788,7 +789,7 @@ Lessons29["dp-lcs-anim"] = function () {
         "  }",                                                     // 18
         "  return dp[m][n];  // LCS length",                       // 19
         "}",                                                       // 20
-      ]} highlight={[p.frame.codeLine]} />
+      ]} line={p.frame.codeLine} />
 
       <Quiz29
         q="LCS ของ 'ABC' และ 'AC' = ?"
@@ -881,7 +882,7 @@ Lessons29["dp-knapsack-anim"] = function () {
       </div>
 
       <h3 style={{ marginTop: 16 }}>โค้ด 0/1 Knapsack (เต็ม)</h3>
-      <CodeBlock code={[
+      <CodeViewToggle code={[
         "#include <vector>",                                                 // 0
         "#include <algorithm>",                                              // 1
         "using namespace std;",                                              // 2
@@ -905,7 +906,7 @@ Lessons29["dp-knapsack-anim"] = function () {
         "  }",                                                               // 20
         "  return dp[n][W];",                                                // 21
         "}",                                                                 // 22
-      ]} highlight={[p.frame.codeLine]} />
+      ]} line={p.frame.codeLine} />
 
       <Quiz29
         q="0/1 Knapsack complexity?"
@@ -1005,7 +1006,7 @@ Lessons29["dp-edit-anim"] = function () {
       </div>
 
       <h3 style={{ marginTop: 16 }}>โค้ด Edit Distance (เต็ม)</h3>
-      <CodeBlock code={[
+      <CodeViewToggle code={[
         "#include <vector>",                                          // 0
         "#include <string>",                                          // 1
         "#include <algorithm>",                                       // 2
@@ -1035,7 +1036,7 @@ Lessons29["dp-edit-anim"] = function () {
         "  }",                                                        // 26
         "  return dp[m][n];",                                         // 27
         "}",                                                          // 28
-      ]} highlight={[p.frame.codeLine]} />
+      ]} line={p.frame.codeLine} />
 
       <Quiz29
         q="Edit distance ระหว่าง 'cat' กับ 'cat' เท่าไหร่?"

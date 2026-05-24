@@ -1,6 +1,236 @@
 /* Lessons Part 18 — Advanced Graph: SCC, Articulation Points, Bridges, Bellman-Ford deep */
 
 const { useState: useS18, useMemo: useM18 } = React;
+const CodeViewToggle18 = window.CodeViewToggle;
+
+/* ============================================================
+   CODE: Kosaraju SCC (Full + Short)
+============================================================ */
+const KOSARAJU_FULL = [
+  "#include <vector>",                                              // 0
+  "#include <stack>",                                               // 1
+  "using namespace std;",                                           // 2
+  "",                                                               // 3
+  "vector<vector<int>> adj, adjT;       // G and G transpose",       // 4
+  "vector<bool> visited;",                                          // 5
+  "stack<int> order;",                                              // 6
+  "vector<vector<int>> sccs;",                                      // 7
+  "",                                                               // 8
+  "// Pass 1: DFS, push to stack in post-order",                    // 9
+  "void dfs1(int u) {",                                             // 10
+  "  visited[u] = true;",                                           // 11
+  "  for (int v : adj[u])",                                         // 12
+  "    if (!visited[v]) dfs1(v);",                                  // 13
+  "  order.push(u);                    // push when done",          // 14
+  "}",                                                              // 15
+  "",                                                               // 16
+  "// Pass 2: DFS on G^T, collect SCC",                             // 17
+  "void dfs2(int u, vector<int>& scc) {",                           // 18
+  "  visited[u] = true;",                                           // 19
+  "  scc.push_back(u);",                                            // 20
+  "  for (int v : adjT[u])",                                        // 21
+  "    if (!visited[v]) dfs2(v, scc);",                             // 22
+  "}",                                                              // 23
+  "",                                                               // 24
+  "void kosaraju(int n) {",                                         // 25
+  "  visited.assign(n, false);",                                    // 26
+  "  for (int u = 0; u < n; u++)",                                  // 27
+  "    if (!visited[u]) dfs1(u);",                                  // 28
+  "",                                                               // 29
+  "  visited.assign(n, false);",                                    // 30
+  "  while (!order.empty()) {",                                     // 31
+  "    int u = order.top(); order.pop();",                          // 32
+  "    if (!visited[u]) {",                                         // 33
+  "      vector<int> scc;",                                         // 34
+  "      dfs2(u, scc);",                                            // 35
+  "      sccs.push_back(scc);",                                     // 36
+  "    }",                                                          // 37
+  "  }",                                                            // 38
+  "}",                                                              // 39
+];
+const KOSARAJU_SHORT = [
+  "void kosaraju(int n) {",                                         // 0
+  "  // Pass 1: DFS on G, record post-order",                       // 1
+  "  for (int u = 0; u < n; u++)",                                  // 2
+  "    if (!visited[u]) dfs1(u);        // ← helper",                // 3
+  "",                                                               // 4
+  "  // Pass 2: DFS on G^T in reverse post-order",                  // 5
+  "  while (!order.empty()) {",                                     // 6
+  "    int u = order.top(); order.pop();",                          // 7
+  "    if (!visited[u]) {",                                         // 8
+  "      vector<int> scc;",                                         // 9
+  "      dfs2(u, scc);                  // ← helper",                // 10
+  "      sccs.push_back(scc);           // one SCC",                // 11
+  "    }",                                                          // 12
+  "  }",                                                            // 13
+  "}",                                                              // 14
+];
+
+/* ============================================================
+   CODE: Tarjan SCC (Full + Short)
+============================================================ */
+const TARJAN_FULL = [
+  "int idx = 0;",                                                   // 0
+  "vector<int> indexArr, lowlink;",                                 // 1
+  "vector<bool> onStack;",                                          // 2
+  "stack<int> st;",                                                 // 3
+  "vector<vector<int>> sccs;",                                      // 4
+  "",                                                               // 5
+  "void strongconnect(int u, vector<vector<int>>& adj) {",          // 6
+  "  indexArr[u] = lowlink[u] = idx++;",                            // 7
+  "  st.push(u);",                                                  // 8
+  "  onStack[u] = true;",                                           // 9
+  "",                                                               // 10
+  "  for (int v : adj[u]) {",                                       // 11
+  "    if (indexArr[v] == -1) {              // tree edge",         // 12
+  "      strongconnect(v, adj);",                                   // 13
+  "      lowlink[u] = min(lowlink[u], lowlink[v]);",                // 14
+  "    } else if (onStack[v]) {              // back/cross",        // 15
+  "      lowlink[u] = min(lowlink[u], indexArr[v]);",               // 16
+  "    }",                                                          // 17
+  "  }",                                                            // 18
+  "",                                                               // 19
+  "  if (lowlink[u] == indexArr[u]) {        // u is SCC root",     // 20
+  "    vector<int> scc;",                                           // 21
+  "    int w;",                                                     // 22
+  "    do {",                                                       // 23
+  "      w = st.top(); st.pop();",                                  // 24
+  "      onStack[w] = false;",                                      // 25
+  "      scc.push_back(w);",                                        // 26
+  "    } while (w != u);",                                          // 27
+  "    sccs.push_back(scc);",                                       // 28
+  "  }",                                                            // 29
+  "}",                                                              // 30
+];
+const TARJAN_SHORT = [
+  "void tarjan(int n, vector<vector<int>>& adj) {",                 // 0
+  "  indexArr.assign(n, -1); lowlink.assign(n, 0);",                // 1
+  "  onStack.assign(n, false);",                                    // 2
+  "  for (int u = 0; u < n; u++)",                                  // 3
+  "    if (indexArr[u] == -1)",                                     // 4
+  "      strongconnect(u, adj);           // ← helper: 1-pass DFS", // 5
+  "}",                                                              // 6
+];
+
+/* ============================================================
+   CODE: Articulation points / Bridges (Full + Short)
+============================================================ */
+const ARTICULATION_FULL = [
+  "vector<int> disc, low;",                                         // 0
+  "vector<bool> isArtPoint;",                                       // 1
+  "vector<pair<int,int>> bridges;",                                 // 2
+  "int timer = 0;",                                                 // 3
+  "",                                                               // 4
+  "void dfs(int u, int parent, vector<vector<int>>& adj) {",        // 5
+  "  disc[u] = low[u] = ++timer;",                                  // 6
+  "  int children = 0;",                                            // 7
+  "  for (int v : adj[u]) {",                                       // 8
+  "    if (v == parent) continue;",                                 // 9
+  "    if (disc[v]) {                          // already visited", // 10
+  "      low[u] = min(low[u], disc[v]);",                           // 11
+  "    } else {",                                                   // 12
+  "      dfs(v, u, adj);",                                          // 13
+  "      low[u] = min(low[u], low[v]);",                            // 14
+  "      children++;",                                              // 15
+  "      // bridge: ไม่มีทาง back ไปก่อน u",                          // 16
+  "      if (low[v] > disc[u]) bridges.push_back({u, v});",         // 17
+  "      // articulation: u เป็น root และมี ≥2 children, หรือ low[v] ≥ disc[u]", // 18
+  "      if (parent != -1 && low[v] >= disc[u]) isArtPoint[u] = true;", // 19
+  "    }",                                                          // 20
+  "  }",                                                            // 21
+  "  if (parent == -1 && children > 1) isArtPoint[u] = true;",      // 22
+  "}",                                                              // 23
+];
+const ARTICULATION_SHORT = [
+  "void findArtPointsAndBridges(int n, vector<vector<int>>& adj) {",// 0
+  "  disc.assign(n, 0); low.assign(n, 0);",                         // 1
+  "  isArtPoint.assign(n, false);",                                 // 2
+  "  for (int u = 0; u < n; u++)",                                  // 3
+  "    if (!disc[u]) dfs(u, -1, adj);    // ← helper: 1 DFS",       // 4
+  "}",                                                              // 5
+];
+
+/* ============================================================
+   CODE: Bellman-Ford (Full + Short)
+============================================================ */
+const BELLMAN_FORD_FULL = [
+  "// Bellman-Ford: shortest path กับ negative weight",               // 0
+  "// Time O(V·E), detect negative cycle ได้",                       // 1
+  "struct Edge { int u, v, w; };",                                   // 2
+  "",                                                                // 3
+  "vector<int> bellmanFord(int n, vector<Edge>& edges, int src) {", // 4
+  "  vector<int> dist(n, INT_MAX);",                                 // 5
+  "  dist[src] = 0;",                                                // 6
+  "  // Relax all edges V-1 times",                                  // 7
+  "  for (int i = 0; i < n - 1; i++) {",                             // 8
+  "    for (auto& e : edges) {",                                     // 9
+  "      if (dist[e.u] != INT_MAX &&",                               // 10
+  "          dist[e.u] + e.w < dist[e.v]) {",                        // 11
+  "        dist[e.v] = dist[e.u] + e.w;",                            // 12
+  "      }",                                                         // 13
+  "    }",                                                           // 14
+  "  }",                                                             // 15
+  "  // V-th iteration: ถ้ายัง relax ได้ → มี negative cycle",         // 16
+  "  for (auto& e : edges)",                                         // 17
+  "    if (dist[e.u] != INT_MAX &&",                                 // 18
+  "        dist[e.u] + e.w < dist[e.v])",                            // 19
+  "      throw runtime_error(\"negative cycle\");",                   // 20
+  "  return dist;",                                                  // 21
+  "}",                                                               // 22
+];
+const BELLMAN_FORD_SHORT = [
+  "vector<int> bellmanFord(int n, vector<Edge>& edges, int src) {", // 0
+  "  vector<int> dist(n, INT_MAX);",                                // 1
+  "  dist[src] = 0;",                                               // 2
+  "  for (int i = 0; i < n - 1; i++)",                              // 3
+  "    relaxAllEdges(dist, edges);       // ← helper: O(E)",         // 4
+  "  if (hasNegativeCycle(dist, edges))  // ← helper",               // 5
+  "    throw runtime_error(\"negative cycle\");",                   // 6
+  "  return dist;            // O(V·E)",                            // 7
+  "}",                                                              // 8
+];
+
+/* ============================================================
+   CODE: SPFA (Full + Short)
+============================================================ */
+const SPFA_FULL = [
+  "// SPFA = Bellman-Ford + queue optimization",                    // 0
+  "vector<int> spfa(int n, vector<vector<pair<int,int>>>& adj, int src) {", // 1
+  "  vector<int> dist(n, INT_MAX);",                                // 2
+  "  vector<bool> inQueue(n, false);",                              // 3
+  "  vector<int> cnt(n, 0);                  // count relaxations", // 4
+  "  queue<int> q;",                                                // 5
+  "  dist[src] = 0;",                                               // 6
+  "  q.push(src); inQueue[src] = true;",                            // 7
+  "",                                                               // 8
+  "  while (!q.empty()) {",                                         // 9
+  "    int u = q.front(); q.pop();",                                // 10
+  "    inQueue[u] = false;",                                        // 11
+  "    for (auto& [v, w] : adj[u]) {",                              // 12
+  "      if (dist[u] + w < dist[v]) {",                             // 13
+  "        dist[v] = dist[u] + w;",                                 // 14
+  "        if (!inQueue[v]) {",                                     // 15
+  "          q.push(v); inQueue[v] = true;",                        // 16
+  "          if (++cnt[v] >= n)",                                   // 17
+  "            throw runtime_error(\"negative cycle\");",           // 18
+  "        }",                                                      // 19
+  "      }",                                                        // 20
+  "    }",                                                          // 21
+  "  }",                                                            // 22
+  "  return dist;",                                                 // 23
+  "}",                                                              // 24
+];
+const SPFA_SHORT = [
+  "vector<int> spfa(int n, vector<vector<pair<int,int>>>& adj, int src) {", // 0
+  "  vector<int> dist(n, INT_MAX); dist[src] = 0;",                 // 1
+  "  queue<int> q; q.push(src);",                                   // 2
+  "  while (!q.empty()) {",                                         // 3
+  "    int u = q.front(); q.pop();",                                // 4
+  "    relaxNeighbors(u, dist, adj, q);  // ← helper",               // 5
+  "  }",                                                            // 6
+  "  return dist;            // O(V·E) worst, fast avg",            // 7
+  "}",                                                              // 8
+];
 const { Quiz: Quiz18 } = window.LessonComponents;
 const { WorkedExample: WE18, CheatSheet: CS18, Pitfalls: PF18 } = window.LearningKit;
 
@@ -119,32 +349,12 @@ Lessons18["scc"] = function () {
       <h3>🎬 Interactive — Kosaraju 2-pass DFS animation</h3>
       <SCCViz />
 
-      <h3>Algorithm 1: Kosaraju's (2 passes DFS)</h3>
-      <pre className="code-block">{`function Kosaraju(G):
-  // Pass 1: DFS on G, record finish times
-  stack = []
-  for each vertex v not visited:
-    DFS1(v)
-  function DFS1(u):
-    mark visited
-    for each (u → v) in G:
-      if !visited[v]: DFS1(v)
-    stack.push(u)         // post-order: push when DONE
-
-  // Pass 2: DFS on G^T (transpose), in reverse finish order
-  Gt = transpose(G)        // reverse all edges
-  while stack not empty:
-    u = stack.pop()
-    if u not visited2:
-      newSCC = []
-      DFS2(u, newSCC)
-      output newSCC
-
-  function DFS2(u, scc):
-    mark visited2
-    scc.add(u)
-    for each (u → v) in Gt:
-      if !visited2[v]: DFS2(v, scc)`}</pre>
+      <h3>Algorithm 1: Kosaraju's (2 passes DFS) — C++ Code</h3>
+      <CodeViewToggle18
+        code={KOSARAJU_FULL}
+        codeShort={KOSARAJU_SHORT}
+        helperName="dfs1() + dfs2()"
+      />
 
       <WE18
         title="Kosaraju Trace"
@@ -168,36 +378,12 @@ SCCs: {1,2,3}, {4,5,6}`}
         → node ที่ finish หลังสุดใน G อยู่ใน "source SCC" ของ DAG → ใน G^T มันอยู่ใน "sink"
       </p>
 
-      <h3>Algorithm 2: Tarjan's (1 pass DFS, low-link values)</h3>
-      <pre className="code-block">{`function Tarjan(G):
-  index = 0
-  stack = []
-  for each vertex v:
-    if v.index is undefined: strongconnect(v)
-
-  function strongconnect(u):
-    u.index = index
-    u.lowlink = index
-    index++
-    stack.push(u)
-    u.onStack = true
-
-    for each (u → v) in G:
-      if v.index is undefined:        // tree edge
-        strongconnect(v)
-        u.lowlink = min(u.lowlink, v.lowlink)
-      elif v.onStack:                  // back/cross to current SCC
-        u.lowlink = min(u.lowlink, v.index)
-
-    // if u is root of SCC
-    if u.lowlink == u.index:
-      scc = []
-      repeat:
-        w = stack.pop()
-        w.onStack = false
-        scc.add(w)
-      until w == u
-      output scc`}</pre>
+      <h3>Algorithm 2: Tarjan's (1 pass DFS, low-link values) — C++ Code</h3>
+      <CodeViewToggle18
+        code={TARJAN_FULL}
+        codeShort={TARJAN_SHORT}
+        helperName="strongconnect()"
+      />
 
       <h3>Tarjan vs Kosaraju</h3>
       <table className="cmp">
@@ -272,34 +458,15 @@ Lessons18["articulation"] = function () {
       <h3>Naive O(V·(V+E))</h3>
       <p>ลบทีละ vertex/edge → run BFS/DFS ตรวจ connectivity → ช้า</p>
 
-      <h3>Tarjan's Algorithm — O(V+E) ด้วย Low-Link Values</h3>
-      <pre className="code-block">{`disc[u] = discovery time (DFS order)
-low[u] = min discovery time reachable from u
-         via subtree + ≤1 back edge
-
-DFS(u, parent):
-  disc[u] = low[u] = timer++
-  children = 0
-  for each neighbor v of u:
-    if v not visited:
-      children++
-      DFS(v, u)
-      low[u] = min(low[u], low[v])
-
-      // u is articulation point if:
-      // 1. u is root AND has > 1 child
-      // 2. u is non-root AND low[v] >= disc[u]
-      if parent == null && children > 1:
-        u is articulation
-      if parent != null && low[v] >= disc[u]:
-        u is articulation
-
-      // (u, v) is bridge if low[v] > disc[u]
-      if low[v] > disc[u]:
-        (u, v) is bridge
-
-    elif v != parent:  // back edge
-      low[u] = min(low[u], disc[v])`}</pre>
+      <h3>Articulation Points + Bridges — C++ Code</h3>
+      <p>
+        <b>disc[u]</b> = discovery time (DFS order) · <b>low[u]</b> = min discovery reachable from u via subtree + ≤1 back edge
+      </p>
+      <CodeViewToggle18
+        code={ARTICULATION_FULL}
+        codeShort={ARTICULATION_SHORT}
+        helperName="dfs() with low-link"
+      />
 
       <WE18
         title="Why low[v] ≥ disc[u] → u is articulation?"
@@ -386,26 +553,12 @@ Lessons18["bellman-ford-deep"] = function () {
         <b>+ Detect negative cycles</b> (Dijkstra ทำไม่ได้)
       </div>
 
-      <h3>Algorithm</h3>
-      <pre className="code-block">{`function BellmanFord(G, s):
-  dist[v] = ∞ for all v
-  dist[s] = 0
-  parent[v] = null
-
-  // Relax all edges V-1 times
-  for i = 1 to V - 1:
-    for each edge (u, v, w) in E:
-      if dist[u] + w < dist[v]:
-        dist[v] = dist[u] + w
-        parent[v] = u
-
-  // Detect negative cycle
-  for each edge (u, v, w) in E:
-    if dist[u] + w < dist[v]:
-      // Negative cycle reachable from s
-      return null
-
-  return dist, parent`}</pre>
+      <h3>Bellman-Ford — C++ Code</h3>
+      <CodeViewToggle18
+        code={BELLMAN_FORD_FULL}
+        codeShort={BELLMAN_FORD_SHORT}
+        helperName="relaxAllEdges()"
+      />
 
       <h3>ทำไม V-1 รอบ?</h3>
       <WE18
@@ -463,18 +616,12 @@ Lessons18["bellman-ford-deep"] = function () {
         → Negative cycle = infeasible
       </p>
 
-      <h3>SPFA Optimization</h3>
-      <pre className="code-block">{`function SPFA(G, s):
-  dist[s] = 0; queue = [s]; inQueue[s] = true
-  while queue not empty:
-    u = queue.dequeue()
-    inQueue[u] = false
-    for each (u, v, w):
-      if dist[u] + w < dist[v]:
-        dist[v] = dist[u] + w
-        if not inQueue[v]:
-          queue.enqueue(v); inQueue[v] = true
-  // SPFA is heuristic — worst case still O(VE)`}</pre>
+      <h3>SPFA Optimization — C++ Code</h3>
+      <CodeViewToggle18
+        code={SPFA_FULL}
+        codeShort={SPFA_SHORT}
+        helperName="relaxNeighbors()"
+      />
 
       <CS18 title="Bellman-Ford Cheat Sheet" sections={[
         { label: "Use", value: "Negative weights<br/>Negative cycle detection<br/>Distributed routing" },

@@ -5,8 +5,445 @@
 
 const { useState: useS28, useMemo: useM28, useEffect: useE28 } = React;
 const { Quiz: Quiz28 } = window.LessonComponents;
+const CodeViewToggle28 = window.CodeViewToggle;
 
 const Lessons28 = {};
+
+/* ============================================================
+   CODE: Sparse Table (Full + Short)
+============================================================ */
+const SPARSE_FULL = [
+  "// Sparse Table for range min (idempotent op)",                  // 0
+  "// preprocess O(n log n), query O(1)",                           // 1
+  "const int LOG = 20;",                                            // 2
+  "vector<vector<int>> st;       // st[k][i] = min of a[i..i+2^k-1]",// 3
+  "vector<int> lg;                // floor(log2(i))",                // 4
+  "",                                                               // 5
+  "void buildSparseTable(vector<int>& a) {",                        // 6
+  "  int n = a.size();",                                            // 7
+  "  lg.assign(n + 1, 0);",                                         // 8
+  "  for (int i = 2; i <= n; i++) lg[i] = lg[i/2] + 1;",            // 9
+  "  st.assign(LOG, vector<int>(n));",                              // 10
+  "  st[0] = a;",                                                   // 11
+  "  for (int k = 1; (1 << k) <= n; k++)",                          // 12
+  "    for (int i = 0; i + (1 << k) <= n; i++)",                    // 13
+  "      st[k][i] = min(st[k-1][i],",                               // 14
+  "                     st[k-1][i + (1 << (k-1))]);",               // 15
+  "}",                                                              // 16
+  "",                                                               // 17
+  "int rangeMin(int l, int r) {",                                   // 18
+  "  int k = lg[r - l + 1];",                                       // 19
+  "  return min(st[k][l], st[k][r - (1 << k) + 1]);",               // 20
+  "}",                                                              // 21
+];
+const SPARSE_SHORT = [
+  "buildSparseTable(a);              // ← helper: O(n log n)",      // 0
+  "int ans = rangeMin(l, r);         // ← helper: O(1) per query",  // 1
+];
+
+/* ============================================================
+   CODE: 2-SAT (Full + Short)
+============================================================ */
+const TWO_SAT_FULL = [
+  "// 2-SAT via implication graph + Tarjan SCC",                    // 0
+  "// var i ∈ {0..n-1} encoded as: i (true), i+n (false)",          // 1
+  "struct TwoSAT {",                                                // 2
+  "  int n;",                                                       // 3
+  "  vector<vector<int>> adj, adjT;",                               // 4
+  "  TwoSAT(int n) : n(n), adj(2*n), adjT(2*n) {}",                 // 5
+  "",                                                               // 6
+  "  void addClause(int a, bool va, int b, bool vb) {",             // 7
+  "    int la = a + (va ? 0 : n);",                                 // 8
+  "    int lb = b + (vb ? 0 : n);",                                 // 9
+  "    int na = a + (va ? n : 0);",                                 // 10
+  "    int nb = b + (vb ? n : 0);",                                 // 11
+  "    // (a or b) ⇒ (¬a → b) and (¬b → a)",                        // 12
+  "    adj[na].push_back(lb); adjT[lb].push_back(na);",             // 13
+  "    adj[nb].push_back(la); adjT[la].push_back(nb);",             // 14
+  "  }",                                                            // 15
+  "",                                                               // 16
+  "  vector<bool> assignment;",                                     // 17
+  "  vector<int> comp;",                                            // 18
+  "",                                                               // 19
+  "  bool solve() {",                                               // 20
+  "    runSCC(adj, adjT, comp);          // ← Kosaraju or Tarjan",  // 21
+  "    assignment.assign(n, false);",                               // 22
+  "    for (int i = 0; i < n; i++) {",                              // 23
+  "      if (comp[i] == comp[i + n]) return false;  // UNSAT",      // 24
+  "      assignment[i] = comp[i] > comp[i + n];",                   // 25
+  "    }",                                                          // 26
+  "    return true;",                                               // 27
+  "  }",                                                            // 28
+  "};",                                                             // 29
+];
+const TWO_SAT_SHORT = [
+  "TwoSAT sat(n);",                                                 // 0
+  "for (auto& cl : clauses)",                                       // 1
+  "  sat.addClause(cl.a, cl.va, cl.b, cl.vb); // ← helper",          // 2
+  "if (sat.solve())                          // ← helper: SCC",     // 3
+  "  // sat.assignment[i] = value",                                 // 4
+  "else /* UNSAT */;",                                              // 5
+];
+
+/* ============================================================
+   CODE: LCA Binary Lifting (Full + Short)
+============================================================ */
+const LCA_FULL = [
+  "// Binary lifting LCA — preprocess O(n log n), query O(log n)", // 0
+  "const int LOG = 20;",                                            // 1
+  "vector<vector<int>> up;",                                        // 2
+  "vector<int> depth;",                                              // 3
+  "",                                                                // 4
+  "void dfsLCA(int u, int p, int d, vector<vector<int>>& adj) {",  // 5
+  "  up[0][u] = p; depth[u] = d;",                                  // 6
+  "  for (int v : adj[u]) if (v != p) dfsLCA(v, u, d+1, adj);",     // 7
+  "}",                                                                // 8
+  "",                                                                // 9
+  "void preprocess(int n, int root, vector<vector<int>>& adj) {",  // 10
+  "  up.assign(LOG, vector<int>(n, root));",                        // 11
+  "  depth.assign(n, 0);",                                          // 12
+  "  dfsLCA(root, root, 0, adj);          // ← helper",              // 13
+  "  for (int k = 1; k < LOG; k++)",                                // 14
+  "    for (int v = 0; v < n; v++)",                                // 15
+  "      up[k][v] = up[k-1][ up[k-1][v] ];",                        // 16
+  "}",                                                                // 17
+  "",                                                                // 18
+  "int lca(int u, int v) {",                                        // 19
+  "  if (depth[u] < depth[v]) swap(u, v);",                         // 20
+  "  int diff = depth[u] - depth[v];",                              // 21
+  "  for (int k = 0; k < LOG; k++)",                                // 22
+  "    if ((diff >> k) & 1) u = up[k][u];",                         // 23
+  "  if (u == v) return u;",                                        // 24
+  "  for (int k = LOG - 1; k >= 0; k--)",                           // 25
+  "    if (up[k][u] != up[k][v]) {",                                // 26
+  "      u = up[k][u]; v = up[k][v];",                              // 27
+  "    }",                                                          // 28
+  "  return up[0][u];",                                             // 29
+  "}",                                                              // 30
+];
+const LCA_SHORT = [
+  "preprocess(n, root, adj);         // ← helper: O(n log n)",      // 0
+  "int ancestor = lca(u, v);         // ← helper: O(log n)",        // 1
+  "int distUV = depth[u] + depth[v] - 2 * depth[ancestor];",        // 2
+];
+
+/* ============================================================
+   CODE: Convex Hull (Andrew's monotone chain)
+============================================================ */
+const CONVEX_HULL_FULL = [
+  "// Cross product: +ccw, -cw, 0 collinear",                       // 0
+  "long long cross(P O, P A, P B) {",                               // 1
+  "  return (long long)(A.x - O.x) * (B.y - O.y)",                  // 2
+  "       - (long long)(A.y - O.y) * (B.x - O.x);",                 // 3
+  "}",                                                              // 4
+  "",                                                               // 5
+  "vector<P> convexHull(vector<P> pts) {",                          // 6
+  "  sort(pts.begin(), pts.end());",                                // 7
+  "  int n = pts.size(), k = 0;",                                   // 8
+  "  vector<P> hull(2 * n);",                                       // 9
+  "  // Lower hull",                                                // 10
+  "  for (int i = 0; i < n; i++) {",                                // 11
+  "    while (k >= 2 && cross(hull[k-2], hull[k-1], pts[i]) <= 0) k--;", // 12
+  "    hull[k++] = pts[i];",                                        // 13
+  "  }",                                                            // 14
+  "  // Upper hull",                                                // 15
+  "  int t = k + 1;",                                               // 16
+  "  for (int i = n - 2; i >= 0; i--) {",                           // 17
+  "    while (k >= t && cross(hull[k-2], hull[k-1], pts[i]) <= 0) k--;", // 18
+  "    hull[k++] = pts[i];",                                        // 19
+  "  }",                                                            // 20
+  "  hull.resize(k - 1);",                                          // 21
+  "  return hull;",                                                 // 22
+  "}",                                                              // 23
+];
+const CONVEX_HULL_SHORT = [
+  "vector<P> convexHull(vector<P> pts) {",                          // 0
+  "  sort(pts.begin(), pts.end());",                                // 1
+  "  // Lower hull: pop เมื่อ cross() ≤ 0",                          // 2
+  "  // Upper hull: pop เมื่อ cross() ≤ 0",                          // 3
+  "  // ใช้ cross() ← helper เพื่อตัดสิน turn",                       // 4
+  "  return hull;             // O(n log n)",                       // 5
+  "}",                                                              // 6
+];
+
+/* ============================================================
+   CODE: A* Search (Full + Short)
+============================================================ */
+const A_STAR_FULL = [
+  "// A* = Dijkstra + heuristic h(n) (admissible & consistent)",    // 0
+  "double heuristic(Cell a, Cell goal) {",                          // 1
+  "  return abs(a.x - goal.x) + abs(a.y - goal.y); // Manhattan",  // 2
+  "}",                                                              // 3
+  "",                                                               // 4
+  "vector<Cell> reconstructPath(map<Cell,Cell>& came, Cell goal) { // 5",
+  "  vector<Cell> path = {goal};",                                  // 6
+  "  while (came.count(path.back()))",                              // 7
+  "    path.push_back(came[path.back()]);",                         // 8
+  "  reverse(path.begin(), path.end());",                           // 9
+  "  return path;",                                                 // 10
+  "}",                                                              // 11
+  "",                                                               // 12
+  "vector<Cell> astar(Cell start, Cell goal, Grid& grid) {",        // 13
+  "  priority_queue<pair<double,Cell>> pq;",                        // 14
+  "  map<Cell, double> g;",                                         // 15
+  "  map<Cell, Cell> came;",                                        // 16
+  "  pq.push({-heuristic(start, goal), start});",                   // 17
+  "  g[start] = 0;",                                                // 18
+  "",                                                               // 19
+  "  while (!pq.empty()) {",                                        // 20
+  "    Cell u = pq.top().second; pq.pop();",                        // 21
+  "    if (u == goal) return reconstructPath(came, goal);",         // 22
+  "    for (Cell v : neighbors(u, grid)) {",                        // 23
+  "      double tentG = g[u] + dist(u, v);",                        // 24
+  "      if (!g.count(v) || tentG < g[v]) {",                       // 25
+  "        g[v] = tentG;",                                          // 26
+  "        came[v] = u;",                                           // 27
+  "        pq.push({-(tentG + heuristic(v, goal)), v});",           // 28
+  "      }",                                                        // 29
+  "    }",                                                          // 30
+  "  }",                                                            // 31
+  "  return {};",                                                   // 32
+  "}",                                                              // 33
+];
+const A_STAR_SHORT = [
+  "vector<Cell> astar(Cell start, Cell goal, Grid& grid) {",        // 0
+  "  // f(n) = g(n) + h(n)",                                        // 1
+  "  // explore lowest f first via priority_queue",                 // 2
+  "  // h(n) = heuristic() ← helper",                               // 3
+  "  // ถึง goal → reconstructPath() ← helper",                      // 4
+  "  return path;             // O(b^d) worst",                     // 5
+  "}",                                                              // 6
+];
+
+/* ============================================================
+   CODE: FFT (Cooley-Tukey radix-2)
+============================================================ */
+const FFT_FULL = [
+  "using cd = complex<double>;",                                    // 0
+  "const double PI = acos(-1.0);",                                  // 1
+  "",                                                               // 2
+  "void fft(vector<cd>& a, bool invert) {",                         // 3
+  "  int n = a.size();",                                            // 4
+  "  if (n == 1) return;",                                          // 5
+  "  vector<cd> a0(n/2), a1(n/2);",                                 // 6
+  "  for (int i = 0; 2*i < n; i++) {",                              // 7
+  "    a0[i] = a[2*i];",                                            // 8
+  "    a1[i] = a[2*i + 1];",                                        // 9
+  "  }",                                                            // 10
+  "  fft(a0, invert);                  // recurse",                 // 11
+  "  fft(a1, invert);                  // recurse",                 // 12
+  "  double ang = 2 * PI / n * (invert ? -1 : 1);",                 // 13
+  "  cd w(1), wn(cos(ang), sin(ang));",                             // 14
+  "  for (int i = 0; 2*i < n; i++) {",                              // 15
+  "    a[i] = a0[i] + w * a1[i];",                                  // 16
+  "    a[i + n/2] = a0[i] - w * a1[i];",                            // 17
+  "    if (invert) { a[i] /= 2; a[i + n/2] /= 2; }",                // 18
+  "    w *= wn;",                                                   // 19
+  "  }",                                                            // 20
+  "}",                                                              // 21
+  "",                                                               // 22
+  "vector<long long> multiply(vector<long long>& a, vector<long long>& b) {", // 23
+  "  vector<cd> fa(a.begin(), a.end()), fb(b.begin(), b.end());",   // 24
+  "  int n = 1;",                                                   // 25
+  "  while (n < (int)(a.size() + b.size())) n <<= 1;",              // 26
+  "  fa.resize(n); fb.resize(n);",                                  // 27
+  "  fft(fa, false); fft(fb, false);",                              // 28
+  "  for (int i = 0; i < n; i++) fa[i] *= fb[i];",                  // 29
+  "  fft(fa, true);",                                               // 30
+  "  vector<long long> result(n);",                                 // 31
+  "  for (int i = 0; i < n; i++) result[i] = round(fa[i].real());", // 32
+  "  return result;",                                               // 33
+  "}",                                                              // 34
+];
+const FFT_SHORT = [
+  "vector<long long> multiply(vector<long long>& a, vector<long long>& b) {", // 0
+  "  // polynomial mult: O(n²) → O(n log n) ผ่าน FFT",               // 1
+  "  fft(fa, false); fft(fb, false);   // ← helper: forward",        // 2
+  "  // pointwise multiply",                                        // 3
+  "  fft(fa, true);                    // ← helper: inverse",        // 4
+  "  return result;",                                               // 5
+  "}",                                                              // 6
+];
+
+/* ============================================================
+   CODE: Mo's Algorithm (Full + Short)
+============================================================ */
+const MO_FULL = [
+  "// Mo's algorithm — offline range queries O((N+Q)√N)",           // 0
+  "struct Query { int l, r, idx; };",                               // 1
+  "int blockSize;",                                                 // 2
+  "",                                                               // 3
+  "bool cmp(const Query& a, const Query& b) {",                     // 4
+  "  if (a.l / blockSize != b.l / blockSize)",                      // 5
+  "    return a.l / blockSize < b.l / blockSize;",                  // 6
+  "  return a.r < b.r;",                                            // 7
+  "}",                                                              // 8
+  "",                                                               // 9
+  "int curAnswer = 0;",                                             // 10
+  "void add(int idx) { /* update curAnswer */ }",                   // 11
+  "void remove(int idx) { /* update curAnswer */ }",                // 12
+  "",                                                               // 13
+  "vector<int> mo(vector<int>& a, vector<Query>& queries) {",       // 14
+  "  blockSize = (int)sqrt((double)a.size());",                     // 15
+  "  sort(queries.begin(), queries.end(), cmp);",                   // 16
+  "  vector<int> ans(queries.size());",                             // 17
+  "  int l = 0, r = -1;",                                           // 18
+  "  for (auto& q : queries) {",                                    // 19
+  "    while (r < q.r) add(++r);          // ← helper",              // 20
+  "    while (l > q.l) add(--l);          // ← helper",              // 21
+  "    while (r > q.r) remove(r--);       // ← helper",              // 22
+  "    while (l < q.l) remove(l++);       // ← helper",              // 23
+  "    ans[q.idx] = curAnswer;",                                    // 24
+  "  }",                                                            // 25
+  "  return ans;",                                                  // 26
+  "}",                                                              // 27
+];
+const MO_SHORT = [
+  "vector<int> mo(vector<int>& a, vector<Query>& queries) {",       // 0
+  "  blockSize = sqrt(a.size());",                                  // 1
+  "  sort(queries, cmp);                // ← key trick (block sort)",// 2
+  "  for (auto& q : queries) {",                                    // 3
+  "    moveLR(l, r, q.l, q.r);          // ← helper: add/remove",   // 4
+  "    ans[q.idx] = curAnswer;",                                    // 5
+  "  }",                                                            // 6
+  "  return ans;             // O((N+Q)·√N)",                       // 7
+  "}",                                                              // 8
+];
+
+/* ============================================================
+   CODE: HLD + Centroid Decomposition (Full + Short)
+============================================================ */
+const HLD_FULL = [
+  "// Heavy-Light Decomposition — path query O(log² n)",            // 0
+  "vector<int> parent, depth, heavy, head, pos;",                   // 1
+  "int curPos = 0;",                                                // 2
+  "",                                                               // 3
+  "int dfsSize(int u, vector<vector<int>>& adj) {",                 // 4
+  "  int size = 1, maxSubtree = 0;",                                // 5
+  "  for (int v : adj[u]) if (v != parent[u]) {",                   // 6
+  "    parent[v] = u; depth[v] = depth[u] + 1;",                    // 7
+  "    int subSize = dfsSize(v, adj);",                             // 8
+  "    size += subSize;",                                           // 9
+  "    if (subSize > maxSubtree) { maxSubtree = subSize; heavy[u] = v; }", // 10
+  "  }",                                                            // 11
+  "  return size;",                                                 // 12
+  "}",                                                              // 13
+  "",                                                               // 14
+  "void decompose(int u, int h, vector<vector<int>>& adj) {",       // 15
+  "  head[u] = h; pos[u] = curPos++;",                              // 16
+  "  if (heavy[u] != -1) decompose(heavy[u], h, adj);",             // 17
+  "  for (int v : adj[u])",                                         // 18
+  "    if (v != parent[u] && v != heavy[u])",                       // 19
+  "      decompose(v, v, adj);",                                    // 20
+  "}",                                                              // 21
+  "",                                                               // 22
+  "int queryPath(int u, int v) {",                                  // 23
+  "  int res = 0;",                                                 // 24
+  "  while (head[u] != head[v]) {",                                 // 25
+  "    if (depth[head[u]] < depth[head[v]]) swap(u, v);",           // 26
+  "    res = combine(res, segQuery(pos[head[u]], pos[u]));",        // 27
+  "    u = parent[head[u]];",                                       // 28
+  "  }",                                                            // 29
+  "  if (depth[u] > depth[v]) swap(u, v);",                         // 30
+  "  return combine(res, segQuery(pos[u], pos[v]));",               // 31
+  "}",                                                              // 32
+];
+const HLD_SHORT = [
+  "dfsSize(root, adj);            // ← helper: compute heavy child",// 0
+  "decompose(root, root, adj);    // ← helper: build chains",       // 1
+  "int answer = queryPath(u, v);  // ← helper: O(log² n)",          // 2
+];
+const CENTROID_FULL = [
+  "// Centroid Decomposition — D&C on tree",                        // 0
+  "vector<int> subtreeSize;",                                       // 1
+  "vector<bool> removed;",                                          // 2
+  "",                                                               // 3
+  "int computeSize(int u, int p, vector<vector<int>>& adj) {",      // 4
+  "  subtreeSize[u] = 1;",                                          // 5
+  "  for (int v : adj[u])",                                         // 6
+  "    if (v != p && !removed[v])",                                 // 7
+  "      subtreeSize[u] += computeSize(v, u, adj);",                // 8
+  "  return subtreeSize[u];",                                       // 9
+  "}",                                                              // 10
+  "",                                                               // 11
+  "int findCentroid(int u, int p, int treeSize, vector<vector<int>>& adj) {", // 12
+  "  for (int v : adj[u])",                                         // 13
+  "    if (v != p && !removed[v] && subtreeSize[v] > treeSize / 2)",// 14
+  "      return findCentroid(v, u, treeSize, adj);",                // 15
+  "  return u;",                                                    // 16
+  "}",                                                              // 17
+  "",                                                               // 18
+  "void decompose(int u, vector<vector<int>>& adj) {",              // 19
+  "  int n = computeSize(u, -1, adj);                  // ← helper", // 20
+  "  int c = findCentroid(u, -1, n, adj);              // ← helper", // 21
+  "  removed[c] = true;",                                           // 22
+  "  solve(c, adj);                       // process through c",    // 23
+  "  for (int v : adj[c])",                                         // 24
+  "    if (!removed[v]) decompose(v, adj); // recurse — depth O(log n)", // 25
+  "}",                                                              // 26
+];
+const CENTROID_SHORT = [
+  "void decompose(int u, vector<vector<int>>& adj) {",              // 0
+  "  int n = computeSize(u, -1, adj);    // ← helper",               // 1
+  "  int c = findCentroid(u, -1, n, adj);// ← helper",               // 2
+  "  removed[c] = true;",                                           // 3
+  "  solve(c, adj);                      // process through c",     // 4
+  "  for (int v : adj[c])",                                         // 5
+  "    if (!removed[v]) decompose(v, adj); // recurse",             // 6
+  "}",                                                              // 7
+];
+
+/* ============================================================
+   CODE: Treap (Full + Short)
+============================================================ */
+const TREAP_FULL = [
+  "// Treap = Tree + Heap by random priority",                      // 0
+  "struct Node {",                                                  // 1
+  "  int key, prio, size;",                                         // 2
+  "  Node *l, *r;",                                                 // 3
+  "  Node(int k) : key(k), prio(rand()), size(1), l(nullptr), r(nullptr) {}", // 4
+  "};",                                                             // 5
+  "",                                                               // 6
+  "int sz(Node* t) { return t ? t->size : 0; }",                    // 7
+  "void updSize(Node* t) { if (t) t->size = 1 + sz(t->l) + sz(t->r); }", // 8
+  "",                                                               // 9
+  "void split(Node* t, int k, Node*& l, Node*& r) {",               // 10
+  "  if (!t) { l = r = nullptr; return; }",                         // 11
+  "  if (t->key <= k) {",                                           // 12
+  "    split(t->r, k, t->r, r);",                                   // 13
+  "    l = t;",                                                     // 14
+  "  } else {",                                                     // 15
+  "    split(t->l, k, l, t->l);",                                   // 16
+  "    r = t;",                                                     // 17
+  "  }",                                                            // 18
+  "  updSize(t);",                                                  // 19
+  "}",                                                              // 20
+  "",                                                               // 21
+  "Node* merge(Node* l, Node* r) {",                                // 22
+  "  if (!l || !r) return l ? l : r;",                              // 23
+  "  if (l->prio > r->prio) {",                                     // 24
+  "    l->r = merge(l->r, r);",                                     // 25
+  "    updSize(l); return l;",                                      // 26
+  "  } else {",                                                     // 27
+  "    r->l = merge(l, r->l);",                                     // 28
+  "    updSize(r); return r;",                                      // 29
+  "  }",                                                            // 30
+  "}",                                                              // 31
+  "",                                                               // 32
+  "Node* insert(Node* root, int key) {",                            // 33
+  "  Node *l, *r;",                                                 // 34
+  "  split(root, key, l, r);",                                      // 35
+  "  return merge(merge(l, new Node(key)), r);",                    // 36
+  "}",                                                              // 37
+];
+const TREAP_SHORT = [
+  "Node* insert(Node* root, int key) {",                            // 0
+  "  Node *l, *r;",                                                 // 1
+  "  split(root, key, l, r);            // ← helper: by key",       // 2
+  "  return merge(                      // ← helper: by priority", // 3
+  "    merge(l, new Node(key)), r);",                               // 4
+  "}                                    // expected O(log n)",      // 5
+];
 
 /* ============================================================
    Helper — simple stepper for SVG-based visualizers
@@ -134,6 +571,13 @@ Lessons28["sparse-table"] = function () {
 
       <h3>ลองปรับ L/R ดูคำตอบ</h3>
       <SparseTableViz />
+
+      <h3>Sparse Table — C++ Code</h3>
+      <CodeViewToggle28
+        code={SPARSE_FULL}
+        codeShort={SPARSE_SHORT}
+        helperName="buildSparseTable() + rangeMin()"
+      />
 
       <h3>โค้ดเต็ม</h3>
       <CodeBlock code={[
@@ -292,6 +736,13 @@ Lessons28["two-sat"] = function () {
 
       <h3>Visualization — Implication Graph</h3>
       <TwoSatViz />
+
+      <h3>2-SAT — C++ Code</h3>
+      <CodeViewToggle28
+        code={TWO_SAT_FULL}
+        codeShort={TWO_SAT_SHORT}
+        helperName="addClause() + solve() (SCC)"
+      />
 
       <h3>Algorithm (Tarjan SCC-based)</h3>
       <ol style={{ color: 'var(--text-1)' }}>
@@ -524,6 +975,13 @@ Lessons28["lca"] = function () {
 
       <h3>Visualization — Tree + Jump Table</h3>
       <LCAViz />
+
+      <h3>LCA Binary Lifting — C++ Code</h3>
+      <CodeViewToggle28
+        code={LCA_FULL}
+        codeShort={LCA_SHORT}
+        helperName="preprocess() + lca()"
+      />
 
       <h3>โค้ดเต็ม</h3>
       <CodeBlock code={[
@@ -1058,6 +1516,13 @@ Lessons28["convex-hull"] = function () {
       <h3>Andrew's Monotone Chain — Step-by-Step Build</h3>
       <ConvexHullViz />
 
+      <h3>Convex Hull — C++ Code (Andrew's monotone chain)</h3>
+      <CodeViewToggle28
+        code={CONVEX_HULL_FULL}
+        codeShort={CONVEX_HULL_SHORT}
+        helperName="cross()"
+      />
+
       <h3>Algorithm</h3>
       <ol style={{ color: 'var(--text-1)' }}>
         <li>Sort จุดตาม (x, y)</li>
@@ -1268,6 +1733,13 @@ Lessons28["a-star"] = function () {
       <h3>Grid Pathfinding Visualization — Manhattan heuristic</h3>
       <AStarViz />
 
+      <h3>A* Search — C++ Code</h3>
+      <CodeViewToggle28
+        code={A_STAR_FULL}
+        codeShort={A_STAR_SHORT}
+        helperName="heuristic() + reconstructPath()"
+      />
+
       <h3>Heuristic ที่นิยม (บน grid)</h3>
       <table style={{ width: '100%', background: 'var(--bg-2)', borderRadius: 10, borderCollapse: 'collapse' }}>
         <thead style={{ background: 'var(--bg-3)' }}>
@@ -1467,6 +1939,13 @@ Lessons28["fft"] = function () {
 
       <FFTViz />
 
+      <h3>FFT — C++ Code (Cooley-Tukey radix-2)</h3>
+      <CodeViewToggle28
+        code={FFT_FULL}
+        codeShort={FFT_SHORT}
+        helperName="fft() recursive"
+      />
+
       <h3>Idea หลัก</h3>
       <ol style={{ color: 'var(--text-1)' }}>
         <li><b>Coefficient representation</b> a₀, a₁, … → <b>Value representation</b> โดยประเมินที่ n จุด</li>
@@ -1660,6 +2139,13 @@ Lessons28["mos-algorithm"] = function () {
 
       <h3>Visualization — Pointer L, R เคลื่อนไหว</h3>
       <MoViz />
+
+      <h3>Mo's Algorithm — C++ Code</h3>
+      <CodeViewToggle28
+        code={MO_FULL}
+        codeShort={MO_SHORT}
+        helperName="add() / remove()"
+      />
 
       <h3>โค้ดโครง</h3>
       <CodeBlock code={[
@@ -1865,6 +2351,13 @@ Lessons28["tree-decomp"] = function () {
       <h3>Visualization — Heavy Edges</h3>
       <HLDViz />
 
+      <h3>HLD — C++ Code</h3>
+      <CodeViewToggle28
+        code={HLD_FULL}
+        codeShort={HLD_SHORT}
+        helperName="dfsSize() + decompose()"
+      />
+
       <h3>Algorithm HLD</h3>
       <ol style={{ color: 'var(--text-1)' }}>
         <li>DFS หา subtree size ของทุก node</li>
@@ -1891,6 +2384,13 @@ Lessons28["tree-decomp"] = function () {
 
       <h3>Visualization — Centroid Highlight</h3>
       <CentroidViz />
+
+      <h3>Centroid Decomposition — C++ Code</h3>
+      <CodeViewToggle28
+        code={CENTROID_FULL}
+        codeShort={CENTROID_SHORT}
+        helperName="computeSize() + findCentroid()"
+      />
 
       <p>Recursive: ตัด centroid → แก้ subproblem 2 ฝั่ง → centroid tree ลึก O(log N)</p>
 
@@ -2022,6 +2522,13 @@ Lessons28["treap"] = function () {
 
       <h3>Visualization — เห็น split(t, k)</h3>
       <TreapViz />
+
+      <h3>Treap — C++ Code</h3>
+      <CodeViewToggle28
+        code={TREAP_FULL}
+        codeShort={TREAP_SHORT}
+        helperName="split() + merge()"
+      />
 
       <h3>Operations หลัก: Split + Merge</h3>
       <CodeBlock code={[

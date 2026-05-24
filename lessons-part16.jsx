@@ -1,6 +1,178 @@
 /* Lessons Part 16 — Network Flow: Max Flow, Ford-Fulkerson, Edmonds-Karp, Min Cut, Bipartite Matching */
 
 const { useState: useS16, useMemo: useM16, useEffect: useE16 } = React;
+const CodeViewToggle16 = window.CodeViewToggle;
+
+/* ============================================================
+   CODE: Ford-Fulkerson (Full + Short)
+============================================================ */
+const FORD_FULKERSON_FULL = [
+  "#include <vector>",                                              // 0
+  "#include <queue>",                                               // 1
+  "#include <climits>",                                             // 2
+  "using namespace std;",                                           // 3
+  "",                                                               // 4
+  "// adj[u] = list of (v, capIdx) where cap[capIdx] = residual",   // 5
+  "vector<vector<pair<int,int>>> adj;",                             // 6
+  "vector<int> cap;",                                               // 7
+  "",                                                               // 8
+  "// BFS-based: find augmenting path (also = Edmonds-Karp)",       // 9
+  "int bfsFindPath(int s, int t, vector<int>& parent) {",           // 10
+  "  parent.assign(adj.size(), -1);",                               // 11
+  "  parent[s] = s;",                                               // 12
+  "  queue<pair<int,int>> q;                  // (node, min cap)",  // 13
+  "  q.push({s, INT_MAX});",                                        // 14
+  "  while (!q.empty()) {",                                         // 15
+  "    auto [u, flow] = q.front(); q.pop();",                       // 16
+  "    for (auto& [v, idx] : adj[u]) {",                            // 17
+  "      if (parent[v] == -1 && cap[idx] > 0) {",                   // 18
+  "        parent[v] = u;",                                         // 19
+  "        int newFlow = min(flow, cap[idx]);",                     // 20
+  "        if (v == t) return newFlow;",                            // 21
+  "        q.push({v, newFlow});",                                  // 22
+  "      }",                                                        // 23
+  "    }",                                                          // 24
+  "  }",                                                            // 25
+  "  return 0;        // no augmenting path",                       // 26
+  "}",                                                              // 27
+  "",                                                               // 28
+  "int maxFlow(int s, int t) {",                                    // 29
+  "  int flow = 0;",                                                // 30
+  "  vector<int> parent;",                                          // 31
+  "  while (int newFlow = bfsFindPath(s, t, parent)) {",            // 32
+  "    flow += newFlow;",                                           // 33
+  "    int cur = t;",                                               // 34
+  "    while (cur != s) {                    // augment",           // 35
+  "      int prev = parent[cur];",                                  // 36
+  "      // increase forward, decrease backward",                   // 37
+  "      cur = prev;",                                              // 38
+  "    }",                                                          // 39
+  "  }",                                                            // 40
+  "  return flow;",                                                 // 41
+  "}",                                                              // 42
+];
+const FORD_FULKERSON_SHORT = [
+  "int maxFlow(int s, int t) {",                                    // 0
+  "  int flow = 0;",                                                // 1
+  "  vector<int> parent;",                                          // 2
+  "  while (int b = bfsFindPath(s, t, parent)) { // ← helper",      // 3
+  "    flow += b;                              // augment by bottleneck", // 4
+  "    // update residual graph along path",                        // 5
+  "  }",                                                            // 6
+  "  return flow;",                                                 // 7
+  "}",                                                              // 8
+];
+
+/* ============================================================
+   CODE: Edmonds-Karp (Full + Short)
+   = Ford-Fulkerson + BFS guarantee O(VE²)
+============================================================ */
+const EDMONDS_KARP_FULL = FORD_FULKERSON_FULL;  // identical — BFS-based is EK
+const EDMONDS_KARP_SHORT = FORD_FULKERSON_SHORT;
+
+/* ============================================================
+   CODE: Bipartite Matching (Full + Short)
+============================================================ */
+const BIPARTITE_FULL = [
+  "// L = left set, R = right set, adj[u] = neighbors of u in R",   // 0
+  "vector<int> matchR;        // matchR[v] = u in L matched to v",   // 1
+  "vector<bool> visited;",                                          // 2
+  "",                                                               // 3
+  "// Try to find augmenting path from u",                          // 4
+  "bool tryAugment(int u, vector<vector<int>>& adj) {",             // 5
+  "  for (int v : adj[u]) {",                                       // 6
+  "    if (visited[v]) continue;",                                  // 7
+  "    visited[v] = true;",                                         // 8
+  "    if (matchR[v] == -1 || tryAugment(matchR[v], adj)) {",       // 9
+  "      matchR[v] = u;",                                           // 10
+  "      return true;",                                             // 11
+  "    }",                                                          // 12
+  "  }",                                                            // 13
+  "  return false;",                                                // 14
+  "}",                                                              // 15
+  "",                                                               // 16
+  "int bipartiteMatch(int L, int R, vector<vector<int>>& adj) {",   // 17
+  "  matchR.assign(R, -1);",                                        // 18
+  "  int matched = 0;",                                             // 19
+  "  for (int u = 0; u < L; u++) {",                                // 20
+  "    visited.assign(R, false);",                                  // 21
+  "    if (tryAugment(u, adj)) matched++;",                         // 22
+  "  }",                                                            // 23
+  "  return matched;",                                              // 24
+  "}",                                                              // 25
+];
+const BIPARTITE_SHORT = [
+  "int bipartiteMatch(int L, int R, vector<vector<int>>& adj) {",   // 0
+  "  matchR.assign(R, -1);",                                        // 1
+  "  int matched = 0;",                                             // 2
+  "  for (int u = 0; u < L; u++) {",                                // 3
+  "    visited.assign(R, false);",                                  // 4
+  "    if (tryAugment(u, adj)) matched++; // ← helper: DFS augment",// 5
+  "  }",                                                            // 6
+  "  return matched;          // |max matching|",                   // 7
+  "}",                                                              // 8
+];
+
+/* ============================================================
+   CODE: Hopcroft-Karp (Full + Short)
+============================================================ */
+const HOPCROFT_FULL = [
+  "// Hopcroft-Karp = bipartite matching ใน O(E√V)",                 // 0
+  "// แทนที่จะ augment ทีละ path → augment หลาย path พร้อมกัน",         // 1
+  "vector<int> pairL, pairR, dist;",                                // 2
+  "const int NIL = 0, INF = INT_MAX;",                              // 3
+  "",                                                               // 4
+  "bool bfs(int L, vector<vector<int>>& adj) {",                    // 5
+  "  queue<int> q;",                                                // 6
+  "  for (int u = 1; u <= L; u++) {",                               // 7
+  "    if (pairL[u] == NIL) { dist[u] = 0; q.push(u); }",           // 8
+  "    else dist[u] = INF;",                                        // 9
+  "  }",                                                            // 10
+  "  dist[NIL] = INF;",                                             // 11
+  "  while (!q.empty()) {",                                         // 12
+  "    int u = q.front(); q.pop();",                                // 13
+  "    if (dist[u] < dist[NIL])",                                   // 14
+  "      for (int v : adj[u])",                                     // 15
+  "        if (dist[pairR[v]] == INF) {",                           // 16
+  "          dist[pairR[v]] = dist[u] + 1;",                        // 17
+  "          q.push(pairR[v]);",                                    // 18
+  "        }",                                                      // 19
+  "  }",                                                            // 20
+  "  return dist[NIL] != INF;",                                     // 21
+  "}",                                                              // 22
+  "",                                                               // 23
+  "bool dfs(int u, vector<vector<int>>& adj) {",                    // 24
+  "  if (u == NIL) return true;",                                   // 25
+  "  for (int v : adj[u])",                                         // 26
+  "    if (dist[pairR[v]] == dist[u] + 1 && dfs(pairR[v], adj)) {", // 27
+  "      pairR[v] = u; pairL[u] = v;",                              // 28
+  "      return true;",                                             // 29
+  "    }",                                                          // 30
+  "  dist[u] = INF;",                                               // 31
+  "  return false;",                                                // 32
+  "}",                                                              // 33
+  "",                                                               // 34
+  "int hopcroftKarp(int L, int R, vector<vector<int>>& adj) {",     // 35
+  "  pairL.assign(L+1, NIL); pairR.assign(R+1, NIL); dist.assign(L+1, 0);", // 36
+  "  int matching = 0;",                                            // 37
+  "  while (bfs(L, adj))",                                          // 38
+  "    for (int u = 1; u <= L; u++)",                               // 39
+  "      if (pairL[u] == NIL && dfs(u, adj)) matching++;",          // 40
+  "  return matching;",                                             // 41
+  "}",                                                              // 42
+];
+const HOPCROFT_SHORT = [
+  "int hopcroftKarp(int L, int R, vector<vector<int>>& adj) {",     // 0
+  "  pairL.assign(L+1, NIL); pairR.assign(R+1, NIL);",              // 1
+  "  int matching = 0;",                                            // 2
+  "  while (bfs(L, adj)) {                  // ← phase: BFS layer", // 3
+  "    for (int u = 1; u <= L; u++)",                               // 4
+  "      if (pairL[u] == NIL && dfs(u, adj)) // ← augment many",    // 5
+  "        matching++;",                                            // 6
+  "  }",                                                            // 7
+  "  return matching;          // O(E√V)",                          // 8
+  "}",                                                              // 9
+];
 const { Quiz: Quiz16 } = window.LessonComponents;
 const { WorkedExample: WE16, CheatSheet: CS16, Pitfalls: PF16 } = window.LearningKit;
 
@@ -272,13 +444,12 @@ Lessons16["max-flow"] = function () {
       <h3>ตัวอย่าง — Network</h3>
       <MaxFlowViz />
 
-      <h3>Ford-Fulkerson Method</h3>
-      <pre className="code-block">{`function FordFulkerson(G, s, t):
-  initialize flow f(u,v) = 0 ทุก edge
-  while มี augmenting path P ใน residual graph G_f:
-    bottleneck = min(c_f(u,v)) ตลอด path P
-    เพิ่ม flow ตาม path P ทีละ bottleneck
-  return |f|`}</pre>
+      <h3>Ford-Fulkerson — C++ Code</h3>
+      <CodeViewToggle16
+        code={FORD_FULKERSON_FULL}
+        codeShort={FORD_FULKERSON_SHORT}
+        helperName="bfsFindPath()"
+      />
 
       <h3>Residual Graph (G_f)</h3>
       <p>
@@ -352,31 +523,12 @@ Lessons16["edmonds-karp"] = function () {
         → guarantee O(VE²) เวลา ไม่ขึ้นกับค่า capacity
       </div>
 
-      <h3>Pseudocode</h3>
-      <pre className="code-block">{`function EdmondsKarp(G, s, t):
-  flow = 0
-  while true:
-    parent = BFS(G_residual, s)   // หา shortest path (เลข edge)
-    if parent[t] is null: break    // ไม่มี augmenting path
-
-    // หา bottleneck ของ path
-    bottleneck = ∞
-    v = t
-    while v != s:
-      u = parent[v]
-      bottleneck = min(bottleneck, c_f(u,v))
-      v = u
-
-    // augment flow
-    v = t
-    while v != s:
-      u = parent[v]
-      f(u,v) += bottleneck
-      f(v,u) -= bottleneck
-      v = u
-
-    flow += bottleneck
-  return flow`}</pre>
+      <h3>Edmonds-Karp — C++ Code</h3>
+      <CodeViewToggle16
+        code={EDMONDS_KARP_FULL}
+        codeShort={EDMONDS_KARP_SHORT}
+        helperName="bfsFindPath()"
+      />
 
       <h3>Visualization (ใช้ BFS เลือก path)</h3>
       <MaxFlowViz />
@@ -546,14 +698,18 @@ Lessons16["bipartite-matching"] = function () {
       <p>
         เร็วกว่า vanilla flow โดยใช้ <b>multiple augmenting paths ต่อ phase</b>:
       </p>
-      <pre className="code-block">{`function HopcroftKarp(G):
-  matching = ∅
-  while true:
-    BFS แบ่ง vertices เป็น layers (จาก unmatched L)
-    หา shortest augmenting paths ทุก disjoint ใน 1 phase (DFS)
-    augment ทุก path พร้อมกัน
-    ถ้าไม่พบ → done
-  return matching`}</pre>
+      <CodeViewToggle16
+        code={HOPCROFT_FULL}
+        codeShort={HOPCROFT_SHORT}
+        helperName="bfs() + dfs()"
+      />
+
+      <h3>Bipartite Matching (Vanilla) — C++ Code</h3>
+      <CodeViewToggle16
+        code={BIPARTITE_FULL}
+        codeShort={BIPARTITE_SHORT}
+        helperName="tryAugment()"
+      />
 
       <h3>König's Theorem (Bipartite Graph)</h3>
       <div className="callout warn">

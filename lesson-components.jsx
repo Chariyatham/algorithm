@@ -8,11 +8,72 @@ function _frameLine(f) {
   return v !== undefined ? [v] : [];
 }
 
+/* ===== CodeViewToggle =====
+ * Renders pseudocode with optional "เต็ม / สั้น" toggle.
+ * Props:
+ *   code         — full code array (required)
+ *   line         — current line to highlight (in FULL coords), can be undefined
+ *   codeShort    — short code array (optional; if absent, toggle hidden)
+ *   lineMapShort — { fullLine: shortLine }, used to remap highlight in short mode
+ *   helperName   — label for short mode button (e.g., "merge()")
+ *   storageKey   — persist mode across re-renders (optional)
+ */
+function CodeViewToggle({ code, line, codeShort, lineMapShort, helperName, storageKey }) {
+  const [mode, setMode] = useStateL('full'); // 'full' | 'short'
+  const hasShort = !!codeShort;
+  const showShort = mode === 'short' && hasShort;
+  const codeToShow = showShort ? codeShort : code;
+  let hiLine = line;
+  if (showShort && lineMapShort && line !== undefined) {
+    hiLine = lineMapShort[line];
+  }
+  const highlight = (hiLine !== undefined && hiLine !== null && hiLine >= 0) ? [hiLine] : [];
+
+  return (
+    <React.Fragment>
+      {hasShort && (
+        <div style={{ display: 'flex', gap: 6, marginBottom: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 11, color: 'var(--text-3)', letterSpacing: 0.5, marginRight: 4 }}>โหมดโค้ด:</span>
+          <button
+            onClick={() => setMode('full')}
+            style={{
+              background: mode === 'full' ? 'var(--accent)' : 'var(--bg-3)',
+              color: mode === 'full' ? '#000' : 'var(--text-1)',
+              border: '1px solid var(--border)',
+              padding: '4px 12px',
+              borderRadius: 14,
+              fontSize: 12,
+              cursor: 'pointer',
+              fontWeight: mode === 'full' ? 600 : 400,
+            }}>📖 เต็ม (มี {helperName || 'helper'})</button>
+          <button
+            onClick={() => setMode('short')}
+            style={{
+              background: mode === 'short' ? 'var(--accent)' : 'var(--bg-3)',
+              color: mode === 'short' ? '#000' : 'var(--text-1)',
+              border: '1px solid var(--border)',
+              padding: '4px 12px',
+              borderRadius: 14,
+              fontSize: 12,
+              cursor: 'pointer',
+              fontWeight: mode === 'short' ? 600 : 400,
+            }}>🎯 สั้น (เรียก {helperName || 'helper'} เป็น call)</button>
+          <span style={{ fontSize: 11, color: 'var(--text-3)', marginLeft: 'auto' }}>
+            {showShort ? `${codeToShow.length} บรรทัด` : `${codeToShow.length} บรรทัด`}
+          </span>
+        </div>
+      )}
+      <CodeBlock code={codeToShow} highlight={highlight} />
+    </React.Fragment>
+  );
+}
+
 function SortLessonViz({ algoKey }) {
   const [arr, setArr] = useStateL([42, 7, 19, 88, 3, 56, 31, 64]);
   const A = window.AlgorithmGenerators[algoKey];
   const player = usePlayer(() => A.gen(arr), [arr, algoKey]);
   const f = player.frame || { arr, marks: {}, vars: {} };
+  const line = f.line !== undefined ? f.line : f.codeLine;
   return (
     <div className="viz">
       <PlayerToolbar player={player} extraLeft={<ArrayInput value={arr} onChange={setArr} />} />
@@ -21,7 +82,13 @@ function SortLessonViz({ algoKey }) {
       </div>
       <VarsPanel vars={f.vars || {}} />
       <div style={{ borderTop: '1px solid var(--border-soft)', padding: '14px 18px' }}>
-        <CodeBlock code={A.code} highlight={_frameLine(f)} />
+        <CodeViewToggle
+          code={A.code}
+          codeShort={A.codeShort}
+          lineMapShort={A.lineMapShort}
+          helperName={A.helperName}
+          line={line}
+        />
       </div>
     </div>
   );
@@ -33,6 +100,7 @@ function SearchLessonViz({ algoKey, defaultArr, target }) {
   const A = window.AlgorithmGenerators[algoKey];
   const player = usePlayer(() => A.gen(arr, t), [arr, t, algoKey]);
   const f = player.frame || { arr, marks: {}, vars: {} };
+  const line = f.line !== undefined ? f.line : f.codeLine;
   return (
     <div className="viz">
       <PlayerToolbar player={player} extraLeft={
@@ -49,7 +117,13 @@ function SearchLessonViz({ algoKey, defaultArr, target }) {
       </div>
       <VarsPanel vars={f.vars || {}} />
       <div style={{ borderTop: '1px solid var(--border-soft)', padding: '14px 18px' }}>
-        <CodeBlock code={A.code} highlight={_frameLine(f)} />
+        <CodeViewToggle
+          code={A.code}
+          codeShort={A.codeShort}
+          lineMapShort={A.lineMapShort}
+          helperName={A.helperName}
+          line={line}
+        />
       </div>
     </div>
   );
@@ -147,4 +221,5 @@ function DragOrder({ items, correct, prompt }) {
   );
 }
 
-window.LessonComponents = { SortLessonViz, SearchLessonViz, Quiz, DragOrder };
+window.LessonComponents = { SortLessonViz, SearchLessonViz, Quiz, DragOrder, CodeViewToggle };
+window.CodeViewToggle = CodeViewToggle;

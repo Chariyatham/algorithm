@@ -1,6 +1,228 @@
 /* Lessons Part 19 — Advanced Strings: Z-algorithm, Suffix Array, Manacher, Aho-Corasick */
 
 const { useState: useS19, useMemo: useM19 } = React;
+const CodeViewToggle19 = window.CodeViewToggle;
+
+/* ============================================================
+   CODE: Z-Algorithm (Full + Short)
+============================================================ */
+const Z_FULL = [
+  "// Z[i] = ความยาว substring เริ่มที่ i ที่ตรงกับ prefix ของ s",       // 0
+  "vector<int> zFunction(const string& s) {",                       // 1
+  "  int n = s.size();",                                            // 2
+  "  vector<int> z(n, 0);",                                         // 3
+  "  int l = 0, r = 0;            // current Z-box [l..r)",         // 4
+  "  for (int i = 1; i < n; i++) {",                                // 5
+  "    if (i < r) {",                                               // 6
+  "      // ใช้ค่า Z จาก mirror",                                     // 7
+  "      z[i] = min(r - i, z[i - l]);",                             // 8
+  "    }",                                                          // 9
+  "    // ขยาย match",                                              // 10
+  "    while (i + z[i] < n && s[z[i]] == s[i + z[i]])",             // 11
+  "      z[i]++;",                                                  // 12
+  "    // อัพเดต Z-box ถ้าขยายไปไกลกว่า",                              // 13
+  "    if (i + z[i] > r) {",                                        // 14
+  "      l = i;",                                                   // 15
+  "      r = i + z[i];",                                            // 16
+  "    }",                                                          // 17
+  "  }",                                                            // 18
+  "  return z;",                                                    // 19
+  "}",                                                              // 20
+];
+const Z_SHORT = [
+  "vector<int> zFunction(const string& s) {",                       // 0
+  "  // Single linear pass with Z-box optimization",                // 1
+  "  // (mirror lookup + extend + update box) — no helpers",        // 2
+  "  // Time O(n) — see Full mode",                                 // 3
+  "  return z;",                                                    // 4
+  "}",                                                              // 5
+];
+
+/* ============================================================
+   CODE: Z-Algorithm Pattern Matching (Full + Short)
+============================================================ */
+const Z_MATCH_FULL = [
+  "vector<int> findPattern(const string& text, const string& pat) {", // 0
+  "  // Concat: pat + '$' + text  ($ ไม่อยู่ใน alphabet)",            // 1
+  "  string combined = pat + \"$\" + text;",                        // 2
+  "  vector<int> z = zFunction(combined);",                         // 3
+  "  vector<int> matches;",                                         // 4
+  "  int m = pat.size();",                                          // 5
+  "  // Z[i] == m → เจอ match ที่ตำแหน่ง i - m - 1 ใน text",          // 6
+  "  for (int i = m + 1; i < (int)combined.size(); i++)",           // 7
+  "    if (z[i] == m)",                                             // 8
+  "      matches.push_back(i - m - 1);",                            // 9
+  "  return matches;",                                              // 10
+  "}",                                                              // 11
+];
+const Z_MATCH_SHORT = [
+  "vector<int> findPattern(const string& text, const string& pat) {", // 0
+  "  string combined = pat + \"$\" + text;",                        // 1
+  "  vector<int> z = zFunction(combined);  // ← helper",            // 2
+  "  // หา position ที่ z[i] == |pat|",                              // 3
+  "  // → match at i - |pat| - 1",                                  // 4
+  "  return matches;",                                              // 5
+  "}",                                                              // 6
+];
+
+/* ============================================================
+   CODE: Suffix Array + LCP Kasai (Full + Short)
+============================================================ */
+const SUFFIX_ARRAY_FULL = [
+  "// O(n log² n) — sort suffixes by first 2^k chars iteratively",  // 0
+  "vector<int> buildSA(const string& s) {",                         // 1
+  "  int n = s.size();",                                            // 2
+  "  vector<int> sa(n), rank(n), tmp(n);",                          // 3
+  "  for (int i = 0; i < n; i++) { sa[i] = i; rank[i] = s[i]; }",   // 4
+  "",                                                               // 5
+  "  for (int k = 1; k < n; k *= 2) {",                             // 6
+  "    auto cmp = [&](int a, int b) {",                             // 7
+  "      if (rank[a] != rank[b]) return rank[a] < rank[b];",        // 8
+  "      int ra = a+k < n ? rank[a+k] : -1;",                       // 9
+  "      int rb = b+k < n ? rank[b+k] : -1;",                       // 10
+  "      return ra < rb;",                                          // 11
+  "    };",                                                         // 12
+  "    sort(sa.begin(), sa.end(), cmp);",                           // 13
+  "    tmp[sa[0]] = 0;",                                            // 14
+  "    for (int i = 1; i < n; i++)",                                // 15
+  "      tmp[sa[i]] = tmp[sa[i-1]] + (cmp(sa[i-1], sa[i]) ? 1 : 0); // 16
+  "    rank = tmp;",                                                // 17
+  "  }",                                                            // 18
+  "  return sa;",                                                   // 19
+  "}",                                                              // 20
+  "",                                                               // 21
+  "// Kasai's algorithm — LCP[i] = lcp(SA[i-1], SA[i]), O(n)",      // 22
+  "vector<int> buildLCP(const string& s, vector<int>& sa) {",       // 23
+  "  int n = s.size();",                                            // 24
+  "  vector<int> rank(n), lcp(n);",                                 // 25
+  "  for (int i = 0; i < n; i++) rank[sa[i]] = i;",                 // 26
+  "  int h = 0;",                                                   // 27
+  "  for (int i = 0; i < n; i++) {",                                // 28
+  "    if (rank[i] > 0) {",                                         // 29
+  "      int j = sa[rank[i] - 1];",                                 // 30
+  "      while (i+h < n && j+h < n && s[i+h] == s[j+h]) h++;",      // 31
+  "      lcp[rank[i]] = h;",                                        // 32
+  "      if (h > 0) h--;",                                          // 33
+  "    }",                                                          // 34
+  "  }",                                                            // 35
+  "  return lcp;",                                                  // 36
+  "}",                                                              // 37
+];
+const SUFFIX_ARRAY_SHORT = [
+  "// Build Suffix Array + LCP in 2 steps",                         // 0
+  "vector<int> sa = buildSA(s);          // ← helper: O(n log² n)", // 1
+  "vector<int> lcp = buildLCP(s, sa);    // ← helper: Kasai O(n)",  // 2
+  "// sa[i] = start position of i-th smallest suffix",              // 3
+  "// lcp[i] = longest common prefix of sa[i-1] and sa[i]",         // 4
+];
+
+/* ============================================================
+   CODE: Manacher (Full + Short)
+============================================================ */
+const MANACHER_FULL = [
+  "// Manacher: longest palindromic substring in O(n)",             // 0
+  "string manacher(const string& s) {",                             // 1
+  "  // Insert # between chars to handle odd/even uniformly",       // 2
+  "  string t = \"^#\";",                                           // 3
+  "  for (char c : s) { t += c; t += '#'; }",                       // 4
+  "  t += '$';",                                                    // 5
+  "  int n = t.size();",                                            // 6
+  "  vector<int> p(n, 0);",                                         // 7
+  "  int c = 0, r = 0;            // center, right boundary",       // 8
+  "",                                                               // 9
+  "  for (int i = 1; i < n - 1; i++) {",                            // 10
+  "    int mirror = 2 * c - i;",                                    // 11
+  "    if (i < r) p[i] = min(r - i, p[mirror]);",                   // 12
+  "    while (t[i + (1 + p[i])] == t[i - (1 + p[i])])",             // 13
+  "      p[i]++;",                                                  // 14
+  "    if (i + p[i] > r) {",                                        // 15
+  "      c = i; r = i + p[i];",                                     // 16
+  "    }",                                                          // 17
+  "  }",                                                            // 18
+  "",                                                               // 19
+  "  // Find max p[i] and extract palindrome",                      // 20
+  "  int maxLen = 0, centerIdx = 0;",                               // 21
+  "  for (int i = 1; i < n - 1; i++)",                              // 22
+  "    if (p[i] > maxLen) { maxLen = p[i]; centerIdx = i; }",       // 23
+  "  int start = (centerIdx - maxLen) / 2;",                        // 24
+  "  return s.substr(start, maxLen);",                              // 25
+  "}",                                                              // 26
+];
+const MANACHER_SHORT = [
+  "string manacher(const string& s) {",                             // 0
+  "  string t = preprocess(s);        // ← helper: insert #",        // 1
+  "  vector<int> p = expandRadii(t);  // ← helper: mirror + expand",// 2
+  "  return extractLongest(s, p);     // ← helper: max p[i]",       // 3
+  "}             // O(n) total",                                    // 4
+];
+
+/* ============================================================
+   CODE: Aho-Corasick (Full + Short)
+============================================================ */
+const AHO_FULL = [
+  "// Aho-Corasick: multi-pattern matching in O(n + m + z)",        // 0
+  "struct ACNode {",                                                // 1
+  "  map<char, int> next;",                                         // 2
+  "  int fail = 0;",                                                // 3
+  "  vector<int> output;       // patterns ending here",            // 4
+  "};",                                                             // 5
+  "vector<ACNode> trie(1);     // index 0 = root",                  // 6
+  "",                                                               // 7
+  "void addPattern(const string& p, int id) {",                     // 8
+  "  int u = 0;",                                                   // 9
+  "  for (char c : p) {",                                           // 10
+  "    if (!trie[u].next.count(c)) {",                              // 11
+  "      trie[u].next[c] = trie.size();",                           // 12
+  "      trie.push_back({});",                                      // 13
+  "    }",                                                          // 14
+  "    u = trie[u].next[c];",                                       // 15
+  "  }",                                                            // 16
+  "  trie[u].output.push_back(id);",                                // 17
+  "}",                                                              // 18
+  "",                                                               // 19
+  "void buildFailureLinks() {",                                     // 20
+  "  queue<int> q;",                                                // 21
+  "  for (auto& [c, v] : trie[0].next) q.push(v);",                 // 22
+  "  while (!q.empty()) {",                                         // 23
+  "    int u = q.front(); q.pop();",                                // 24
+  "    for (auto& [c, v] : trie[u].next) {",                        // 25
+  "      int f = trie[u].fail;",                                    // 26
+  "      while (f && !trie[f].next.count(c)) f = trie[f].fail;",    // 27
+  "      trie[v].fail = trie[f].next.count(c) && trie[f].next[c] != v", // 28
+  "                     ? trie[f].next[c] : 0;",                    // 29
+  "      // merge output ของ fail node (matches ทุก suffix pattern)", // 30
+  "      for (int id : trie[trie[v].fail].output)",                 // 31
+  "        trie[v].output.push_back(id);",                          // 32
+  "      q.push(v);",                                               // 33
+  "    }",                                                          // 34
+  "  }",                                                            // 35
+  "}",                                                              // 36
+  "",                                                               // 37
+  "vector<pair<int,int>> search(const string& text) {",             // 38
+  "  vector<pair<int,int>> hits;     // (position, pattern_id)",    // 39
+  "  int u = 0;",                                                   // 40
+  "  for (int i = 0; i < (int)text.size(); i++) {",                 // 41
+  "    char c = text[i];",                                          // 42
+  "    while (u && !trie[u].next.count(c)) u = trie[u].fail;",      // 43
+  "    if (trie[u].next.count(c)) u = trie[u].next[c];",            // 44
+  "    for (int id : trie[u].output) hits.push_back({i, id});",     // 45
+  "  }",                                                            // 46
+  "  return hits;",                                                 // 47
+  "}",                                                              // 48
+];
+const AHO_SHORT = [
+  "void buildAhoCorasick(vector<string>& patterns) {",              // 0
+  "  for (int i = 0; i < patterns.size(); i++)",                    // 1
+  "    addPattern(patterns[i], i);     // ← helper: insert to trie",// 2
+  "  buildFailureLinks();              // ← helper: BFS layer",     // 3
+  "}",                                                              // 4
+  "",                                                               // 5
+  "vector<pair<int,int>> search(const string& text) {",             // 6
+  "  // walk text char-by-char, follow fail links on mismatch",     // 7
+  "  // emit all hits via output sets",                             // 8
+  "  return hits;             // O(n + total |P| + z)",             // 9
+  "}",                                                              // 10
+];
 const { Quiz: Quiz19 } = window.LessonComponents;
 const { WorkedExample: WE19, CheatSheet: CS19, Pitfalls: PF19 } = window.LearningKit;
 
@@ -212,17 +434,12 @@ Lessons19["z-algorithm"] = function () {
         ทุก iteration จะ <b>extend r forward เท่านั้น</b> → r monotonic → amortized O(n)
       </p>
 
-      <pre className="code-block">{`function Z(s):
-  n = len(s); z = [0] * n
-  l = r = 0
-  for i = 1 to n-1:
-    if i < r:
-      z[i] = min(r - i, z[i - l])   // copy from earlier match
-    while i + z[i] < n and s[z[i]] == s[i + z[i]]:
-      z[i]++                         // extend match
-    if i + z[i] > r:
-      l = i; r = i + z[i]            // update Z-box
-  return z`}</pre>
+      <h3>Z-Function — C++ Code</h3>
+      <CodeViewToggle19
+        code={Z_FULL}
+        codeShort={Z_SHORT}
+        helperName="Z-box (no separate helper)"
+      />
 
       <WE19
         title="Trace: s = 'aabxaayaab'"
@@ -239,15 +456,12 @@ Lessons19["z-algorithm"] = function () {
         takeaway="Z-box trick = key to O(n)"
       />
 
-      <h3>Pattern Matching via Z-Algorithm</h3>
-      <pre className="code-block">{`Find pattern P in text T:
-  combined = P + '$' + T   ('$' = สัญลักษณ์ไม่อยู่ใน alphabet)
-  z = Z(combined)
-  for i = len(P) + 1 to len(combined) - 1:
-    if z[i] == len(P):
-      match found at position (i - len(P) - 1) ใน T
-
-Time: O(|P| + |T|)`}</pre>
+      <h3>Pattern Matching via Z-Algorithm — C++ Code</h3>
+      <CodeViewToggle19
+        code={Z_MATCH_FULL}
+        codeShort={Z_MATCH_SHORT}
+        helperName="zFunction()"
+      />
 
       <h3>Z-Algorithm vs KMP</h3>
       <table className="cmp">
@@ -366,22 +580,12 @@ Lessons19["suffix-array"] = function () {
         </tbody>
       </table>
 
-      <h3>LCP Construction (Kasai's algorithm)</h3>
-      <pre className="code-block">{`function buildLCP(s, SA):
-  n = len(s)
-  rank[SA[i]] = i  // inverse of SA
-  h = 0
-  for i = 0 to n-1:
-    if rank[i] > 0:
-      j = SA[rank[i] - 1]  // previous suffix in sorted order
-      while i+h < n and j+h < n and s[i+h] == s[j+h]:
-        h++
-      LCP[rank[i]] = h
-      if h > 0: h--
-    else: h = 0
-  return LCP
-
-Time: O(n) — amortized because h decreases by ≤1 per iter`}</pre>
+      <h3>Suffix Array + LCP — C++ Code</h3>
+      <CodeViewToggle19
+        code={SUFFIX_ARRAY_FULL}
+        codeShort={SUFFIX_ARRAY_SHORT}
+        helperName="buildSA() + buildLCP()"
+      />
 
       <WE19
         title="Why is Kasai's O(n)?"
@@ -489,32 +693,12 @@ Lessons19["manacher"] = function () {
       <h3>🎬 Interactive — เลื่อน center ดู palindrome radius</h3>
       <ManacherViz />
 
-      <h3>Algorithm</h3>
-      <pre className="code-block">{`function Manacher(s):
-  // Insert separators to handle even/odd uniformly
-  t = '^#' + s.join('#') + '#$'
-  n = len(t)
-  p = [0] * n        // p[i] = palindrome radius centered at t[i]
-  c = r = 0          // center and right edge of current palindrome
-
-  for i = 1 to n-2:
-    mirror = 2*c - i
-    if i < r:
-      p[i] = min(r - i, p[mirror])   // reuse from mirror
-
-    // Try to extend
-    while t[i + 1 + p[i]] == t[i - 1 - p[i]]:
-      p[i]++
-
-    // Update center if extended past r
-    if i + p[i] > r:
-      c = i
-      r = i + p[i]
-
-  // Find max
-  maxI = argmax(p)
-  start = (maxI - p[maxI]) / 2
-  return s[start : start + p[maxI]]`}</pre>
+      <h3>Manacher — C++ Code</h3>
+      <CodeViewToggle19
+        code={MANACHER_FULL}
+        codeShort={MANACHER_SHORT}
+        helperName="preprocess/expandRadii/extract"
+      />
 
       <WE19
         title="Why O(n)?"
@@ -592,37 +776,12 @@ Lessons19["aho-corasick"] = function () {
         <li><b>Scan text</b> — เดิน trie + failure link เมื่อ mismatch</li>
       </ol>
 
-      <h3>Failure Link Construction</h3>
-      <pre className="code-block">{`function buildFailureLinks(root):
-  queue = []
-  for each child c of root:
-    c.fail = root
-    queue.add(c)
-
-  while queue not empty:
-    u = queue.dequeue()
-    for each (char ch, child v) of u:
-      f = u.fail
-      while f != root and ch not in f.children:
-        f = f.fail
-      v.fail = f.children[ch] if ch in f.children else root
-      if v.fail == v: v.fail = root  // edge case
-      queue.add(v)`}</pre>
-
-      <h3>Scanning</h3>
-      <pre className="code-block">{`function scan(T):
-  current = root
-  for i = 0 to len(T) - 1:
-    c = T[i]
-    while current != root and c not in current.children:
-      current = current.fail
-    if c in current.children:
-      current = current.children[c]
-    // Report all matches ending here
-    temp = current
-    while temp != root:
-      if temp.isEnd: report match (pattern ending at i)
-      temp = temp.outputLink or temp.fail`}</pre>
+      <h3>Aho-Corasick — C++ Code (Build + Scan ครบ)</h3>
+      <CodeViewToggle19
+        code={AHO_FULL}
+        codeShort={AHO_SHORT}
+        helperName="addPattern + buildFailureLinks"
+      />
 
       <WE19
         title="Trace: patterns={he, she, his, hers}, T='ushers'"

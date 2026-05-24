@@ -464,14 +464,117 @@ const binaryCode = [
   "}",                                                              // 12
 ];
 
+// ============ Short versions (helper hidden as function call) ============
+
+// Merge sort — full code is mergeCode (16 lines). Short = main mergeSort + merge() เป็น 1 บรรทัด
+const mergeCodeShort = [
+  "void mergeSort(vector<int>& a, int l, int r) {",                 // 0
+  "  if (l >= r) return;",                                          // 1
+  "  int mid = (l + r) / 2;",                                       // 2
+  "  mergeSort(a, l, mid);                  // recurse left",       // 3
+  "  mergeSort(a, mid + 1, r);              // recurse right",      // 4
+  "  merge(a, l, mid, r);                   // merge two halves",   // 5
+  "}",                                                              // 6
+];
+// map full line → short line (frames ใช้ line ของ full)
+// full: 5=interleave (in merge() body), 9=mergeSort start, 11=mid, 14=merge() call, 15=}
+const mergeLineMap = {
+  5: 5,   // interleave (in merge() impl) → highlight "merge(...)" call ใน short
+  9: 0,   // void mergeSort
+  10: 1,  // if (l >= r) return
+  11: 2,  // int mid
+  12: 3,  // mergeSort(a, l, mid)
+  13: 4,  // mergeSort(a, mid+1, r)
+  14: 5,  // merge(a, l, mid, r)
+  15: 6,  // }
+};
+
+// Quick sort — full code is quickCode (19 lines). Short = main quickSort + partition() as 1 call
+const quickCodeShort = [
+  "void quickSort(vector<int>& a, int lo, int hi) {",               // 0
+  "  if (lo < hi) {",                                               // 1
+  "    int p = partition(a, lo, hi);    // ← partition + return pivot pos", // 2
+  "    quickSort(a, lo, p - 1);         // recurse left",           // 3
+  "    quickSort(a, p + 1, hi);         // recurse right",           // 4
+  "  }",                                                            // 5
+  "}",                                                              // 6
+];
+// full lines: 0-11 = partition(), 12-18 = quickSort()
+// frame uses: 0(initial), 2(start partition), 4(if compare), 6(swap inside), 9(final swap), 12(done — quickSort signature)
+const quickLineMap = {
+  0: 2,   // partition start → "partition()" call in short
+  1: 2,
+  2: 2,   // i = lo - 1 → still partition
+  3: 2,
+  4: 2,   // if compare → partition
+  5: 2,
+  6: 2,   // swap inside partition → partition call
+  7: 2,
+  8: 2,
+  9: 2,   // final pivot swap → still partition
+  10: 2,
+  11: 2,
+  12: 0,  // void quickSort signature
+  13: 1,
+  14: 2,  // p = partition(...)
+  15: 3,  // recurse left
+  16: 4,  // recurse right
+  17: 5,
+  18: 6,
+};
+
+// Heap sort — full code is heapCode (18 lines). Short = main heapSort + heapify() as 1 call
+const heapCodeShort = [
+  "void heapSort(vector<int>& a) {",                                // 0
+  "  int n = a.size();",                                            // 1
+  "  // 1) build max-heap จาก bottom-up",                            // 2
+  "  for (int i = n/2 - 1; i >= 0; i--)",                           // 3
+  "    heapify(a, n, i);              // ← sift down (max-heapify)", // 4
+  "  // 2) sort: swap root กับ end แล้ว re-heapify",                  // 5
+  "  for (int i = n - 1; i > 0; i--) {",                            // 6
+  "    swap(a[0], a[i]);",                                          // 7
+  "    heapify(a, i, 0);              // ← re-heapify",              // 8
+  "  }",                                                            // 9
+  "}",                                                              // 10
+];
+// full: 0-9 heapify(), 10-17 heapSort()
+// frames: 0(initial), 2(children check in heapify), 6(swap in heapify), 14(sort-loop swap), 17(final)
+const heapLineMap = {
+  0: 4,   // heapify start → heapify call line in short
+  1: 4,
+  2: 4,   // children check → heapify call
+  3: 4,
+  4: 4,
+  5: 4,
+  6: 4,   // swap in heapify → heapify call
+  7: 4,
+  8: 4,
+  9: 4,
+  10: 0,  // void heapSort
+  11: 1,  // int n
+  12: 3,  // for build heap
+  13: 6,  // for sort loop
+  14: 7,  // swap(a[0], a[i])
+  15: 8,  // heapify(a, i, 0) — re-heapify
+  16: 9,
+  17: 10, // }
+};
+
+// Schema:
+//   gen           — frame generator
+//   code          — pseudocode array (เต็ม, default mode)
+//   hasHelper     — true ถ้ามี Short version
+//   codeShort     — pseudocode array (สั้น, ซ่อน helper impl)
+//   lineMapShort  — { fullLineIdx: shortLineIdx } map สำหรับ highlight
+//   helperName    — ชื่อ helper (สำหรับ tooltip)
 window.AlgorithmGenerators = {
-  bubble: { gen: genBubbleSort, code: bubbleCode, name: "Bubble Sort", complexity: { time: "O(n²)", space: "O(1)" } },
-  shell: { gen: genShellSort, code: shellCode, name: "Shell Sort", complexity: { time: "O(n^1.3) – O(n²)", space: "O(1)" } },
-  selection: { gen: genSelectionSort, code: selectionCode, name: "Selection Sort", complexity: { time: "O(n²)", space: "O(1)" } },
-  insertion: { gen: genInsertionSort, code: insertionCode, name: "Insertion Sort", complexity: { time: "O(n²)", space: "O(1)" } },
-  merge: { gen: genMergeSort, code: mergeCode, name: "Merge Sort", complexity: { time: "O(n log n)", space: "O(n)" } },
-  quick: { gen: genQuickSort, code: quickCode, name: "Quick Sort", complexity: { time: "O(n log n) avg", space: "O(log n)" } },
-  heap: { gen: genHeapSort, code: heapCode, name: "Heap Sort", complexity: { time: "O(n log n)", space: "O(1)" } },
-  linear: { gen: genLinearSearch, code: linearCode, name: "Linear Search", complexity: { time: "O(n)", space: "O(1)" } },
-  binary: { gen: genBinarySearch, code: binaryCode, name: "Binary Search", complexity: { time: "O(log n)", space: "O(1)" } },
+  bubble:    { gen: genBubbleSort,    code: bubbleCode,    name: "Bubble Sort",    complexity: { time: "O(n²)",            space: "O(1)" },     hasHelper: false },
+  shell:     { gen: genShellSort,     code: shellCode,     name: "Shell Sort",     complexity: { time: "O(n^1.3) – O(n²)", space: "O(1)" },     hasHelper: false },
+  selection: { gen: genSelectionSort, code: selectionCode, name: "Selection Sort", complexity: { time: "O(n²)",            space: "O(1)" },     hasHelper: false },
+  insertion: { gen: genInsertionSort, code: insertionCode, name: "Insertion Sort", complexity: { time: "O(n²)",            space: "O(1)" },     hasHelper: false },
+  merge:     { gen: genMergeSort,     code: mergeCode,     name: "Merge Sort",     complexity: { time: "O(n log n)",       space: "O(n)" },     hasHelper: true,  codeShort: mergeCodeShort,    lineMapShort: mergeLineMap,    helperName: "merge()" },
+  quick:     { gen: genQuickSort,     code: quickCode,     name: "Quick Sort",     complexity: { time: "O(n log n) avg",   space: "O(log n)" }, hasHelper: true,  codeShort: quickCodeShort,    lineMapShort: quickLineMap,    helperName: "partition()" },
+  heap:      { gen: genHeapSort,      code: heapCode,      name: "Heap Sort",      complexity: { time: "O(n log n)",       space: "O(1)" },     hasHelper: true,  codeShort: heapCodeShort,     lineMapShort: heapLineMap,     helperName: "heapify()" },
+  linear:    { gen: genLinearSearch,  code: linearCode,    name: "Linear Search",  complexity: { time: "O(n)",             space: "O(1)" },     hasHelper: false },
+  binary:    { gen: genBinarySearch,  code: binaryCode,    name: "Binary Search",  complexity: { time: "O(log n)",         space: "O(1)" },     hasHelper: false },
 };

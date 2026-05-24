@@ -1,6 +1,72 @@
 /* Lessons Part 23 — STL Containers: overview, vector-deep, string, iterators, pair-tuple, stack-queue, deque, priority-queue */
 
 const { useState: useS23, useMemo: useM23 } = React;
+const CodeViewToggle23 = window.CodeViewToggle;
+
+/* ============================================================
+   CODE: Binary Heap (Full + Short) — siftUp / siftDown helpers
+============================================================ */
+const HEAP_FULL = [
+  "// Binary max-heap (array-based, 0-indexed)",                    // 0
+  "// parent(i) = (i-1)/2, left(i) = 2i+1, right(i) = 2i+2",        // 1
+  "class MaxHeap {",                                                // 2
+  "  vector<int> h;",                                               // 3
+  "public:",                                                        // 4
+  "  void push(int v) {",                                           // 5
+  "    h.push_back(v);",                                            // 6
+  "    siftUp(h.size() - 1);                  // ← helper",          // 7
+  "  }",                                                            // 8
+  "",                                                               // 9
+  "  int pop() {",                                                  // 10
+  "    int top = h[0];",                                            // 11
+  "    h[0] = h.back();",                                           // 12
+  "    h.pop_back();",                                              // 13
+  "    if (!h.empty()) siftDown(0);           // ← helper",          // 14
+  "    return top;",                                                // 15
+  "  }",                                                            // 16
+  "",                                                               // 17
+  "  int top() const { return h[0]; }",                             // 18
+  "",                                                               // 19
+  "private:",                                                       // 20
+  "  void siftUp(int i) {",                                         // 21
+  "    while (i > 0) {",                                            // 22
+  "      int p = (i - 1) / 2;",                                     // 23
+  "      if (h[p] >= h[i]) break;",                                 // 24
+  "      swap(h[p], h[i]);",                                        // 25
+  "      i = p;",                                                   // 26
+  "    }",                                                          // 27
+  "  }",                                                            // 28
+  "",                                                               // 29
+  "  void siftDown(int i) {",                                       // 30
+  "    int n = h.size();",                                          // 31
+  "    while (true) {",                                             // 32
+  "      int l = 2*i + 1, r = 2*i + 2, largest = i;",               // 33
+  "      if (l < n && h[l] > h[largest]) largest = l;",             // 34
+  "      if (r < n && h[r] > h[largest]) largest = r;",             // 35
+  "      if (largest == i) break;",                                 // 36
+  "      swap(h[i], h[largest]);",                                  // 37
+  "      i = largest;",                                             // 38
+  "    }",                                                          // 39
+  "  }",                                                            // 40
+  "};",                                                             // 41
+];
+const HEAP_SHORT = [
+  "class MaxHeap {",                                                // 0
+  "  vector<int> h;",                                               // 1
+  "public:",                                                        // 2
+  "  void push(int v) {",                                           // 3
+  "    h.push_back(v);",                                            // 4
+  "    siftUp(h.size() - 1);     // ← helper: bubble up",            // 5
+  "  }",                                                            // 6
+  "  int pop() {",                                                  // 7
+  "    int top = h[0];",                                            // 8
+  "    h[0] = h.back(); h.pop_back();",                             // 9
+  "    if (!h.empty()) siftDown(0); // ← helper: sift down",         // 10
+  "    return top;",                                                // 11
+  "  }",                                                            // 12
+  "  int top() const { return h[0]; }",                             // 13
+  "};                            // ทุก op = O(log n)",              // 14
+];
 const { Quiz: Quiz23 } = window.LessonComponents;
 const { WorkedExample: WE23, CheatSheet: CS23, Pitfalls: PF23 } = window.LearningKit;
 
@@ -1426,6 +1492,13 @@ Lessons23["stl-priority-queue"] = function () {
 
       <h3>🎬 Interactive — Heap tree (push bubble up / pop sift down)</h3>
       <HeapTreeViz />
+
+      <h3>Heap Implementation — C++ Code (เพื่อเข้าใจ priority_queue ภายใน)</h3>
+      <CodeViewToggle23
+        code={HEAP_FULL}
+        codeShort={HEAP_SHORT}
+        helperName="siftUp() + siftDown()"
+      />
 
       <h3>1. Default: Max-Heap</h3>
       <pre className="code-block">{`#include <queue>

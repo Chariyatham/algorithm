@@ -1,6 +1,117 @@
 /* Lessons Part 17 — Advanced DP: LIS, LCS, Edit Distance, Matrix Chain, Bitmask DP, Tree DP */
 
 const { useState: useS17, useMemo: useM17 } = React;
+const CodeViewToggle17 = window.CodeViewToggle;
+
+/* Code arrays */
+const MATRIX_CHAIN_FULL = [
+  "// Matrix Chain Multiplication — interval DP O(n³)",             // 0
+  "int matrixChain(vector<int>& p) {",                              // 1
+  "  int n = p.size() - 1;             // n matrices",              // 2
+  "  vector<vector<int>> m(n+1, vector<int>(n+1, 0));",             // 3
+  "  for (int len = 2; len <= n; len++) {     // chain length",     // 4
+  "    for (int i = 1; i + len - 1 <= n; i++) {",                   // 5
+  "      int j = i + len - 1;",                                     // 6
+  "      m[i][j] = INT_MAX;",                                       // 7
+  "      for (int k = i; k < j; k++) {        // split point",      // 8
+  "        int cost = m[i][k] + m[k+1][j]",                         // 9
+  "                 + p[i-1] * p[k] * p[j];",                       // 10
+  "        if (cost < m[i][j]) m[i][j] = cost;",                    // 11
+  "      }",                                                        // 12
+  "    }",                                                          // 13
+  "  }",                                                            // 14
+  "  return m[1][n];",                                              // 15
+  "}",                                                              // 16
+];
+const BITMASK_TSP_FULL = [
+  "// Bitmask DP TSP — O(n² · 2ⁿ)",                                  // 0
+  "// dp[mask][i] = min cost visiting cities in 'mask', ending at i",// 1
+  "int tsp(vector<vector<int>>& dist) {",                           // 2
+  "  int n = dist.size();",                                         // 3
+  "  vector<vector<int>> dp(1 << n, vector<int>(n, INT_MAX));",     // 4
+  "  dp[1][0] = 0;             // start at city 0",                 // 5
+  "",                                                               // 6
+  "  for (int mask = 1; mask < (1 << n); mask++) {",                // 7
+  "    if (!(mask & 1)) continue;     // must include city 0",      // 8
+  "    for (int last = 0; last < n; last++) {",                     // 9
+  "      if (!(mask & (1 << last))) continue;",                     // 10
+  "      if (dp[mask][last] == INT_MAX) continue;",                 // 11
+  "      // try going to city 'next'",                              // 12
+  "      for (int next = 0; next < n; next++) {",                   // 13
+  "        if (mask & (1 << next)) continue;",                      // 14
+  "        int newMask = mask | (1 << next);",                      // 15
+  "        int newCost = dp[mask][last] + dist[last][next];",       // 16
+  "        if (newCost < dp[newMask][next])",                       // 17
+  "          dp[newMask][next] = newCost;",                         // 18
+  "      }",                                                        // 19
+  "    }",                                                          // 20
+  "  }",                                                            // 21
+  "  // close cycle: return to city 0",                             // 22
+  "  int ans = INT_MAX;",                                           // 23
+  "  int full = (1 << n) - 1;",                                     // 24
+  "  for (int i = 1; i < n; i++)",                                  // 25
+  "    if (dp[full][i] != INT_MAX)",                                // 26
+  "      ans = min(ans, dp[full][i] + dist[i][0]);",                // 27
+  "  return ans;",                                                  // 28
+  "}",                                                              // 29
+];
+const LIS_DP_FULL = [
+  "// LIS O(n²) DP",                                                // 0
+  "int lis(vector<int>& a) {",                                      // 1
+  "  int n = a.size();",                                            // 2
+  "  vector<int> dp(n, 1);",                                        // 3
+  "  for (int i = 1; i < n; i++)",                                  // 4
+  "    for (int j = 0; j < i; j++)",                                // 5
+  "      if (a[j] < a[i] && dp[j] + 1 > dp[i])",                    // 6
+  "        dp[i] = dp[j] + 1;",                                     // 7
+  "  return *max_element(dp.begin(), dp.end());",                   // 8
+  "}",                                                              // 9
+];
+const LIS_PATIENCE_SHORT = [
+  "// O(n log n) — patience sort with std::lower_bound",            // 0
+  "int lis(vector<int>& a) {",                                      // 1
+  "  vector<int> tails;",                                           // 2
+  "  for (int x : a) {",                                            // 3
+  "    auto it = lower_bound(tails.begin(), tails.end(), x);",      // 4
+  "    if (it == tails.end()) tails.push_back(x);",                 // 5
+  "    else *it = x;",                                              // 6
+  "  }",                                                            // 7
+  "  return tails.size();",                                         // 8
+  "}",                                                              // 9
+];
+const LCS_FULL = [
+  "// LCS — Longest Common Subsequence, O(m·n) DP",                 // 0
+  "int lcs(const string& s, const string& t) {",                    // 1
+  "  int m = s.size(), n = t.size();",                              // 2
+  "  vector<vector<int>> dp(m+1, vector<int>(n+1, 0));",            // 3
+  "  for (int i = 1; i <= m; i++)",                                 // 4
+  "    for (int j = 1; j <= n; j++)",                               // 5
+  "      if (s[i-1] == t[j-1])",                                    // 6
+  "        dp[i][j] = dp[i-1][j-1] + 1;",                           // 7
+  "      else",                                                     // 8
+  "        dp[i][j] = max(dp[i-1][j], dp[i][j-1]);",                // 9
+  "  return dp[m][n];",                                             // 10
+  "}",                                                              // 11
+];
+const EDIT_DIST_FULL = [
+  "// Edit Distance (Levenshtein) — O(m·n) DP",                     // 0
+  "int editDistance(const string& s, const string& t) {",           // 1
+  "  int m = s.size(), n = t.size();",                              // 2
+  "  vector<vector<int>> dp(m+1, vector<int>(n+1));",               // 3
+  "  for (int i = 0; i <= m; i++) dp[i][0] = i;     // delete all", // 4
+  "  for (int j = 0; j <= n; j++) dp[0][j] = j;     // insert all", // 5
+  "  for (int i = 1; i <= m; i++)",                                 // 6
+  "    for (int j = 1; j <= n; j++)",                               // 7
+  "      if (s[i-1] == t[j-1])",                                    // 8
+  "        dp[i][j] = dp[i-1][j-1];                  // match",     // 9
+  "      else",                                                     // 10
+  "        dp[i][j] = 1 + min({",                                   // 11
+  "          dp[i-1][j],      // delete s[i-1]",                    // 12
+  "          dp[i][j-1],      // insert t[j-1]",                    // 13
+  "          dp[i-1][j-1]});  // replace",                          // 14
+  "  return dp[m][n];",                                             // 15
+  "}",                                                              // 16
+];
 const { Quiz: Quiz17 } = window.LessonComponents;
 const { WorkedExample: WE17, CheatSheet: CS17, Pitfalls: PF17 } = window.LearningKit;
 
@@ -320,6 +431,13 @@ Lessons17["lis"] = function () {
       <h3>ตัวอย่าง</h3>
       <LISViz />
 
+      <h3>LIS — C++ Code</h3>
+      <CodeViewToggle17
+        code={LIS_DP_FULL}
+        codeShort={LIS_PATIENCE_SHORT}
+        helperName="std::lower_bound (O(n log n))"
+      />
+
       <h3>วิธีที่ 1 — DP O(n²)</h3>
       <pre className="code-block">{`dp[i] = LIS length ที่ลงท้ายด้วย a[i]
 dp[i] = 1 + max(dp[j] : j < i AND a[j] < a[i])
@@ -470,6 +588,9 @@ Lessons17["lcs"] = function () {
 
       <h3>Interactive Visualizer</h3>
       <LCSViz />
+
+      <h3>LCS — C++ Code</h3>
+      <CodeViewToggle17 code={LCS_FULL} />
 
       <h3>Recurrence</h3>
       <pre className="code-block">{`dp[i][j] = LCS ของ s1[0..i-1] และ s2[0..j-1]
@@ -673,6 +794,9 @@ else:
     dp[i-1][j-1]     // replace s1[i-1] → s2[j-1]
   )`}</pre>
 
+      <h3>Edit Distance — C++ Code</h3>
+      <CodeViewToggle17 code={EDIT_DIST_FULL} />
+
       <WE17
         title="Trace: kitten → sitting (3 ops)"
         problem="หา edit distance + operations"
@@ -740,6 +864,9 @@ Lessons17["matrix-chain"] = function () {
 
       <h3>🎬 Interactive — เดิน interval DP ทีละ length</h3>
       <MatrixChainViz />
+
+      <h3>Matrix Chain — C++ Code</h3>
+      <CodeViewToggle17 code={MATRIX_CHAIN_FULL} />
 
       <h3>Interval DP — Recurrence</h3>
       <pre className="code-block">{`dimensions: p[0], p[1], ..., p[n]   (matrix i = p[i-1] × p[i])
@@ -854,6 +981,9 @@ Answer: min over i: dp[full_mask][i] + dist[i][0]   (return to start)`}</pre>
 
       <h3>🎬 Interactive — TSP states (4 cities) เห็น dp[mask][last] เติมทีละช่อง</h3>
       <BitmaskTSPViz />
+
+      <h3>Bitmask TSP — C++ Code</h3>
+      <CodeViewToggle17 code={BITMASK_TSP_FULL} />
 
       <WE17
         title="TSP for 4 cities — illustrate state"

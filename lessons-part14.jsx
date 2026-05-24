@@ -1,6 +1,60 @@
 /* Lessons Part 14 — Proofs & Analysis (มหาลัย): Big-O proofs, Recursion methods, Loop invariant, Amortized */
 
 const { useState: useS14, useMemo: useM14, useEffect: useE14 } = React;
+const CodeViewToggle14 = window.CodeViewToggle;
+
+/* Code arrays for viz */
+const LOOP_INV_FULL = [
+  "// Insertion sort — invariant: a[0..i-1] sorted before each outer iter", // 0
+  "void insertionSort(vector<int>& a) {",                           // 1
+  "  for (int j = 1; j < (int)a.size(); j++) {",                    // 2
+  "    int key = a[j];",                                            // 3
+  "    int i = j - 1;",                                             // 4
+  "    while (i >= 0 && a[i] > key) {",                             // 5
+  "      a[i + 1] = a[i];      // shift right",                     // 6
+  "      i--;",                                                     // 7
+  "    }",                                                          // 8
+  "    a[i + 1] = key;          // place key",                      // 9
+  "    // Invariant: a[0..j] sorted ✓",                             // 10
+  "  }",                                                            // 11
+  "  // Termination: j = n → a[0..n-1] sorted ▢",                   // 12
+  "}",                                                              // 13
+];
+const RECTREE_FULL = [
+  "// Recurrence tree analysis — T(n) = a·T(n/b) + f(n)",           // 0
+  "// Sum work across all levels:",                                 // 1
+  "//   Level k: a^k subproblems, size n/b^k, work f(n/b^k)",       // 2
+  "//   Total work at level k = a^k · f(n/b^k)",                    // 3
+  "// Depth = log_b(n)",                                            // 4
+  "// Total = Σ_{k=0}^{log_b n} a^k · f(n/b^k)",                    // 5
+  "",                                                               // 6
+  "// Master Theorem cases (when f(n) = n^d):",                     // 7
+  "//   d > log_b(a) → O(n^d)        (root-heavy)",                 // 8
+  "//   d = log_b(a) → O(n^d · log n)(balanced)",                   // 9
+  "//   d < log_b(a) → O(n^log_b(a)) (leaf-heavy)",                 // 10
+];
+const DYNARRAY_FULL = [
+  "// Dynamic array — amortized O(1) push",                         // 0
+  "class DynArray {",                                               // 1
+  "  int* data;",                                                   // 2
+  "  int size = 0, cap = 1;",                                       // 3
+  "public:",                                                        // 4
+  "  DynArray() { data = new int[1]; }",                            // 5
+  "",                                                               // 6
+  "  void push(int v) {",                                           // 7
+  "    if (size == cap) {",                                         // 8
+  "      cap *= 2;                       // double capacity",       // 9
+  "      int* newData = new int[cap];",                             // 10
+  "      for (int i = 0; i < size; i++)",                           // 11
+  "        newData[i] = data[i];         // copy O(n)",             // 12
+  "      delete[] data;",                                           // 13
+  "      data = newData;",                                          // 14
+  "    }",                                                          // 15
+  "    data[size++] = v;                 // basic O(1)",            // 16
+  "  }",                                                            // 17
+  "};",                                                             // 18
+  "// Amortized analysis: n pushes → ≤ 3n total cost → O(1) avg",   // 19
+];
 const { Quiz: Quiz14 } = window.LessonComponents;
 const { WorkedExample: WE14, CheatSheet: CS14, Pitfalls: PF14 } = window.LearningKit;
 
@@ -542,6 +596,9 @@ Lessons14["recursion-methods"] = function () {
       </div>
       <RecursionTreeViz {...demos[demo]} />
 
+      <h3>Recurrence Tree — Analysis Formula</h3>
+      <CodeViewToggle14 code={RECTREE_FULL} />
+
       <WE14
         title="Recursion Tree: T(n) = T(n/4) + T(n/2) + n²"
         problem="แก้ recurrence ไม่สม่ำเสมอนี้ — Master Theorem ใช้ไม่ได้"
@@ -626,6 +683,9 @@ Lessons14["loop-invariant"] = function () {
 
       <h3>🎬 Interactive — Insertion Sort + invariant highlight (a[0..j-1] sorted)</h3>
       <LoopInvariantViz />
+
+      <h3>Insertion Sort — C++ Code (with invariant annotation)</h3>
+      <CodeViewToggle14 code={LOOP_INV_FULL} />
 
       <WE14
         title="Worked Example 1: Insertion Sort"
@@ -774,6 +834,9 @@ Lessons14["amortized"] = function () {
       <h3>Demo: Dynamic Array (Vector) Push</h3>
       <p>ทุกครั้งที่ array เต็ม → ขยายเป็น 2 เท่า + copy ทุก element (O(n)). คลิก Push หลาย ๆ ครั้งดู cost เฉลี่ย:</p>
       <DynamicArrayViz />
+
+      <h3>Dynamic Array — C++ Implementation</h3>
+      <CodeViewToggle14 code={DYNARRAY_FULL} />
 
       <h3>วิธีที่ 1 — Aggregate Method (ง่ายสุด)</h3>
       <WE14

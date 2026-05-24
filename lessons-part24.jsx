@@ -3,8 +3,67 @@
 const { useState: useS24 } = React;
 const { Quiz: Quiz24 } = window.LessonComponents;
 const { WorkedExample: WE24, CheatSheet: CS24, Pitfalls: PF24 } = window.LearningKit;
+const CodeViewToggle24 = window.CodeViewToggle;
 
 const Lessons24 = {};
+
+/* Code arrays */
+const BST_INSERT_FULL = [
+  "// BST insert — recursive, O(h) average",                        // 0
+  "struct Node {",                                                  // 1
+  "  int val;",                                                     // 2
+  "  Node *l, *r;",                                                 // 3
+  "  Node(int v) : val(v), l(nullptr), r(nullptr) {}",              // 4
+  "};",                                                             // 5
+  "",                                                               // 6
+  "Node* insert(Node* root, int v) {",                              // 7
+  "  if (!root) return new Node(v);",                               // 8
+  "  if (v < root->val)",                                           // 9
+  "    root->l = insert(root->l, v);    // ไปซ้าย",                  // 10
+  "  else if (v > root->val)",                                      // 11
+  "    root->r = insert(root->r, v);    // ไปขวา",                   // 12
+  "  // else duplicate → ไม่แทรก",                                    // 13
+  "  return root;",                                                 // 14
+  "}",                                                              // 15
+  "",                                                               // 16
+  "bool search(Node* root, int v) {",                               // 17
+  "  while (root) {",                                               // 18
+  "    if (v == root->val) return true;",                           // 19
+  "    root = (v < root->val) ? root->l : root->r;",                // 20
+  "  }",                                                            // 21
+  "  return false;",                                                // 22
+  "}",                                                              // 23
+];
+const BITSET_FULL = [
+  "#include <bitset>",                                              // 0
+  "using namespace std;",                                           // 1
+  "",                                                               // 2
+  "bitset<1000000> b;     // fixed-size compile-time bits",         // 3
+  "// 32x faster than vector<bool> for batch ops",                  // 4
+  "",                                                               // 5
+  "// Single bit access",                                           // 6
+  "b.set(i);              // bit i = 1",                            // 7
+  "b.reset(i);            // bit i = 0",                            // 8
+  "b.flip(i);             // toggle bit i",                         // 9
+  "bool x = b.test(i);    // safe read",                            // 10
+  "",                                                               // 11
+  "// Bulk operations (entire bitset)",                             // 12
+  "b.count();             // popcount",                             // 13
+  "b.any() / b.none() / b.all();",                                  // 14
+  "",                                                               // 15
+  "// Bitwise — O(N/64)",                                           // 16
+  "b1 & b2;  b1 | b2;  b1 ^ b2;  ~b;",                              // 17
+  "b << k;   b >> k;",                                              // 18
+  "",                                                               // 19
+  "// Example: Sieve of Eratosthenes",                              // 20
+  "bitset<10000001> isPrime;",                                      // 21
+  "isPrime.set();         // ทุก bit = 1",                          // 22
+  "isPrime[0] = isPrime[1] = 0;",                                   // 23
+  "for (int i = 2; i*i <= 10000000; i++)",                          // 24
+  "  if (isPrime[i])",                                              // 25
+  "    for (int j = i*i; j <= 10000000; j += i)",                   // 26
+  "      isPrime[j] = 0;",                                          // 27
+];
 
 /* ============================================================
    Shared Viz — BST Insertion (visualize set/map ordered tree)
@@ -160,6 +219,9 @@ Lessons24["stl-set-map"] = function () {
 
       <h3>🎬 Interactive — ดู insert ใน BST (set ภายในก็ทำงานแบบนี้)</h3>
       <BSTInsertViz />
+
+      <h3>BST Insert — C++ Code</h3>
+      <CodeViewToggle24 code={BST_INSERT_FULL} />
 
       <h3>1. <code>std::set</code> — Unique Sorted Set</h3>
       <pre className="code-block">{`#include <set>
@@ -920,6 +982,9 @@ Lessons24["stl-bitset"] = function () {
 
       <h3>🎬 Interactive — กดบิตเพื่อ flip + ลอง AND/OR/XOR/shift</h3>
       <BitsetViz />
+
+      <h3>std::bitset — C++ Code Reference</h3>
+      <CodeViewToggle24 code={BITSET_FULL} />
 
       <h3>1. การสร้าง</h3>
       <pre className="code-block">{`#include <bitset>
