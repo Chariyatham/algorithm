@@ -85,7 +85,7 @@ const SUFFIX_ARRAY_FULL = [
   "    sort(sa.begin(), sa.end(), cmp);",                           // 13
   "    tmp[sa[0]] = 0;",                                            // 14
   "    for (int i = 1; i < n; i++)",                                // 15
-  "      tmp[sa[i]] = tmp[sa[i-1]] + (cmp(sa[i-1], sa[i]) ? 1 : 0); // 16
+  "      tmp[sa[i]] = tmp[sa[i-1]] + (cmp(sa[i-1], sa[i]) ? 1 : 0);", // 16
   "    rank = tmp;",                                                // 17
   "  }",                                                            // 18
   "  return sa;",                                                   // 19

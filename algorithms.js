@@ -208,40 +208,91 @@ const shellCode = [
 ];
 
 // ============ Merge Sort ============
+// Steps through EVERY line of merge() (lines 0-8) and mergeSort() (9-15)
+// — ไม่ใช่แค่กระโดดบรรทัด 5 ครั้งเดียวเหมือนเดิม
 function genMergeSort(input) {
   const a = [...input];
   const frames = [];
   const n = a.length;
+  const fmt = (arr) => '[' + arr.join(',') + ']';
+  const push = (line, vars, markFn) => {
+    frames.push({ line, arr: [...a], marks: markFn ? markFn() : {}, vars });
+  };
   function rec(l, r, depth = 0) {
+    push(9, { call: `mergeSort(l=${l}, r=${r})`, depth }, () => {
+      const m = {}; for (let x = l; x <= r; x++) m[x] = 'compare'; return m;
+    });
+    push(10, { l, r, depth, check: `l>=r? ${l >= r}` });
     if (l >= r) return;
     const mid = Math.floor((l + r) / 2);
-    const m = {};
-    for (let k = l; k <= r; k++) m[k] = 'compare';
-    frames.push({ line: 11, arr: [...a], marks: m, vars: { l, r, mid, depth } });
+    push(11, { l, r, mid, depth }, () => {
+      const m = {}; for (let x = l; x <= r; x++) m[x] = 'dim'; m[mid] = 'pivot'; return m;
+    });
+    push(12, { l, mid, recurse: 'left' });
     rec(l, mid, depth + 1);
+    push(13, { mid: mid + 1, r, recurse: 'right' });
     rec(mid + 1, r, depth + 1);
-    // merge
+    push(14, { l, mid, r, action: 'call merge()' }, () => {
+      const m = {}; for (let x = l; x <= mid; x++) m[x] = 'compare';
+      for (let x = mid + 1; x <= r; x++) m[x] = 'pivot'; return m;
+    });
+
+    // ----- enter merge() — step through every body line -----
+    push(0, { l, mid, r, action: 'enter merge()' }, () => {
+      const m = {}; for (let x = l; x <= mid; x++) m[x] = 'compare';
+      for (let x = mid + 1; x <= r; x++) m[x] = 'pivot'; return m;
+    });
     const left = a.slice(l, mid + 1);
+    push(1, { 'left[]': fmt(left), 'left.size': left.length }, () => {
+      const m = {}; for (let x = l; x <= mid; x++) m[x] = 'compare';
+      for (let x = mid + 1; x <= r; x++) m[x] = 'dim'; return m;
+    });
     const right = a.slice(mid + 1, r + 1);
+    push(2, { 'left[]': fmt(left), 'right[]': fmt(right), 'right.size': right.length }, () => {
+      const m = {}; for (let x = l; x <= mid; x++) m[x] = 'dim';
+      for (let x = mid + 1; x <= r; x++) m[x] = 'pivot'; return m;
+    });
     let i = 0, j = 0, k = l;
+    push(3, { i, j, k, 'left[]': fmt(left), 'right[]': fmt(right) }, () => {
+      const m = {}; for (let x = l; x <= r; x++) m[x] = 'dim'; m[k] = 'cursor'; return m;
+    });
     while (i < left.length && j < right.length) {
-      const mm = {};
-      for (let x = l; x <= r; x++) mm[x] = 'dim';
-      mm[k] = 'cursor';
-      frames.push({ line: 5, arr: [...a], marks: mm, vars: { l, r, k, leftI: i, rightJ: j } });
-      if (left[i] <= right[j]) { a[k++] = left[i++]; }
+      push(4, { i, j, k, 'left[i]': left[i], 'right[j]': right[j], check: `i<${left.length} && j<${right.length}? true` }, () => {
+        const m = {}; for (let x = l; x <= r; x++) m[x] = 'dim';
+        for (let x = l; x < k; x++) m[x] = 'sorted'; m[k] = 'cursor'; return m;
+      });
+      const winner = left[i] <= right[j];
+      push(5, { i, j, k, 'left[i]': left[i], 'right[j]': right[j], choose: winner ? `left[${i}]=${left[i]} ≤ right[${j}]=${right[j]} → ใช้ left` : `left[${i}]=${left[i]} > right[${j}]=${right[j]} → ใช้ right`, 'a[k]': winner ? left[i] : right[j] }, () => {
+        const m = {}; for (let x = l; x <= r; x++) m[x] = 'dim';
+        for (let x = l; x < k; x++) m[x] = 'sorted'; m[k] = 'swap'; return m;
+      });
+      if (winner) { a[k++] = left[i++]; }
       else { a[k++] = right[j++]; }
     }
-    while (i < left.length) a[k++] = left[i++];
-    while (j < right.length) a[k++] = right[j++];
-    const done = {};
-    for (let x = l; x <= r; x++) done[x] = 'sorted';
-    frames.push({ line: 14, arr: [...a], marks: done, vars: { l, r, depth } });
+    push(4, { i, j, k, check: `i<${left.length} && j<${right.length}? false → ออก loop` });
+    while (i < left.length) {
+      push(6, { i, k, 'left[i]': left[i], drain: 'ก๊อปที่เหลือจาก left' }, () => {
+        const m = {}; for (let x = l; x <= r; x++) m[x] = 'dim';
+        for (let x = l; x < k; x++) m[x] = 'sorted'; m[k] = 'swap'; return m;
+      });
+      a[k++] = left[i++];
+    }
+    while (j < right.length) {
+      push(7, { j, k, 'right[j]': right[j], drain: 'ก๊อปที่เหลือจาก right' }, () => {
+        const m = {}; for (let x = l; x <= r; x++) m[x] = 'dim';
+        for (let x = l; x < k; x++) m[x] = 'sorted'; m[k] = 'swap'; return m;
+      });
+      a[k++] = right[j++];
+    }
+    push(8, { l, mid, r, depth, done: 'merge() เสร็จ → [' + a.slice(l, r + 1).join(',') + ']' }, () => {
+      const m = {}; for (let x = l; x <= r; x++) m[x] = 'sorted'; return m;
+    });
   }
-  frames.push({ line: 9, arr: [...a], marks: {}, vars: { l: 0, r: n - 1 } });
+  push(9, { call: `mergeSort(l=0, r=${n - 1})`, depth: 0, action: 'top-level' });
   rec(0, n - 1);
-  const fm = {}; for (let i = 0; i < n; i++) fm[i] = 'sorted';
-  frames.push({ line: 15, arr: [...a], marks: fm, vars: {} });
+  push(15, { done: true }, () => {
+    const m = {}; for (let i = 0; i < n; i++) m[i] = 'sorted'; return m;
+  });
   return frames;
 }
 const mergeCode = [
@@ -264,48 +315,88 @@ const mergeCode = [
 ];
 
 // ============ Quick Sort (Lomuto) ============
+// Steps through EVERY line of partition() (0-11) and quickSort() (12-18)
 function genQuickSort(input) {
   const a = [...input];
   const frames = [];
   const n = a.length;
   let comparisons = 0, swaps = 0;
+  const push = (line, vars, markFn) => {
+    frames.push({ line, arr: [...a], marks: markFn ? markFn() : {}, vars });
+  };
   function partition(lo, hi) {
+    push(0, { call: `partition(lo=${lo}, hi=${hi})` }, () => {
+      const m = {}; for (let x = lo; x <= hi; x++) m[x] = 'compare'; return m;
+    });
     const pivot = a[hi];
+    push(1, { lo, hi, pivot: `a[${hi}] = ${pivot}` }, () => {
+      const m = {}; for (let x = lo; x <= hi; x++) m[x] = 'dim'; m[hi] = 'pivot'; return m;
+    });
     let i = lo - 1;
-    const base = {};
-    base[hi] = 'pivot';
-    frames.push({ line: 2, arr: [...a], marks: { ...base }, vars: { lo, hi, pivot, i, comparisons, swaps } });
+    push(2, { lo, hi, pivot, i, note: 'i = lo-1 (left-side boundary)' }, () => {
+      const m = {}; for (let x = lo; x <= hi; x++) m[x] = 'dim'; m[hi] = 'pivot'; return m;
+    });
     for (let j = lo; j < hi; j++) {
+      push(3, { i, j, pivot, check: `j<${hi}? ${j < hi}` }, () => {
+        const m = {}; for (let x = lo; x <= hi; x++) m[x] = 'dim';
+        m[hi] = 'pivot'; m[j] = 'cursor'; if (i >= lo) m[i] = 'compare';
+        return m;
+      });
       comparisons++;
-      const m = { ...base }; m[j] = 'compare'; if (i >= lo) m[i] = 'cursor';
-      frames.push({ line: 4, arr: [...a], marks: m, vars: { lo, hi, pivot, i, j, comparisons, swaps } });
+      push(4, { i, j, 'a[j]': a[j], pivot, check: `${a[j]} <= ${pivot}? ${a[j] <= pivot}`, comparisons }, () => {
+        const m = {}; for (let x = lo; x <= hi; x++) m[x] = 'dim';
+        m[hi] = 'pivot'; m[j] = 'compare'; if (i >= lo) m[i] = 'cursor';
+        return m;
+      });
       if (a[j] <= pivot) {
         i++;
+        push(5, { i, j, note: 'i++ — ขยายพื้นที่ ≤ pivot' }, () => {
+          const m = {}; for (let x = lo; x <= hi; x++) m[x] = 'dim';
+          m[hi] = 'pivot'; m[i] = 'cursor'; m[j] = 'compare'; return m;
+        });
         if (i !== j) {
           [a[i], a[j]] = [a[j], a[i]];
           swaps++;
-          const m2 = { ...base }; m2[i] = 'swap'; m2[j] = 'swap';
-          frames.push({ line: 6, arr: [...a], marks: m2, vars: { lo, hi, pivot, i, j, comparisons, swaps } });
+          push(6, { i, j, swap: `swap(a[${i}], a[${j}])`, swaps }, () => {
+            const m = {}; for (let x = lo; x <= hi; x++) m[x] = 'dim';
+            m[hi] = 'pivot'; m[i] = 'swap'; m[j] = 'swap'; return m;
+          });
+        } else {
+          push(6, { i, j, note: 'i == j → swap ตัวเอง (ข้าม)' }, () => {
+            const m = {}; for (let x = lo; x <= hi; x++) m[x] = 'dim';
+            m[hi] = 'pivot'; m[i] = 'cursor'; return m;
+          });
         }
       }
     }
+    push(8, { note: 'จบ for loop' });
     [a[i + 1], a[hi]] = [a[hi], a[i + 1]];
     swaps++;
-    const finalM = {}; finalM[i + 1] = 'sorted';
-    frames.push({ line: 9, arr: [...a], marks: finalM, vars: { lo, hi, pivotPos: i + 1, comparisons, swaps } });
+    push(9, { swap: `swap(a[${i + 1}], a[${hi}])`, note: 'วาง pivot ที่ตำแหน่งสุดท้าย', swaps }, () => {
+      const m = {}; m[i + 1] = 'swap'; m[hi] = 'swap'; return m;
+    });
+    push(10, { return: i + 1, note: `pivot อยู่ที่ index ${i + 1}` }, () => {
+      const m = {}; m[i + 1] = 'sorted'; return m;
+    });
     return i + 1;
   }
   function qs(lo, hi) {
+    push(12, { call: `quickSort(lo=${lo}, hi=${hi})` });
+    push(13, { lo, hi, check: `lo<hi? ${lo < hi}` });
     if (lo < hi) {
+      push(14, { lo, hi, action: 'call partition()' });
       const p = partition(lo, hi);
+      push(15, { recurse: 'left', range: `[${lo}..${p - 1}]` });
       qs(lo, p - 1);
+      push(16, { recurse: 'right', range: `[${p + 1}..${hi}]` });
       qs(p + 1, hi);
     }
   }
-  frames.push({ line: 0, arr: [...a], marks: {}, vars: {} });
+  push(12, { call: `quickSort(lo=0, hi=${n - 1})`, action: 'top-level' });
   qs(0, n - 1);
-  const fm = {}; for (let i = 0; i < n; i++) fm[i] = 'sorted';
-  frames.push({ line: 12, arr: [...a], marks: fm, vars: { comparisons, swaps } });
+  push(18, { done: true, comparisons, swaps }, () => {
+    const m = {}; for (let i = 0; i < n; i++) m[i] = 'sorted'; return m;
+  });
   return frames;
 }
 const quickCode = [
@@ -331,40 +422,75 @@ const quickCode = [
 ];
 
 // ============ Heap Sort ============
+// Steps through EVERY line of heapify() (0-9) and heapSort() (10-17)
 function genHeapSort(input) {
   const a = [...input];
   const frames = [];
   const n = a.length;
-  function heapify(size, root) {
-    let largest = root;
-    const l = 2 * root + 1, r = 2 * root + 2;
-    const m = {};
-    m[root] = 'cursor'; if (l < size) m[l] = 'compare'; if (r < size) m[r] = 'compare';
-    frames.push({ line: 2, arr: [...a], marks: m, vars: { root, l, r, size } });
+  const push = (line, vars, markFn) => {
+    frames.push({ line, arr: [...a], marks: markFn ? markFn() : {}, vars });
+  };
+  const sortedSet = new Set();
+  const dimSorted = (m) => { [...sortedSet].forEach(k => m[k] = 'sorted'); return m; };
+
+  function heapify(size, i) {
+    push(0, { call: `heapify(n=${size}, i=${i})`, 'a[i]': a[i] }, () => {
+      const m = dimSorted({}); m[i] = 'cursor'; return m;
+    });
+    let largest = i;
+    push(1, { largest, note: 'สมมุติ root เป็นตัวมากสุดก่อน' }, () => {
+      const m = dimSorted({}); m[largest] = 'cursor'; return m;
+    });
+    const l = 2 * i + 1, r = 2 * i + 2;
+    push(2, { i, l, r, 'a[l]': l < size ? a[l] : '—', 'a[r]': r < size ? a[r] : '—' }, () => {
+      const m = dimSorted({}); m[i] = 'cursor';
+      if (l < size) m[l] = 'compare'; if (r < size) m[r] = 'compare'; return m;
+    });
+    push(3, { l, size, check: l < size ? `a[${l}]=${a[l]} > a[${largest}]=${a[largest]}? ${a[l] > a[largest]}` : 'l ≥ size — ไม่มี left child' }, () => {
+      const m = dimSorted({}); m[largest] = 'cursor'; if (l < size) m[l] = 'compare'; return m;
+    });
     if (l < size && a[l] > a[largest]) largest = l;
+    push(4, { r, size, check: r < size ? `a[${r}]=${a[r]} > a[${largest}]=${a[largest]}? ${a[r] > a[largest]}` : 'r ≥ size — ไม่มี right child' }, () => {
+      const m = dimSorted({}); m[largest] = 'cursor'; if (r < size) m[r] = 'compare'; return m;
+    });
     if (r < size && a[r] > a[largest]) largest = r;
-    if (largest !== root) {
-      [a[root], a[largest]] = [a[largest], a[root]];
-      const m2 = {}; m2[root] = 'swap'; m2[largest] = 'swap';
-      frames.push({ line: 6, arr: [...a], marks: m2, vars: { root, largest, size } });
+    push(5, { largest, i, check: `largest != i? ${largest !== i}` }, () => {
+      const m = dimSorted({}); m[i] = 'cursor'; m[largest] = 'compare'; return m;
+    });
+    if (largest !== i) {
+      [a[i], a[largest]] = [a[largest], a[i]];
+      push(6, { swap: `swap(a[${i}], a[${largest}])` }, () => {
+        const m = dimSorted({}); m[i] = 'swap'; m[largest] = 'swap'; return m;
+      });
+      push(7, { 'recurse on': largest, note: 'sift-down ต่อจาก largest' }, () => {
+        const m = dimSorted({}); m[largest] = 'cursor'; return m;
+      });
       heapify(size, largest);
     }
+    push(9, { return: 'heapify เสร็จ', i });
   }
-  frames.push({ line: 0, arr: [...a], marks: {}, vars: {} });
+
+  push(10, { call: 'heapSort(a)', action: 'top-level' });
+  push(11, { n });
+  push(12, { build: 'build max-heap จาก bottom-up' });
   for (let i = Math.floor(n / 2) - 1; i >= 0; i--) heapify(n, i);
-  const sorted = new Set();
+  push(13, { phase: 'extract phase — swap root → re-heapify' });
   for (let i = n - 1; i > 0; i--) {
+    push(13, { i, check: `i>0? ${i > 0}` }, () => dimSorted({ [0]: 'pivot' }));
     [a[0], a[i]] = [a[i], a[0]];
-    sorted.add(i);
-    const m = {};
-    [...sorted].forEach(k => m[k] = 'sorted');
-    m[0] = 'pivot';
-    frames.push({ line: 14, arr: [...a], marks: m, vars: { i, sortedCount: sorted.size } });
+    sortedSet.add(i);
+    push(14, { swap: `swap(a[0]=root, a[${i}])`, note: 'root ใหญ่สุดถูกย้ายไปท้าย → sorted' }, () => {
+      const m = dimSorted({}); m[0] = 'cursor'; return m;
+    });
+    push(15, { 'reheapify size': i }, () => {
+      const m = dimSorted({}); m[0] = 'cursor'; return m;
+    });
     heapify(i, 0);
   }
-  sorted.add(0);
-  const fm = {}; [...sorted].forEach(k => fm[k] = 'sorted');
-  frames.push({ line: 17, arr: [...a], marks: fm, vars: {} });
+  sortedSet.add(0);
+  push(17, { done: true }, () => {
+    const m = {}; for (let k = 0; k < n; k++) m[k] = 'sorted'; return m;
+  });
   return frames;
 }
 const heapCode = [
@@ -477,9 +603,12 @@ const mergeCodeShort = [
   "}",                                                              // 6
 ];
 // map full line → short line (frames ใช้ line ของ full)
-// full: 5=interleave (in merge() body), 9=mergeSort start, 11=mid, 14=merge() call, 15=}
+// full: 0-8 = merge() body, 9-15 = mergeSort() body
+// short: 0=void mergeSort, 1=if l>=r, 2=mid, 3=recurse left, 4=recurse right, 5=merge call, 6=}
 const mergeLineMap = {
-  5: 5,   // interleave (in merge() impl) → highlight "merge(...)" call ใน short
+  // merge() body — ทั้งหมด collapse → "merge(...)" call ใน short
+  0: 5, 1: 5, 2: 5, 3: 5, 4: 5, 5: 5, 6: 5, 7: 5, 8: 5,
+  // mergeSort() body — map 1:1
   9: 0,   // void mergeSort
   10: 1,  // if (l >= r) return
   11: 2,  // int mid
@@ -499,28 +628,19 @@ const quickCodeShort = [
   "  }",                                                            // 5
   "}",                                                              // 6
 ];
-// full lines: 0-11 = partition(), 12-18 = quickSort()
-// frame uses: 0(initial), 2(start partition), 4(if compare), 6(swap inside), 9(final swap), 12(done — quickSort signature)
+// full lines: 0-11 = partition() body, 12-18 = quickSort() body
+// short: 0=quickSort sig, 1=if lo<hi, 2=p=partition(), 3=recurse left, 4=recurse right, 5=}, 6=}
 const quickLineMap = {
-  0: 2,   // partition start → "partition()" call in short
-  1: 2,
-  2: 2,   // i = lo - 1 → still partition
-  3: 2,
-  4: 2,   // if compare → partition
-  5: 2,
-  6: 2,   // swap inside partition → partition call
-  7: 2,
-  8: 2,
-  9: 2,   // final pivot swap → still partition
-  10: 2,
-  11: 2,
+  // partition() body — ทั้งหมด collapse → "partition()" call (line 2) ใน short
+  0: 2, 1: 2, 2: 2, 3: 2, 4: 2, 5: 2, 6: 2, 7: 2, 8: 2, 9: 2, 10: 2, 11: 2,
+  // quickSort() body — map 1:1
   12: 0,  // void quickSort signature
-  13: 1,
+  13: 1,  // if (lo < hi)
   14: 2,  // p = partition(...)
   15: 3,  // recurse left
   16: 4,  // recurse right
-  17: 5,
-  18: 6,
+  17: 5,  // }
+  18: 6,  // }
 };
 
 // Heap sort — full code is heapCode (18 lines). Short = main heapSort + heapify() as 1 call
@@ -537,19 +657,12 @@ const heapCodeShort = [
   "  }",                                                            // 9
   "}",                                                              // 10
 ];
-// full: 0-9 heapify(), 10-17 heapSort()
-// frames: 0(initial), 2(children check in heapify), 6(swap in heapify), 14(sort-loop swap), 17(final)
+// full: 0-9 heapify() body, 10-17 heapSort() body
+// short: 0=heapSort sig, 1=n, 2=build comment, 3=for build, 4=heapify (call), 5=sort comment, 6=for sort, 7=swap, 8=heapify, 9=}, 10=}
 const heapLineMap = {
-  0: 4,   // heapify start → heapify call line in short
-  1: 4,
-  2: 4,   // children check → heapify call
-  3: 4,
-  4: 4,
-  5: 4,
-  6: 4,   // swap in heapify → heapify call
-  7: 4,
-  8: 4,
-  9: 4,
+  // heapify() body — ทั้งหมด collapse → heapify call (line 4 in short, used in build phase)
+  0: 4, 1: 4, 2: 4, 3: 4, 4: 4, 5: 4, 6: 4, 7: 4, 8: 4, 9: 4,
+  // heapSort() body — map 1:1
   10: 0,  // void heapSort
   11: 1,  // int n
   12: 3,  // for build heap

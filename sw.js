@@ -1,7 +1,7 @@
 /* Service Worker — Algorithm Academy
    Strategy: cache-first for app shell, stale-while-revalidate for jsx/css */
 
-const VERSION = 'v2-2026-05-fonts';
+const VERSION = 'v3-2026-05-anim-detail';
 const SHELL = 'algoacademy-shell-' + VERSION;
 const RUNTIME = 'algoacademy-runtime-' + VERSION;
 

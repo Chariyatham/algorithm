@@ -1,6 +1,7 @@
 /* Lessons Part 7 — Inject Worked Examples + Cheat Sheets + Pitfalls into existing lessons */
 
 const { WorkedExample, CheatSheet, Pitfalls } = window.LearningKit;
+const { Quiz: QuizP7 } = window.LessonComponents;
 
 /* For every lesson that has extra content, we wrap the original lesson and append. */
 const ENRICH = {};
@@ -55,6 +56,27 @@ ENRICH["big-o"] = function () {
         { trap: "ตอบ Best case ของ Bubble Sort = O(n²) เสมอ", fix: "ผิด! Bubble Sort ที่ใช้ flag <b>หยุดได้ early</b> ถ้าไม่มี swap → Best = O(n)" },
         { trap: "นับ recursion ผิด: T(n) = T(n-1) + n เหมือน T(n) = nT(n-1)", fix: "ระวัง! T(n-1) + n = O(n²) แต่ nT(n-1) = O(n!) — ต่างกันมหาศาล" },
       ]} />
+
+      <h3 style={{ marginTop: 30 }}>✅ ทดสอบตัวเอง — โจทย์ปิดท้าย</h3>
+      <p>หลังเรียนทฤษฎี + worked example + cheat sheet + pitfalls แล้ว ลองตอบโจทย์นี้ดู</p>
+      <pre className="code-block">
+        <code>{`for (int i = 0; i < n; i++) {
+  for (int j = 0; j < n; j++) {
+    sum += a[i] * b[j];
+  }
+}`}</code>
+      </pre>
+      <QuizP7
+        q="โค้ดข้างบนมี time complexity เท่าใด?"
+        options={[
+          "O(n)",
+          "O(n²)",
+          "O(n log n)",
+          "O(log n)"
+        ]}
+        answer={1}
+        explain="มี loop ซ้อน 2 ชั้น (i และ j) แต่ละ loop วน n ครั้ง รวมเป็น n × n = O(n²) — ตัวอย่างนี้คือพื้นฐานของ Bubble Sort นั่นเอง"
+      />
     </React.Fragment>
   );
 };

@@ -151,26 +151,6 @@ Lessons["big-o"] = function () {
         <span style={{ fontFamily: 'var(--mono)' }}>for i: for j: → O(n × n) = O(n²)</span>
       </div>
 
-      <h3>ลองวิเคราะห์โค้ดนี้</h3>
-      <pre className="code-block">
-        <code>{`for (int i = 0; i < n; i++) {
-  for (int j = 0; j < n; j++) {
-    sum += a[i] * b[j];
-  }
-}`}</code>
-      </pre>
-
-      <Quiz
-        q="โค้ดข้างบนมี time complexity เท่าใด?"
-        options={[
-          "O(n)",
-          "O(n²)",
-          "O(n log n)",
-          "O(log n)"
-        ]}
-        answer={1}
-        explain="มี loop ซ้อน 2 ชั้น (i และ j) แต่ละ loop วน n ครั้ง รวมเป็น n × n = O(n²) — ตัวอย่างนี้คือพื้นฐานของ Bubble Sort นั่นเอง"
-      />
     </React.Fragment>
   );
 };
